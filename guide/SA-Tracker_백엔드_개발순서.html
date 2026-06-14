@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SA-Tracker 백엔드 개발 순서 가이드</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0D0D0D;
+    --bg2: #111111;
+    --bg-card: #1A1A1A;
+    --bg-hover: #2A2A2A;
+    --accent: #7ED957;
+    --accent-glow: rgba(126,217,87,0.2);
+    --text: #FFFFFF;
+    --text2: #AAAAAA;
+    --text3: #666666;
+    --border: #333333;
+    --win: #7ED957;
+    --lose: #E74C3C;
+    --draw: #F39C12;
+    --react: #61DAFB;
+    --spring: #6DB33F;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Noto Sans KR',sans-serif; line-height:1.8; font-size:15px; }
+
+  .container { max-width:900px; margin:0 auto; padding:48px 32px 120px; }
+
+  .hero { text-align:center; padding:60px 0 48px; border-bottom:1px solid var(--border); margin-bottom:48px; }
+  .hero-badge { display:inline-block; background:var(--bg-card); border:1px solid var(--accent); color:var(--accent); font-size:11px; font-weight:700; padding:4px 16px; border-radius:20px; margin-bottom:16px; letter-spacing:1px; }
+  .hero h1 { font-size:36px; font-weight:900; background:linear-gradient(135deg,var(--accent),#b8f090); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:8px; }
+  .hero p { color:var(--text2); font-size:15px; }
+
+  .overview { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; margin-bottom:48px; padding:24px; background:var(--bg-card); border-radius:12px; border:1px solid var(--border); }
+  .ov-step { display:flex; align-items:center; gap:6px; }
+  .ov-num { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; }
+  .ov-label { font-size:12px; color:var(--text2); }
+  .ov-arrow { color:var(--accent); font-size:16px; font-weight:700; margin:0 2px; }
+
+  .step { margin-bottom:48px; position:relative; padding-left:48px; }
+  .step::before { content:''; position:absolute; left:17px; top:40px; bottom:-48px; width:2px; background:var(--border); }
+  .step:last-of-type::before { display:none; }
+
+  .step-header { display:flex; align-items:center; gap:14px; margin-bottom:16px; position:relative; }
+  .step-num { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:900; position:absolute; left:-48px; z-index:1; }
+  .step-title { font-size:22px; font-weight:900; color:var(--text); }
+  .step-time { font-size:12px; color:var(--text3); background:var(--bg-card); padding:2px 10px; border-radius:12px; margin-left:8px; }
+
+  .step-desc { color:var(--text2); font-size:14px; margin-bottom:16px; padding:12px 16px; background:var(--bg-card); border-radius:8px; border-left:3px solid var(--accent); }
+
+  .file-grid { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
+  .file-card { background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:14px 18px; transition:background 0.2s; }
+  .file-card:hover { background:var(--bg-hover); }
+  .file-card-header { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+  .file-icon { font-size:16px; }
+  .file-name { font-size:14px; font-weight:700; color:var(--accent); font-family:'Courier New',monospace; }
+  .file-desc { font-size:13px; color:var(--text2); line-height:1.6; }
+  .file-order { display:inline-block; background:var(--accent-glow); color:var(--accent); font-size:10px; font-weight:700; padding:1px 8px; border-radius:10px; margin-left:auto; }
+
+  .test-box { background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:14px 18px; margin-bottom:12px; border-left:3px solid var(--win); }
+  .test-title { font-size:13px; font-weight:700; color:var(--win); margin-bottom:4px; display:flex; align-items:center; gap:6px; }
+  .test-desc { font-size:13px; color:var(--text2); font-family:'Courier New',monospace; line-height:1.6; }
+
+  .tip-box { background:rgba(97,218,251,0.08); border:1px solid rgba(97,218,251,0.2); border-radius:8px; padding:12px 16px; margin-bottom:12px; }
+  .tip-box p { font-size:13px; color:var(--react); margin:0; }
+  .tip-label { font-weight:700; }
+
+  .warn-box { background:rgba(231,76,60,0.08); border:1px solid rgba(231,76,60,0.2); border-radius:8px; padding:12px 16px; margin-bottom:12px; }
+  .warn-box p { font-size:13px; color:var(--lose); margin:0; }
+
+  .code-block { background:#0a0a0a; border:1px solid var(--border); border-radius:8px; padding:16px; margin:12px 0; overflow-x:auto; font-size:13px; line-height:1.6; font-family:'Courier New',monospace; color:#c9d1d9; }
+  .kw { color:#ff7b72; }
+  .str { color:#a5d6ff; }
+  .cm { color:#8b949e; }
+  .fn { color:#d2a8ff; }
+  .tp { color:#79c0ff; }
+
+  .summary { background:var(--bg-card); border:1px solid var(--accent); border-radius:12px; padding:32px; text-align:center; margin-top:48px; box-shadow:0 0 20px var(--accent-glow); }
+  .summary h2 { font-size:24px; font-weight:900; color:var(--accent); margin-bottom:12px; }
+  .summary p { color:var(--text2); font-size:14px; }
+  .summary-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:20px; }
+  .summary-item { background:var(--bg); border-radius:8px; padding:16px; }
+  .summary-item .sv { font-size:28px; font-weight:900; color:var(--accent); }
+  .summary-item .sl { font-size:11px; color:var(--text3); margin-top:4px; }
+
+  .tag { display:inline-block; font-size:10px; font-weight:700; padding:2px 8px; border-radius:4px; margin-right:4px; }
+  .tag-new { background:var(--accent-glow); color:var(--accent); }
+  .tag-important { background:rgba(231,76,60,0.15); color:var(--lose); }
+
+  .deco { display:flex; gap:4px; justify-content:center; margin-top:24px; }
+  .deco span { width:8px; height:8px; display:block; }
+  .deco .g { background:var(--accent); }
+  .deco .d { background:var(--text3); }
+  .deco .w { background:var(--text2); }
+
+  @media(max-width:768px) {
+    .container { padding:24px 16px 80px; }
+    .step { padding-left:36px; }
+    .step-num { left:-36px; width:28px; height:28px; font-size:12px; }
+    .step::before { left:12px; }
+    .hero h1 { font-size:28px; }
+    .summary-grid { grid-template-columns:1fr; }
+  }
+  @media print {
+    body { background:white; color:black; }
+    .step::before { border-left:2px solid #ccc; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- 히어로 -->
+  <div class="hero">
+    <div class="hero-badge">BACKEND BUILD ORDER GUIDE</div>
+    <h1>백엔드 개발 순서 가이드</h1>
+    <p>SA-Tracker Spring Boot REST API — 한 단계씩, 만들고 테스트하고 다음으로</p>
+  </div>
+
+  <!-- 전체 흐름 오버뷰 -->
+  <div class="overview">
+    <div class="ov-step">
+      <div class="ov-num" style="background:rgba(255,255,255,0.1);color:var(--text2);">0</div>
+      <div class="ov-label">준비</div>
+    </div>
+    <div class="ov-arrow">→</div>
+    <div class="ov-step">
+      <div class="ov-num" style="background:rgba(126,217,87,0.15);color:var(--accent);">1</div>
+      <div class="ov-label">Config</div>
+    </div>
+    <div class="ov-arrow">→</div>
+    <div class="ov-step">
+      <div class="ov-num" style="background:rgba(97,218,251,0.15);color:var(--react);">2</div>
+      <div class="ov-label">Entity</div>
+    </div>
+    <div class="ov-arrow">→</div>
+    <div class="ov-step">
+      <div class="ov-num" style="background:rgba(52,152,219,0.15);color:#3498db;">3</div>
+      <div class="ov-label">DTO</div>
+    </div>
+    <div class="ov-arrow">→</div>
+    <div class="ov-step">
+      <div class="ov-num" style="background:rgba(231,76,60,0.15);color:var(--lose);">4</div>
+      <div class="ov-label">Service</div>
+    </div>
+    <div class="ov-arrow">→</div>
+    <div class="ov-step">
+      <div class="ov-num" style="background:rgba(126,217,87,0.15);color:var(--accent);">5</div>
+      <div class="ov-label">Controller</div>
+    </div>
+    <div class="ov-arrow">→</div>
+    <div class="ov-step">
+      <div class="ov-num" style="background:var(--accent);color:var(--bg);">✓</div>
+      <div class="ov-label">완성!</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- STEP 0: 준비 -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num" style="background:rgba(255,255,255,0.1);color:var(--text2);">0</div>
+      <div class="step-title">프로젝트 생성 + DB 준비</div>
+      <div class="step-time">1~2일</div>
+    </div>
+
+    <div class="step-desc">
+      코드를 한 줄도 쓰기 전에, <strong>프로젝트 틀</strong>과 <strong>DB</strong>를 먼저 만듭니다.<br>
+      이 단계에서 Java 코드는 하나도 안 씁니다.
+    </div>
+
+    <div class="file-grid">
+      <div class="file-card">
+        <div class="file-card-header">
+          <span class="file-icon">☕</span>
+          <span class="file-name">Spring Boot 프로젝트 생성</span>
+          <span class="file-order">첫 번째</span>
+        </div>
+        <div class="file-desc">
+          STS → File → New → Spring Starter Project<br>
+          <strong>선택 항목:</strong> Gradle, Java 21, Spring Boot 3.x<br>
+          <strong>Dependencies:</strong> Spring Web, Spring Data JPA, MySQL Driver<br>
+          <strong>Group:</strong> com.sa.trk &nbsp; <strong>Artifact:</strong> sa-tracker
+        </div>
+      </div>
+
+      <div class="file-card">
+        <div class="file-card-header">
+          <span class="file-icon">🗄️</span>
+          <span class="file-name">MySQL 데이터베이스 생성</span>
+          <span class="file-order">두 번째</span>
+        </div>
+        <div class="file-desc">MySQL Workbench 또는 터미널에서 실행:</div>
+        <div class="code-block">
+<span class="kw">CREATE DATABASE</span> sa_match <span class="kw">DEFAULT CHARACTER SET</span> utf8mb4;
+<span class="kw">USE</span> sa_match;
+
+<span class="kw">CREATE TABLE</span> clan_members (
+    id          <span class="tp">BIGINT</span> <span class="kw">AUTO_INCREMENT PRIMARY KEY</span>,
+    user_name   <span class="tp">VARCHAR(50)</span>  <span class="kw">NOT NULL</span>,
+    clan_name   <span class="tp">VARCHAR(50)</span>  <span class="kw">DEFAULT</span> <span class="str">'모'</span>,
+    ouid        <span class="tp">VARCHAR(200)</span>,
+    created_at  <span class="tp">DATETIME</span>     <span class="kw">DEFAULT</span> <span class="fn">CURRENT_TIMESTAMP</span>,
+    updated_at  <span class="tp">DATETIME</span>     <span class="kw">DEFAULT</span> <span class="fn">CURRENT_TIMESTAMP</span> <span class="kw">ON UPDATE</span> <span class="fn">CURRENT_TIMESTAMP</span>,
+    <span class="kw">UNIQUE KEY</span> uk_user_name (user_name)
+) <span class="kw">ENGINE</span>=InnoDB;
+
+<span class="cm">-- 클랜원 초기 데이터</span>
+<span class="kw">INSERT INTO</span> clan_members (user_name) <span class="kw">VALUES</span>
+(<span class="str">'닉네임1'</span>), (<span class="str">'닉네임2'</span>), (<span class="str">'닉네임3'</span>);
+        </div>
+      </div>
+
+      <div class="file-card">
+        <div class="file-card-header">
+          <span class="file-icon">⚙️</span>
+          <span class="file-name">application.properties</span>
+          <span class="file-order">세 번째</span>
+        </div>
+        <div class="file-desc">src/main/resources/application.properties 파일 수정:</div>
+        <div class="code-block">
+<span class="cm"># 서버 포트</span>
+server.port=<span class="str">8085</span>
+
+<span class="cm"># MySQL 연결</span>
+spring.datasource.url=<span class="str">jdbc:mysql://localhost:3306/sa_match?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=utf8mb4</span>
+spring.datasource.username=<span class="str">root</span>
+spring.datasource.password=<span class="str">내비밀번호</span>
+spring.datasource.driver-class-name=<span class="str">com.mysql.cj.jdbc.Driver</span>
+
+<span class="cm"># JPA</span>
+spring.jpa.hibernate.ddl-auto=<span class="str">update</span>
+spring.jpa.show-sql=<span class="str">true</span>
+
+<span class="cm"># NEXON API KEY (절대 프론트에 노출 금지!)</span>
+nexon.api.key=<span class="str">내_API_KEY_여기에</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="test-box">
+      <div class="test-title">✅ 확인 방법</div>
+      <div class="test-desc">STS에서 Run As → Spring Boot App → 콘솔에 "Started SATrkApplication" 뜨면 성공!<br>브라우저에서 localhost:8085 접속 → Whitelabel Error Page가 뜨면 정상 (아직 페이지가 없으니까)</div>
+    </div>
+
+    <div class="tip-box">
+      <p><span class="tip-label">💡 팁:</span> Whitelabel Error Page가 뜨는 게 정상이에요. "서버는 떴는데 보여줄 페이지가 없다"는 뜻입니다.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- STEP 1: Config -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num" style="background:rgba(126,217,87,0.15);color:var(--accent);">1</div>
+      <div class="step-title">설정 클래스 (Config)</div>
+      <div class="step-time">반나절</div>
+    </div>
+
+    <div class="step-desc">
+      RestTemplate(외부 API 호출 도구)과 CORS(React 허용) 설정.<br>
+      <strong>딱 2개 파일</strong>만 만들면 됩니다. 한번 만들면 거의 안 건드립니다.
+    </div>
+
+    <div class="file-grid">
+      <div class="file-card">
+        <div class="file-card-header">
+          <span class="file-icon">🔧</span>
+          <span class="file-name">config/NexonApiConfig.java</span>
+          <span class="file-order">먼저</span>
+        </div>
+        <div class="file-desc">RestTemplate을 Bean으로 등록하는 설정 클래스</div>
+        <div class="code-block">
+<span class="kw">package</span> com.sa.trk.config;
+
+<span class="kw">import</span> org.springframework.context.annotation.Bean;
+<span class="kw">import</span> org.springframework.context.annotation.Configuration;
+<span class="kw">import</span> org.springframework.web.client.RestTemplate;
+
+<span class="kw">@Configuration</span>
+<span class="kw">public class</span> <span class="tp">NexonApiConfig</span> {
+
+    <span class="kw">@Bean</span>
+    <span class="kw">public</span> <span class="tp">RestTemplate</span> <span class="fn">restTemplate</span>() {
+        <span class="kw">return new</span> <span class="tp">RestTemplate</span>();
+    }
+}
+        </div>
+      </div>
+
+      <div class="file-card">
+        <div class="file-card-header">
+          <span class="file-icon">🌐</span>
+          <span class="file-name">config/WebConfig.java</span>
+          <span class="file-order">다음</span>
+        </div>
+        <div class="file-desc">React 개발 서버(localhost:5173)에서의 API 호출을 허용하는 CORS 설정</div>
+        <div class="code-block">
+<span class="kw">package</span> com.sa.trk.config;
+
+<span class="kw">import</span> org.springframework.context.annotation.Configuration;
+<span class="kw">import</span> org.springframework.web.servlet.config.annotation.*;
+
+<span class="kw">@Configuration</span>
+<span class="kw">public class</span> <span class="tp">WebConfig</span> <span class="kw">implements</span> <span class="tp">WebMvcConfigurer</span> {
+
+    <span class="kw">@Override</span>
+    <span class="kw">public void</span> <span class="fn">addCorsMappings</span>(<span class="tp">CorsRegistry</span> registry) {
+        registry.<span class="fn">addMapping</span>(<span class="str">"/api/**"</span>)
+                .<span class="fn">allowedOrigins</span>(<span class="str">"http://localhost:5173"</span>)
+                .<span class="fn">allowedMethods</span>(<span class="str">"GET"</span>)
+                .<span class="fn">allowedHeaders</span>(<span class="str">"*"</span>);
+    }
+}
+        </div>
+      </div>
+    </div>
+
+    <div class="test-box">
+      <div class="test-title">✅ 확인 방법</div>
+      <div class="test-desc">서버 재시작 → 콘솔에 빨간 에러 없이 정상 기동되면 OK</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- STEP 2: Entity + Repository -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num" style="background:rgba(97,218,251,0.15);color:var(--react);">2</div>
+      <div class="step-title">Entity + Repository</div>
+      <div class="step-time">반나절</div>
+    </div>
+
+    <div class="step-desc">
+      DB 테이블과 연결되는 Java 클래스. <strong>clan_members 테이블의 Java 버전</strong>이라고 생각하면 됩니다.<br>
+      Repository는 interface만 만들면 Spring이 알아서 SQL을 생성해줍니다.
+    </div>
+
+    <div class="file-grid">
+      <div class="file-card">
+        <div class="file-card-header">
+          <span class="file-icon">📦</span>
+          <span class="file-name">entity/ClanMember.java</span>
+          <span class="file-order">먼저</span>
+        </div>
+        <div class="file-desc">@Entity — DB 테이블과 1:1 매핑되는 클래스</div>
+        <div class="code-block">
+<span class="kw">package</span> com.sa.trk.entity;
+
+<span class="kw">import</span> jakarta.persistence.*;
+<span class="kw">import</span> java.time.LocalDateTime;
+
+<span class="kw">@Entity</span>
+<span class="kw">@Table</span>(name = <span class="str">"clan_members"</span>)
+<span class="kw">public class</span> <span class="tp">ClanMember</span> {
+
+    <span class="kw">@Id @GeneratedValue</span>(strategy = GenerationType.IDENTITY)
+    <span class="kw">private</span> <span class="tp">Long</span> id;
+
+    <span class="kw">@Column</span>(name = <span class="str">"user_name"</span>, nullable = <span class="kw">false</span>, unique = <span class="kw">true</span>)
+    <span class="kw">private</span> <span class="tp">String</span> userName;
+
+    <span class="kw">@Column</span>(name = <span class="str">"clan_name"</span>)
+    <span class="kw">private</span> <span class="tp">String</span> clanName = <span class="str">"모"</span>;
+
+    <span class="kw">private</span> <span class="tp">String</span> ouid;
+
+    <span class="kw">@Column</span>(name = <span class="str">"created_at"</span>)
+    <span class="kw">private</span> <span class="tp">LocalDateTime</span> createdAt;
+
+    <span class="kw">@Column</span>(name = <span class="str">"updated_at"</span>)
+    <span class="kw">private</span> <span class="tp">LocalDateTime</span> updatedAt;
+
+    <span class="cm">// Getter & Setter (전부 만들어야 함)</span>
+    <span class="kw">public</span> <span class="tp">Long</span> <span class="fn">getId</span>() { <span class="kw">return</span> id; }
+    <span class="kw">public void</span> <span class="fn">setId</span>(<span class="tp">Long</span> id) { <span class="kw">this</span>.id = id; }
+    <span class="kw">public</span> <span class="tp">String</span> <span class="fn">getUserName</span>() { <span class="kw">return</span> userName; }
+    <span class="kw">public void</span> <span class="fn">setUserName</span>(<span class="tp">String</span> userName) { <span class="kw">this</span>.userName = userName; }
+    <span class="kw">public</span> <span class="tp">String</span> <span class="fn">getClanName</span>() { <span class="kw">return</span> clanName; }
+    <span class="kw">public void</span> <span class="fn">setClanName</span>(<span class="tp">String</span> clanName) { <span class="kw">this</span>.clanName = clanName; }
+    <span class="kw">public</span> <span class="tp">String</span> <span class="fn">getOuid</span>() { <span class="kw">return</span> ouid; }
+    <span class="kw">public void</span> <span class="fn">setOuid</span>(<span class="tp">String</span> ouid) { <span class="kw">this</span>.ouid = ouid; }
+    <span class="kw">public</span> <span class="tp">LocalDateTime</span> <span class="fn">getCreatedAt</span>() { <span class="kw">return</span> createdAt; }
+    <span class="kw">public</span> <span class="tp">LocalDateTime</span> <span class="fn">getUpdatedAt</span>() { <span class="kw">return</span> updatedAt; }
+}
+        </div>
+      </div>
+
+      <div class="file-card">
+        <div class="file-card-header">
+          <span class="file-icon">🔍</span>
+          <span class="file-name">repository/ClanMemberRepository.java</span>
+          <span class="file-order">다음</span>
+        </div>
+        <div class="file-desc">interface만 만들면 끝! 구현 코드 없이 Spring이 알아서 해줌</div>
+        <div class="code-block">
+<span class="kw">package</span> com.sa.trk.repository;
+
+<span class="kw">import</span> com.sa.trk.entity.ClanMember;
+<span class="kw">import</span> org.springframework.data.jpa.repository.JpaRepository;
+<span class="kw">import</span> java.util.Optional;
+
+<span class="kw">public interface</span> <span class="tp">ClanMemberRepository</span>
+        <span class="kw">extends</span> <span class="tp">JpaRepository</span>&lt;<span class="tp">ClanMember</span>, <span class="tp">Long</span>&gt; {
+
+    <span class="cm">// 닉네임으로 클랜원 찾기 (Spring이 자동 생성)</span>
+    <span class="tp">Optional</span>&lt;<span class="tp">ClanMember</span>&gt; <span class="fn">findByUserName</span>(<span class="tp">String</span> userName);
+}
+        </div>
+      </div>
+    </div>
+
+    <div class="test-box">
+      <div class="test-title">✅ 확인 방법</div>
+      <div class="test-desc">서버 재시작 → 콘솔에 "Hibernate: select..." 같은 SQL 로그가 찍히면 DB 연결 성공!</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- STEP 3: DTO -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num" style="background:rgba(52,152,219,0.15);color:#3498db;">3</div>
+      <div class="step-title">DTO 클래스들 만들기</div>
+      <div class="step-time">반나절~1일</div>
+    </div>
+
+    <div class="step-desc">
+      NEXON API 응답을 담는 <strong>그릇</strong>들. 필드(변수)만 있는 아주 단순한 클래스입니다.<br>
+      로직이 전혀 없어서 실수할 일이 거의 없어요.
+    </div>
+
+    <div class="file-grid">
+      <div class="file-card">
+        <div class="file-card-header">
+          <span class="file-icon">📋</span>
+          <span class="file-name">dto/player/OuidResponseDto.java</span>
+          <span class="tag tag-new">가장 단순</span>
+        </div>
+        <div class="file-desc">필드 1개짜리. 이걸로 DTO 감을 잡으세요.</div>
+        <div class="code-block">
+<span class="kw">package</span> com.sa.trk.dto.player;
+
+<span class="kw">public class</span> <span class="tp">OuidResponseDto</span> {
+    <span class="kw">private</span> <span class="tp">String</span> ouid;
+
+    <span class="kw">public</span> <span class="tp">String</span> <span class="fn">getOuid</span>() { <span class="kw">return</span> ouid; }
+    <span class="kw">public void</span> <span class="fn">setOuid</span>(<span class="tp">String</span> ouid) { <span class="kw">this</span>.ouid = ouid; }
+}
+        </div>
+      </div>
+
+      <div class="file-card">
+        <div class="file-card-header">
+          <span class="file-icon">📋</span>
+          <span class="file-name">나머지 DTO들</span>
+        </div>
+        <div class="file-desc">
+          전부 위와 같은 패턴 — <strong>private 필드 + getter/setter</strong>만 있으면 됩니다.<br><br>
+          만들 파일 목록:<br>
+          • <code>dto/player/UserBasicDto.java</code> — user_name, user_date_create, title_name, clan_name, manner_grade<br>
+          • <code>dto/player/UserRankDto.java</code> — grade, grade_exp, grade_ranking, season_grade, season_grade_exp, season_grade_ranking<br>
+          • <code>dto/player/UserTierDto.java</code> — solo_rank_match_tier/score, party_rank_match_tier/score<br>
+          • <code>dto/player/UserRecentInfoDto.java</code> — recent_win_rate, recent_kill_death_rate, recent_assault/sniper/special_rate<br>
+          • <code>dto/player/PlayerPageDto.java</code> — basic, rank, tier, recent, matches를 합친 <strong>통합 DTO</strong><br>
+          • <code>dto/match/MatchDto.java</code> — match_id, match_type, match_mode, date_match, match_result, kill, death, assist<br>
+          • <code>dto/match/MatchDetailDto.java</code> — match_id, match_map, match_detail(List)<br>
+          • <code>dto/match/MatchDetailPlayerDto.java</code> — team_id, user_name, kill, death, headshot, damage, assist<br>
+          • <code>dto/clan/ClanMemberDto.java</code> — userName, clanName (화면 전달용)
+        </div>
+      </div>
+    </div>
+
+    <div class="test-box">
+      <div class="test-title">✅ 확인 방법</div>
+      <div class="test-desc">컴파일 에러(빨간 줄) 없으면 OK. DTO는 로직이 없어서 별도 테스트 불필요.</div>
+    </div>
+
+    <div class="tip-box">
+      <p><span class="tip-label">💡 팁:</span> 필드 이름은 NEXON API 응답 JSON의 키 이름과 <strong>정확히 똑같이</strong> 맞춰야 합니다. (user_name, match_result 등) 언더스코어(_) 포함!</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- STEP 4: Service (핵심!) -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num" style="background:rgba(231,76,60,0.15);color:var(--lose);">4</div>
+      <div class="step-title">Service 계층 (가장 중요!)</div>
+      <div class="step-time">3~4일</div>
+    </div>
+
+    <div class="step-desc">
+      <span class="tag tag-important">핵심</span> 실제로 NEXON API를 호출하고 데이터를 조합하는 <strong>두뇌</strong> 역할.<br>
+      이 단계가 제일 오래 걸리고 제일 중요합니다. <strong>한 메서드씩</strong> 만들고 테스트하세요!
+    </div>
+
+    <div class="file-grid">
+      <div class="file-card" style="border-color:var(--draw);">
+        <div class="file-card-header">
+          <span class="file-icon">⭐</span>
+          <span class="file-name">service/NexonApiService.java</span>
+          <span class="file-order">가장 먼저!</span>
+        </div>
+        <div class="file-desc">NEXON API를 직접 호출하는 서비스. <strong>getOuid()부터 하나씩</strong> 만들어가세요.</div>
+        <div class="code-block">
+<span class="kw">package</span> com.sa.trk.service;
+
+<span class="kw">import</span> com.sa.trk.dto.player.*;
+<span class="kw">import</span> org.springframework.beans.factory.annotation.Value;
+<span class="kw">import</span> org.springframework.http.*;
+<span class="kw">import</span> org.springframework.stereotype.Service;
+<span class="kw">import</span> org.springframework.web.client.RestTemplate;
+<span class="kw">import</span> java.net.URLEncoder;
+<span class="kw">import</span> java.nio.charset.StandardCharsets;
+
+<span class="kw">@Service</span>
+<span class="kw">public class</span> <span class="tp">NexonApiService</span> {
+
+    <span class="kw">private final</span> <span class="tp">RestTemplate</span> restTemplate;
+    <span class="kw">private static final</span> <span class="tp">String</span> BASE = <span class="str">"https://open.api.nexon.com"</span>;
+
+    <span class="kw">@Value</span>(<span class="str">"${nexon.api.key}"</span>)
+    <span class="kw">private</span> <span class="tp">String</span> apiKey;
+
+    <span class="kw">public</span> <span class="fn">NexonApiService</span>(<span class="tp">RestTemplate</span> restTemplate) {
+        <span class="kw">this</span>.restTemplate = restTemplate;
+    }
+
+    <span class="cm">// 공통: API KEY를 헤더에 담는 메서드</span>
+    <span class="kw">private</span> <span class="tp">HttpHeaders</span> <span class="fn">headers</span>() {
+        <span class="tp">HttpHeaders</span> h = <span class="kw">new</span> <span class="tp">HttpHeaders</span>();
+        h.set(<span class="str">"x-nxopen-api-key"</span>, apiKey);
+        <span class="kw">return</span> h;
+    }
+
+    <span class="cm">// ★ 1번째로 만들 메서드: 닉네임 → ouid</span>
+    <span class="kw">public</span> <span class="tp">String</span> <span class="fn">getOuid</span>(<span class="tp">String</span> userName) {
+        <span class="tp">String</span> url = BASE + <span class="str">"/suddenattack/v1/id?user_name="</span>
+            + URLEncoder.encode(userName, StandardCharsets.UTF_8);
+        <span class="tp">HttpEntity</span>&lt;<span class="tp">String</span>&gt; entity = <span class="kw">new</span> <span class="tp">HttpEntity</span>&lt;&gt;(headers());
+        <span class="tp">ResponseEntity</span>&lt;<span class="tp">OuidResponseDto</span>&gt; res =
+            restTemplate.exchange(url, HttpMethod.GET, entity, <span class="tp">OuidResponseDto</span>.<span class="kw">class</span>);
+        <span class="kw">return</span> res.getBody().getOuid();
+    }
+
+    <span class="cm">// ★ 2번째: ouid → 기본 정보</span>
+    <span class="kw">public</span> <span class="tp">UserBasicDto</span> <span class="fn">getUserBasic</span>(<span class="tp">String</span> ouid) {
+        <span class="tp">String</span> url = BASE + <span class="str">"/suddenattack/v1/user/basic?ouid="</span> + ouid;
+        <span class="tp">HttpEntity</span>&lt;<span class="tp">String</span>&gt; entity = <span class="kw">new</span> <span class="tp">HttpEntity</span>&lt;&gt;(headers());
+        <span class="kw">return</span> restTemplate.exchange(url, HttpMethod.GET, entity, <span class="tp">UserBasicDto</span>.<span class="kw">class</span>)
+                .getBody();
+    }
+
+    <span class="cm">// ★ 같은 패턴으로 getUserRank, getUserTier, getRecentInfo, getMatches, getMatchDetail 추가</span>
+    <span class="cm">// ... (url과 반환 타입만 바꾸면 됨)</span>
+}
+        </div>
+      </div>
+
+      <div class="file-card">
+        <div class="file-card-header">
+          <span class="file-icon">💾</span>
+          <span class="file-name">service/ClanService.java</span>
+          <span class="file-order">두 번째</span>
+        </div>
+        <div class="file-desc">ouid를 DB에 캐싱하는 핵심 로직. API 호출 횟수를 줄여줍니다.</div>
+        <div class="code-block">
+<span class="kw">@Service</span>
+<span class="kw">public class</span> <span class="tp">ClanService</span> {
+    <span class="kw">private final</span> <span class="tp">ClanMemberRepository</span> repo;
+    <span class="kw">private final</span> <span class="tp">NexonApiService</span> nexonApi;
+
+    <span class="kw">public</span> <span class="fn">ClanService</span>(<span class="tp">ClanMemberRepository</span> repo, <span class="tp">NexonApiService</span> nexonApi) {
+        <span class="kw">this</span>.repo = repo;
+        <span class="kw">this</span>.nexonApi = nexonApi;
+    }
+
+    <span class="cm">// DB에 ouid 있으면 재사용, 없으면 API 호출 후 저장</span>
+    <span class="kw">public</span> <span class="tp">String</span> <span class="fn">getOrFetchOuid</span>(<span class="tp">String</span> userName) {
+        <span class="tp">ClanMember</span> member = repo.findByUserName(userName).orElse(<span class="kw">null</span>);
+
+        <span class="cm">// DB에 ouid가 이미 있으면 바로 반환 (API 호출 안 함!)</span>
+        <span class="kw">if</span> (member != <span class="kw">null</span> && member.getOuid() != <span class="kw">null</span>) {
+            <span class="kw">return</span> member.getOuid();
+        }
+
+        <span class="cm">// 없으면 API에서 가져와서 DB에 저장</span>
+        <span class="tp">String</span> ouid = nexonApi.getOuid(userName);
+        <span class="kw">if</span> (member != <span class="kw">null</span>) {
+            member.setOuid(ouid);
+            repo.save(member);
+        }
+        <span class="kw">return</span> ouid;
+    }
+
+    <span class="cm">// 클랜원 전체 목록</span>
+    <span class="kw">public</span> <span class="tp">List</span>&lt;<span class="tp">ClanMember</span>&gt; <span class="fn">getAllMembers</span>() {
+        <span class="kw">return</span> repo.findAll();
+    }
+}
+        </div>
+      </div>
+
+      <div class="file-card">
+        <div class="file-card-header">
+          <span class="file-icon">🔗</span>
+          <span class="file-name">service/PlayerService.java</span>
+          <span class="file-order">세 번째</span>
+        </div>
+        <div class="file-desc">여러 API 결과를 하나로 합치는 조합기. PlayerPageDto를 만들어서 반환.</div>
+        <div class="code-block">
+<span class="kw">@Service</span>
+<span class="kw">public class</span> <span class="tp">PlayerService</span> {
+    <span class="kw">private final</span> <span class="tp">ClanService</span> clanService;
+    <span class="kw">private final</span> <span class="tp">NexonApiService</span> nexonApi;
+
+    <span class="cm">// ... 생성자</span>
+
+    <span class="kw">public</span> <span class="tp">PlayerPageDto</span> <span class="fn">getPlayerPage</span>(<span class="tp">String</span> name) {
+        <span class="tp">String</span> ouid = clanService.getOrFetchOuid(name);
+
+        <span class="tp">PlayerPageDto</span> dto = <span class="kw">new</span> <span class="tp">PlayerPageDto</span>();
+        dto.setBasic(nexonApi.getUserBasic(ouid));
+        dto.setRank(nexonApi.getUserRank(ouid));
+        dto.setTier(nexonApi.getUserTier(ouid));
+        dto.setRecent(nexonApi.getRecentInfo(ouid));
+        dto.setMatches(nexonApi.getMatches(ouid, <span class="kw">null</span>, <span class="kw">null</span>));
+        <span class="kw">return</span> dto;  <span class="cm">// 이게 통째로 JSON이 됨!</span>
+    }
+}
+        </div>
+      </div>
+    </div>
+
+    <div class="warn-box">
+      <p><strong>⚠️ 주의:</strong> NexonApiService의 getOuid()를 먼저 만들고 반드시 테스트하세요! 이게 돌아야 나머지도 돌아갑니다. 임시 TestController를 만들어서 브라우저에서 확인하는 것을 강력 추천합니다.</p>
+    </div>
+
+    <div class="test-box">
+      <div class="test-title">✅ 확인 방법 — 임시 테스트 컨트롤러</div>
+      <div class="test-desc">
+<span class="cm">// 테스트용으로 임시로 만들고, 나중에 삭제해도 됨</span>
+@RestController
+public class TestController {
+    @Autowired NexonApiService api;
+
+    @GetMapping("/test/ouid")
+    public String test(@RequestParam String name) {
+        return api.getOuid(name);  <span class="cm">// 브라우저에서 /test/ouid?name=닉네임</span>
+    }
+}
+
+<span class="cm">→ 브라우저에 ouid 문자열이 뜨면 성공!</span>
+      </div>
+    </div>
+
+    <div class="tip-box">
+      <p><span class="tip-label">💡 개발 순서 팁:</span> getOuid 성공 → getUserBasic 추가 → getUserRank 추가 → ... 이렇게 <strong>한 메서드씩</strong> 늘려가세요. 한꺼번에 다 만들면 에러 찾기가 어려워요.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- STEP 5: Controller -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num" style="background:rgba(126,217,87,0.15);color:var(--accent);">5</div>
+      <div class="step-title">@RestController 만들기</div>
+      <div class="step-time">1일</div>
+    </div>
+
+    <div class="step-desc">
+      React가 호출할 <code>/api/...</code> 엔드포인트. Service를 호출하고 결과를 <strong>return만</strong> 하면 됩니다.<br>
+      Controller는 <strong>최대한 얇게!</strong> 로직을 여기에 쓰면 안 됩니다.
+    </div>
+
+    <div class="file-grid">
+      <div class="file-card">
+        <div class="file-card-header">
+          <span class="file-icon">🎯</span>
+          <span class="file-name">controller/PlayerApiController.java</span>
+        </div>
+        <div class="code-block">
+<span class="kw">package</span> com.sa.trk.controller;
+
+<span class="kw">import</span> com.sa.trk.dto.player.PlayerPageDto;
+<span class="kw">import</span> com.sa.trk.service.PlayerService;
+<span class="kw">import</span> org.springframework.web.bind.annotation.*;
+
+<span class="kw">@RestController</span>
+<span class="kw">@RequestMapping</span>(<span class="str">"/api"</span>)
+<span class="kw">public class</span> <span class="tp">PlayerApiController</span> {
+
+    <span class="kw">private final</span> <span class="tp">PlayerService</span> playerService;
+
+    <span class="kw">public</span> <span class="fn">PlayerApiController</span>(<span class="tp">PlayerService</span> playerService) {
+        <span class="kw">this</span>.playerService = playerService;
+    }
+
+    <span class="cm">// React에서: axios.get('/api/player?name=닉네임')</span>
+    <span class="kw">@GetMapping</span>(<span class="str">"/player"</span>)
+    <span class="kw">public</span> <span class="tp">PlayerPageDto</span> <span class="fn">getPlayer</span>(<span class="kw">@RequestParam</span> <span class="tp">String</span> name) {
+        <span class="kw">return</span> playerService.getPlayerPage(name);
+        <span class="cm">// ↑ 이게 전부! JSON으로 자동 변환됨</span>
+    }
+}
+        </div>
+      </div>
+
+      <div class="file-card">
+        <div class="file-card-header">
+          <span class="file-icon">🎯</span>
+          <span class="file-name">controller/MatchApiController.java</span>
+        </div>
+        <div class="code-block">
+<span class="kw">@RestController</span>
+<span class="kw">@RequestMapping</span>(<span class="str">"/api"</span>)
+<span class="kw">public class</span> <span class="tp">MatchApiController</span> {
+
+    <span class="kw">private final</span> <span class="tp">NexonApiService</span> nexonApi;
+
+    <span class="cm">// ... 생성자</span>
+
+    <span class="kw">@GetMapping</span>(<span class="str">"/match/{matchId}"</span>)
+    <span class="kw">public</span> <span class="tp">MatchDetailDto</span> <span class="fn">getMatchDetail</span>(<span class="kw">@PathVariable</span> <span class="tp">String</span> matchId) {
+        <span class="kw">return</span> nexonApi.getMatchDetail(matchId);
+    }
+}
+        </div>
+      </div>
+
+      <div class="file-card">
+        <div class="file-card-header">
+          <span class="file-icon">🎯</span>
+          <span class="file-name">controller/ClanApiController.java</span>
+        </div>
+        <div class="code-block">
+<span class="kw">@RestController</span>
+<span class="kw">@RequestMapping</span>(<span class="str">"/api"</span>)
+<span class="kw">public class</span> <span class="tp">ClanApiController</span> {
+
+    <span class="kw">private final</span> <span class="tp">ClanService</span> clanService;
+
+    <span class="cm">// ... 생성자</span>
+
+    <span class="kw">@GetMapping</span>(<span class="str">"/clan/members"</span>)
+    <span class="kw">public</span> <span class="tp">List</span>&lt;<span class="tp">ClanMemberDto</span>&gt; <span class="fn">getMembers</span>() {
+        <span class="kw">return</span> clanService.getAllMembers().stream()
+            .map(m -> <span class="kw">new</span> <span class="tp">ClanMemberDto</span>(m.getUserName(), m.getClanName()))
+            .toList();
+    }
+}
+        </div>
+      </div>
+    </div>
+
+    <div class="test-box">
+      <div class="test-title">✅ 최종 확인 — 브라우저에서 직접 테스트</div>
+      <div class="test-desc">
+http://localhost:8085/api/player?name=실제닉네임
+→ JSON 데이터가 브라우저에 표시되면 <strong>백엔드 완성!</strong>
+
+http://localhost:8085/api/clan/members
+→ 클랜원 목록 JSON이 보이면 OK!
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 완성 요약 -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="summary">
+    <h2>🎉 백엔드 완성!</h2>
+    <p>브라우저에서 /api/... 주소로 JSON이 보이면 React 연결 준비 완료</p>
+    <div class="summary-grid">
+      <div class="summary-item">
+        <div class="sv">12</div>
+        <div class="sl">생성한 Java 파일</div>
+      </div>
+      <div class="summary-item">
+        <div class="sv">3</div>
+        <div class="sl">REST API 엔드포인트</div>
+      </div>
+      <div class="summary-item">
+        <div class="sv">6</div>
+        <div class="sl">개발 단계 (Step)</div>
+      </div>
+    </div>
+    <div style="margin-top:24px; text-align:left; padding:16px; background:var(--bg); border-radius:8px;">
+      <div style="font-size:14px; font-weight:700; color:var(--accent); margin-bottom:8px;">React에서 이렇게 호출하면 됩니다:</div>
+      <div class="code-block" style="margin:0;">
+<span class="cm">// React (api.js)</span>
+<span class="kw">import</span> axios <span class="kw">from</span> <span class="str">'axios'</span>;
+
+<span class="kw">const</span> api = axios.create({ baseURL: <span class="str">'http://localhost:8085/api'</span> });
+
+<span class="cm">// 전적 조회</span>
+api.get(<span class="str">`/player?name=${닉네임}`</span>).then(res => console.log(res.data));
+
+<span class="cm">// 매치 상세</span>
+api.get(<span class="str">`/match/${matchId}`</span>).then(res => console.log(res.data));
+
+<span class="cm">// 클랜원 목록</span>
+api.get(<span class="str">'/clan/members'</span>).then(res => console.log(res.data));
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center; padding:48px 0 20px; margin-top:48px; border-top:1px solid var(--border);">
+    <div style="font-size:20px; font-weight:900; color:var(--accent);">SA-Tracker</div>
+    <div style="font-size:12px; color:var(--text3);">백엔드 개발 순서 가이드 — Spring Boot REST API</div>
+    <div class="deco">
+      <span class="g"></span><span class="g"></span><span class="d"></span><span class="w"></span><span class="d"></span><span class="g"></span>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

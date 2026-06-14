@@ -1,0 +1,297 @@
+.player-favorites {
+  width: 100%;
+  padding: 56px 72px 72px;
+  background: #050505;
+  color: #ffffff;
+}
+
+.player-favorites-header {
+  margin-bottom: 28px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(126, 217, 87, 0.55);
+}
+
+.player-favorites-header span {
+  color: #7ed957;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 5px;
+}
+
+.player-favorites-header h2 {
+  margin: 6px 0 0;
+  font-size: 36px;
+  font-weight: 900;
+  letter-spacing: 5px;
+}
+
+.player-favorites-message {
+  padding: 28px;
+  border: 1px solid rgba(126, 217, 87, 0.28);
+  background: rgba(0, 0, 0, 0.55);
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+
+.player-card-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px;
+}
+
+.favorite-player-card {
+  width: 430px;
+  min-height: 330px;
+  padding: 22px 26px 22px;
+  background:
+    linear-gradient(145deg, rgba(26, 26, 26, 0.96), rgba(8, 8, 8, 0.98));
+  border: 1px solid rgba(126, 217, 87, 0.22);
+  border-radius: 14px;
+  box-shadow:
+    inset 0 0 28px rgba(255, 255, 255, 0.03),
+    0 0 18px rgba(126, 217, 87, 0.08);
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.favorite-player-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(126, 217, 87, 0.65);
+  box-shadow: 0 0 24px rgba(126, 217, 87, 0.18);
+}
+
+.favorite-top {
+  display: grid;
+  grid-template-columns: 90px 1fr 105px;
+  align-items: center;
+  gap: 14px;
+}
+
+.favorite-rank {
+  width: 86px;
+  height: 86px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.favorite-rank img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.favorite-name {
+  min-width: 0;
+}
+
+.favorite-name h3 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: -1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.favorite-name p {
+  margin: 4px 0 0;
+  color: #777777;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.favorite-login {
+  align-self: start;
+  text-align: right;
+  white-space: nowrap;
+  padding-top: 4px;
+}
+
+.favorite-login span {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  color: #777777;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.favorite-login i {
+  display: block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #444444;
+}
+
+.favorite-login i.active {
+  background: #7ed957;
+  box-shadow: 0 0 8px rgba(126, 217, 87, 0.9);
+}
+
+.favorite-login strong {
+  display: block;
+  margin-top: 5px;
+  color: #555555;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.favorite-login strong.active {
+  color: #7ed957;
+}
+
+.favorite-divider {
+  width: 100%;
+  height: 1px;
+  margin: 16px 0;
+  background: rgba(126, 217, 87, 0.16);
+}
+
+.favorite-clan {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.favorite-clan-mark {
+  width: 86px;
+  height: 86px;
+  border: none;
+  border-radius: 0;
+  overflow: hidden;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.favorite-clan-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.favorite-clan strong {
+  color: #ffffff;
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: -1px;
+}
+
+.favorite-kda span {
+  display: block;
+  margin-bottom: 8px;
+  color: #7ed957;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+.favorite-kda div {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+}
+
+.favorite-kda b {
+  color: #ffffff;
+  font-size: 30px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.favorite-kda em {
+  color: #5a5a5a;
+  font-style: normal;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.favorite-kda .death {
+  color: #ff4d4d;
+}
+
+.favorite-kda .assist {
+  color: #ffb13b;
+}
+
+.favorite-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.favorite-actions button {
+  height: 42px;
+  border: 1px solid #7ed957;
+  background: transparent;
+  color: #7ed957;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.favorite-actions button:hover {
+  background: #7ed957;
+  color: #000000;
+}
+
+.favorite-actions .remove {
+  border-color: #555555;
+  color: #aaaaaa;
+}
+
+.favorite-actions .remove:hover {
+  border-color: #e74c3c;
+  background: #e74c3c;
+  color: #000000;
+}
+
+@media (max-width: 720px) {
+  .player-favorites {
+    padding: 40px 20px;
+  }
+
+  .favorite-player-card {
+    width: 100%;
+  }
+
+  .favorite-top {
+    grid-template-columns: 76px 1fr;
+  }
+
+  .favorite-rank,
+  .favorite-clan-mark {
+    width: 72px;
+    height: 72px;
+  }
+
+  .favorite-login {
+    grid-column: 1 / -1;
+    text-align: left;
+  }
+
+  .favorite-login span {
+    justify-content: flex-start;
+  }
+
+  .favorite-kda b {
+    font-size: 25px;
+  }
+}

@@ -1,0 +1,36 @@
+.match-detail-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.match-detail-page {
+  flex: 1;
+  background: var(--bg-primary);
+  padding: 56px 20px 72px;
+}
+
+.match-detail-container {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+.match-detail-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 32px;
+}
+
+.match-detail-title {
+  color: var(--accent);
+  font-size: 40px;
+  font-weight: 900;
+  margin-bottom: 12px;
+}
+
+.match-detail-desc {
+  color: var(--text-secondary);
+  font-size: 18px;
+}

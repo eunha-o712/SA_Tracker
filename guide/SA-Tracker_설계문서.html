@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SA-Tracker 종합 설계 문서</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #0D0D0D;
+    --bg-secondary: #111111;
+    --bg-card: #1A1A1A;
+    --bg-card-alt: #222222;
+    --bg-hover: #2A2A2A;
+    --accent: #7ED957;
+    --accent-dark: #5CB840;
+    --accent-glow: rgba(126, 217, 87, 0.2);
+    --accent-glow-strong: rgba(126, 217, 87, 0.35);
+    --text-primary: #FFFFFF;
+    --text-secondary: #AAAAAA;
+    --text-dim: #666666;
+    --win: #7ED957;
+    --lose: #E74C3C;
+    --draw: #F39C12;
+    --border: #333333;
+    --border-accent: #3A5A2A;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Noto Sans KR', sans-serif;
+    line-height: 1.8;
+    font-size: 15px;
+  }
+
+  /* ── 사이드 네비게이션 ── */
+  .sidebar {
+    position: fixed; top: 0; left: 0;
+    width: 280px; height: 100vh;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    overflow-y: auto; z-index: 100;
+    padding: 24px 0;
+  }
+  .sidebar-logo {
+    padding: 0 24px 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .sidebar-logo h1 {
+    font-size: 22px; font-weight: 900;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+  .sidebar-logo p {
+    font-size: 11px; color: var(--text-dim);
+    margin-top: 4px;
+  }
+  .nav-section {
+    padding: 8px 24px;
+  }
+  .nav-section-title {
+    font-size: 10px; font-weight: 700;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+  }
+  .nav-link {
+    display: block;
+    padding: 7px 12px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 13px;
+    border-radius: 6px;
+    transition: all 0.2s;
+    margin-bottom: 2px;
+  }
+  .nav-link:hover {
+    background: var(--bg-hover);
+    color: var(--accent);
+  }
+  .nav-link.sub {
+    padding-left: 28px;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  /* ── 메인 콘텐츠 ── */
+  .main {
+    margin-left: 280px;
+    padding: 48px 64px 120px;
+    max-width: 1100px;
+  }
+
+  /* ── 히어로 섹션 ── */
+  .hero {
+    text-align: center;
+    padding: 80px 0 60px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 60px;
+    position: relative;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; top: 20px; right: 40px;
+    width: 120px; height: 120px;
+    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .hero-badge {
+    display: inline-block;
+    background: var(--bg-card);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-size: 11px; font-weight: 700;
+    padding: 4px 16px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+  }
+  .hero h1 {
+    font-size: 48px; font-weight: 900;
+    background: linear-gradient(135deg, var(--accent), #b8f090);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 12px;
+  }
+  .hero p {
+    color: var(--text-secondary);
+    font-size: 16px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .hero-meta {
+    display: flex; gap: 32px;
+    justify-content: center;
+    margin-top: 32px;
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+  .hero-meta span {
+    color: var(--text-secondary);
+  }
+
+  /* ── 섹션 ── */
+  .section {
+    margin-bottom: 64px;
+  }
+  .section-number {
+    font-size: 12px; font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .section h2 {
+    font-size: 28px; font-weight: 900;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--border-accent);
+  }
+  .section h3 {
+    font-size: 20px; font-weight: 700;
+    color: var(--accent);
+    margin: 36px 0 16px;
+  }
+  .section h4 {
+    font-size: 16px; font-weight: 700;
+    color: var(--text-primary);
+    margin: 24px 0 12px;
+    padding-left: 12px;
+    border-left: 3px solid var(--accent);
+  }
+  .section p {
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+  }
+
+  /* ── 카드 ── */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 16px;
+    box-shadow: 0 0 10px var(--accent-glow);
+  }
+  .card-title {
+    font-size: 16px; font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  /* ── 테이블 ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0 24px;
+    font-size: 13px;
+    background: var(--bg-card);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  thead th {
+    background: var(--bg-card-alt);
+    color: var(--accent);
+    font-weight: 700;
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 2px solid var(--border-accent);
+    font-size: 12px;
+    letter-spacing: 0.5px;
+  }
+  tbody td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
+    vertical-align: top;
+  }
+  tbody tr:hover {
+    background: var(--bg-hover);
+  }
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+  td code, th code {
+    background: var(--bg-primary);
+    color: var(--accent);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-family: 'Courier New', monospace;
+  }
+
+  /* ── 코드 블록 ── */
+  pre {
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    overflow-x: auto;
+    margin: 12px 0 24px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  pre code {
+    color: #c9d1d9;
+    font-family: 'Courier New', monospace;
+  }
+  .keyword { color: #ff7b72; }
+  .string { color: #a5d6ff; }
+  .comment { color: #8b949e; }
+  .type { color: #79c0ff; }
+  .func { color: #d2a8ff; }
+
+  /* ── 리스트 ── */
+  ul, ol {
+    padding-left: 24px;
+    margin: 8px 0 16px;
+    color: var(--text-secondary);
+  }
+  li {
+    margin-bottom: 6px;
+    font-size: 14px;
+  }
+  li strong {
+    color: var(--text-primary);
+  }
+
+  /* ── 그리드 ── */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 16px 0;
+  }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin: 16px 0;
+  }
+  .grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 16px 0;
+  }
+
+  /* ── 스탯 카드 ── */
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+  }
+  .stat-card .stat-value {
+    font-size: 32px; font-weight: 900;
+    color: var(--accent);
+  }
+  .stat-card .stat-label {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  /* ── 플로우 ── */
+  .flow {
+    display: flex; align-items: center;
+    gap: 8px; flex-wrap: wrap;
+    margin: 16px 0 24px;
+  }
+  .flow-step {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--text-primary);
+  }
+  .flow-arrow {
+    color: var(--accent);
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  /* ── 태그 ── */
+  .tag {
+    display: inline-block;
+    background: var(--accent-glow);
+    color: var(--accent);
+    font-size: 11px; font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 4px;
+    margin-right: 6px;
+    margin-bottom: 4px;
+  }
+  .tag.red { background: rgba(231,76,60,0.15); color: var(--lose); }
+  .tag.yellow { background: rgba(243,156,18,0.15); color: var(--draw); }
+  .tag.blue { background: rgba(52,152,219,0.15); color: #3498db; }
+
+  /* ── 디바이더 ── */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 40px 0;
+  }
+
+  /* ── 장식 블록 ── */
+  .deco-blocks {
+    display: flex; gap: 4px;
+    margin-top: 24px;
+  }
+  .deco-blocks span {
+    width: 8px; height: 8px;
+    display: block;
+  }
+  .deco-blocks .g { background: var(--accent); }
+  .deco-blocks .d { background: var(--text-dim); }
+  .deco-blocks .w { background: var(--text-secondary); }
+
+  /* ── 타임라인 ── */
+  .timeline {
+    position: relative;
+    padding-left: 32px;
+    margin: 24px 0;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute; left: 8px; top: 0; bottom: 0;
+    width: 2px;
+    background: var(--border);
+  }
+  .timeline-item {
+    position: relative;
+    margin-bottom: 24px;
+    padding: 16px 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .timeline-item::before {
+    content: '';
+    position: absolute; left: -28px; top: 20px;
+    width: 10px; height: 10px;
+    background: var(--accent);
+    border-radius: 50%;
+    border: 2px solid var(--bg-primary);
+  }
+  .timeline-phase {
+    font-size: 11px; font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .timeline-title {
+    font-size: 15px; font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+  }
+  .timeline-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  /* ── 와이어프레임 ── */
+  .wireframe {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 16px 0 24px;
+  }
+  .wf-header {
+    background: var(--bg-primary);
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .wf-search {
+    background: var(--bg-primary);
+    border: 2px solid var(--accent);
+    border-radius: 8px;
+    padding: 18px;
+    text-align: center;
+    margin: 24px auto;
+    max-width: 500px;
+    color: var(--text-dim);
+    font-size: 14px;
+    box-shadow: 0 0 15px var(--accent-glow);
+  }
+  .wf-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .wf-card {
+    background: var(--bg-primary);
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    padding: 16px 10px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .wf-profile {
+    display: flex; gap: 16px;
+    background: var(--bg-primary);
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .wf-profile-img {
+    width: 64px; height: 64px;
+    background: var(--bg-hover);
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: var(--text-dim);
+  }
+  .wf-profile-info {
+    font-size: 12px; color: var(--text-dim);
+  }
+  .wf-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 12px 0;
+  }
+  .wf-stat {
+    background: var(--bg-primary);
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .wf-match {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--bg-primary);
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 6px;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .wf-match-bar {
+    width: 4px; height: 32px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .wf-match-bar.win { background: var(--win); }
+  .wf-match-bar.lose { background: var(--lose); }
+
+  /* ── 반응형 ── */
+  @media (max-width: 1024px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; padding: 32px 24px 80px; }
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    .wf-cards { grid-template-columns: repeat(2, 1fr); }
+    .hero h1 { font-size: 32px; }
+  }
+
+  /* ── 프린트 ── */
+  @media print {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    body { background: white; color: black; }
+  }
+
+  /* ── 스크롤바 ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg-primary); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+</style>
+</head>
+<body>
+
+<!-- ████ 사이드바 네비게이션 ████ -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <h1>SA-Tracker</h1>
+    <p>종합 설계 문서 v1.0</p>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">기획</div>
+    <a href="#s1" class="nav-link">1. 프로젝트 기획서</a>
+    <a href="#s1-1" class="nav-link sub">1.1 프로젝트 개요</a>
+    <a href="#s1-2" class="nav-link sub">1.2 기술 스택</a>
+    <a href="#s1-3" class="nav-link sub">1.3 서비스 범위</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">요구사항</div>
+    <a href="#s2" class="nav-link">2. 요구사항 정의서</a>
+    <a href="#s2-1" class="nav-link sub">2.1 기능적 요구사항</a>
+    <a href="#s2-2" class="nav-link sub">2.2 비기능적 요구사항</a>
+    <a href="#s2-3" class="nav-link sub">2.3 제약사항</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">데이터</div>
+    <a href="#s3" class="nav-link">3. 테이블 명세서</a>
+    <a href="#s3-1" class="nav-link sub">3.1 clan_members</a>
+    <a href="#s3-2" class="nav-link sub">3.2 DDL</a>
+    <a href="#s3-3" class="nav-link sub">3.3 ERD</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">아키텍처</div>
+    <a href="#s4" class="nav-link">4. 구조 명세서</a>
+    <a href="#s4-1" class="nav-link sub">4.1 계층 구조</a>
+    <a href="#s4-2" class="nav-link sub">4.2 패키지 구조</a>
+    <a href="#s4-3" class="nav-link sub">4.3 DTO 명세</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">API</div>
+    <a href="#s5" class="nav-link">5. API 연동 명세서</a>
+    <a href="#s5-1" class="nav-link sub">5.1 공통 사항</a>
+    <a href="#s5-2" class="nav-link sub">5.2 엔드포인트 목록</a>
+    <a href="#s5-3" class="nav-link sub">5.3 데이터 흐름</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">화면</div>
+    <a href="#s6" class="nav-link">6. 화면 설계서</a>
+    <a href="#s6-1" class="nav-link sub">6.1 로딩 인트로</a>
+    <a href="#s6-2" class="nav-link sub">6.2 메인 페이지</a>
+    <a href="#s6-3" class="nav-link sub">6.3 전적 페이지</a>
+    <a href="#s6-4" class="nav-link sub">6.4 매치 상세</a>
+    <a href="#s6-5" class="nav-link sub">6.5 디자인 가이드</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">일정</div>
+    <a href="#s7" class="nav-link">7. 개발 일정표</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">부록</div>
+    <a href="#s8" class="nav-link">8. 확장 로드맵</a>
+  </div>
+
+  <div class="deco-blocks" style="padding: 0 24px;">
+    <span class="g"></span><span class="g"></span><span class="d"></span><span class="w"></span><span class="d"></span>
+  </div>
+</nav>
+
+<!-- ████ 메인 콘텐츠 ████ -->
+<div class="main">
+
+  <!-- ── 히어로 ── -->
+  <div class="hero" id="top">
+    <div class="hero-badge">DESIGN DOCUMENT v1.0</div>
+    <h1>SA-Tracker</h1>
+    <p>NEXON Open API 기반 서든어택 전적 조회 및 매치 분석 웹 서비스 — 종합 설계 문서</p>
+    <div class="hero-meta">
+      <div>작성일 <span>2026.04.20</span></div>
+      <div>버전 <span>v1.0 Final</span></div>
+      <div>기술 <span>Spring Boot 3.x + MySQL + Thymeleaf</span></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- 1. 프로젝트 기획서 -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <div class="section" id="s1">
+    <div class="section-number">SECTION 01</div>
+    <h2>프로젝트 기획서 (Project Proposal)</h2>
+
+    <h3 id="s1-1">1.1 프로젝트 개요</h3>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">프로젝트 정체성</div>
+        <table>
+          <tbody>
+            <tr><td><strong>프로젝트명</strong></td><td>SA-Tracker</td></tr>
+            <tr><td><strong>프로젝트 성격</strong></td><td>서든어택 전적 조회 및 매치 분석 웹 서비스 (OP.GG 스타일)</td></tr>
+            <tr><td><strong>대상 사용자</strong></td><td>서든어택 플레이어, "모" 클랜원</td></tr>
+            <tr><td><strong>핵심 가치</strong></td><td>닉네임 하나로 모든 전적을 한눈에</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title">핵심 지향점</div>
+        <ul>
+          <li><strong>구조가 분명</strong>해야 한다 — Controller → Service → DTO 계층 준수</li>
+          <li>나중에 다시 <strong>뜯어고치지 않아야</strong> 한다 — 최종 명세서 기반 구현</li>
+          <li>기능이 늘어나도 <strong>폴더와 역할이 흔들리지 않아야</strong> 한다</li>
+          <li>직관적인 UI를 통한 <strong>경기 기록 제공</strong>, 데이터 캐싱을 통한 <strong>성능 최적화</strong></li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 id="s1-2">1.2 기술 스택 명세</h3>
+
+    <table>
+      <thead>
+        <tr><th>구분</th><th>기술 스택</th><th>비고</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Backend</strong></td><td>Java 21, Spring Boot 3.x, Gradle</td><td>LTS 기반 안정성 확보</td></tr>
+        <tr><td><strong>Template Engine</strong></td><td>Thymeleaf</td><td>서버사이드 렌더링 (SSR)</td></tr>
+        <tr><td><strong>Frontend</strong></td><td>HTML5, CSS3, JavaScript, Bootstrap 5</td><td>반응형 대응</td></tr>
+        <tr><td><strong>Database</strong></td><td>MySQL 8.x + Spring Data JPA</td><td>ouid 캐싱, 클랜원 관리</td></tr>
+        <tr><td><strong>HTTP Client</strong></td><td>RestTemplate</td><td>외부 API 호출</td></tr>
+        <tr><td><strong>외부 API</strong></td><td>NEXON Open API (Sudden Attack)</td><td>Base URL: <code>https://open.api.nexon.com</code></td></tr>
+        <tr><td><strong>IDE</strong></td><td>Eclipse STS (Spring Tool Suite)</td><td>Spring 전용 개발 환경</td></tr>
+      </tbody>
+    </table>
+
+    <h3 id="s1-3">1.3 서비스 범위</h3>
+
+    <h4>1차 완성 범위 (MVP)</h4>
+    <div class="grid-4">
+      <div class="stat-card">
+        <div class="stat-value">A</div>
+        <div class="stat-label">메인 페이지</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">B</div>
+        <div class="stat-label">플레이어 전적</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">C</div>
+        <div class="stat-label">매치 상세</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">D</div>
+        <div class="stat-label">클랜원 관리</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">A. 메인 페이지 (index.html)</div>
+      <ul>
+        <li>사이트 첫 진입 시 인트로 로딩 영상(MP4) 재생</li>
+        <li>중앙 닉네임 검색창 제공 (엔터 또는 버튼 클릭 시 전적 조회)</li>
+        <li>"모" 클랜원 카드 목록 그리드 배치</li>
+        <li>클랜원 클릭 시 해당 유저 전적 페이지로 즉시 이동</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">B. 플레이어 전적 페이지 (player.html)</div>
+      <ul>
+        <li>프로필 영역: 닉네임, 계급 이미지, 시즌 계급, 티어, 매너등급, 클랜명, 칭호</li>
+        <li>전적 요약: 최근 승률, 최근 K/D, 무기군별(돌격/저격/특수) 최근 성과</li>
+        <li>최근 매치 목록: 승리(녹색바) / 패배(빨간바) 구분, match_mode / match_type 필터</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">C. 매치 상세 페이지 (match-detail.html)</div>
+      <ul>
+        <li>매치 기본 정보: 맵, 모드, 매치 유형, 날짜(KST 변환)</li>
+        <li>팀별 인원 목록: 유저별 킬 / 데스 / 헤드샷 / 데미지 / 어시스트</li>
+        <li>두 팀 비교 테이블 형태</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">D. 클랜원 관리</div>
+      <ul>
+        <li>MySQL <code>clan_members</code> 테이블에 클랜원 닉네임 저장</li>
+        <li>ouid는 최초 API 호출 시 DB에 캐싱하여 반복 호출 방지</li>
+        <li>메인 페이지에서 DB 기반 렌더링</li>
+      </ul>
+    </div>
+
+    <h4>2차 확장 범위 (Post-MVP)</h4>
+    <ul>
+      <li>전적 그래프 (승률/K/D 추이 시각화)</li>
+      <li>최근 경기 성향 분석</li>
+      <li>유저별 플레이 패턴 분석</li>
+      <li>클랜 통합 대시보드</li>
+      <li>AI 기반 경기 분석 봇</li>
+    </ul>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- 2. 요구사항 정의서 -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <div class="section" id="s2">
+    <div class="section-number">SECTION 02</div>
+    <h2>요구사항 정의서 (Requirements Definition)</h2>
+
+    <h3 id="s2-1">2.1 기능적 요구사항</h3>
+
+    <table>
+      <thead>
+        <tr><th>ID</th><th>요구사항</th><th>우선순위</th><th>상세 설명</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>FR-001</code></td>
+          <td><strong>로딩 인트로 재생</strong></td>
+          <td><span class="tag">필수</span></td>
+          <td>사이트 첫 접속 시 MP4 로딩 영상 재생 후 fade-out → 메인 페이지 fade-in 전환. sessionStorage로 재방문 시 스킵 처리.</td>
+        </tr>
+        <tr>
+          <td><code>FR-002</code></td>
+          <td><strong>닉네임 전적 검색</strong></td>
+          <td><span class="tag">필수</span></td>
+          <td>사용자가 닉네임을 입력하면 NEXON API를 통해 ouid를 획득하고, 해당 유저의 전적 페이지로 이동.</td>
+        </tr>
+        <tr>
+          <td><code>FR-003</code></td>
+          <td><strong>ouid DB 캐싱</strong></td>
+          <td><span class="tag">필수</span></td>
+          <td>최초 조회한 ouid를 <code>clan_members</code> 테이블에 저장. 동일 닉네임 재조회 시 API 호출 생략하여 429 에러 방지.</td>
+        </tr>
+        <tr>
+          <td><code>FR-004</code></td>
+          <td><strong>통합 기록 노출</strong></td>
+          <td><span class="tag">필수</span></td>
+          <td>계급, 시즌 계급, 티어, 최근 승률, K/D, 무기군별 성과 등을 시각적으로 출력.</td>
+        </tr>
+        <tr>
+          <td><code>FR-005</code></td>
+          <td><strong>매치 필터링</strong></td>
+          <td><span class="tag">필수</span></td>
+          <td>match_mode(개인전/데스매치/폭파미션/진짜를모아라)와 match_type(일반전/클랜전/랭크전 등)에 따른 필터 제공.</td>
+        </tr>
+        <tr>
+          <td><code>FR-006</code></td>
+          <td><strong>매치 상세 분석</strong></td>
+          <td><span class="tag">필수</span></td>
+          <td>특정 매치 클릭 시 팀별 구성원과 유저별 상세 기록(킬, 데스, 헤드샷, 데미지, 어시스트) 비교.</td>
+        </tr>
+        <tr>
+          <td><code>FR-007</code></td>
+          <td><strong>클랜원 카드 목록</strong></td>
+          <td><span class="tag">필수</span></td>
+          <td>메인 페이지 하단에 DB 저장된 "모" 클랜원 닉네임을 카드형으로 배치. 클릭 시 전적 페이지 이동.</td>
+        </tr>
+        <tr>
+          <td><code>FR-008</code></td>
+          <td><strong>메타데이터 연동</strong></td>
+          <td><span class="tag yellow">권장</span></td>
+          <td>계급/시즌계급/티어의 이미지 URL을 메타데이터 API에서 가져와 프로필에 표시.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 id="s2-2">2.2 비기능적 요구사항</h3>
+
+    <table>
+      <thead>
+        <tr><th>ID</th><th>요구사항</th><th>상세 설명</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>NFR-001</code></td>
+          <td><strong>보안</strong></td>
+          <td>NEXON API KEY는 서버 사이드(<code>application.properties</code>)에서만 관리. 프론트엔드 노출 절대 금지. Spring Security 미사용 (전체 permitAll).</td>
+        </tr>
+        <tr>
+          <td><code>NFR-002</code></td>
+          <td><strong>디자인 일관성</strong></td>
+          <td>완전 블랙 배경(#0D0D0D) + 네온 그린(#7ED957) 포인트 컬러. 밝은 배경 절대 사용 금지. PPTX 디자인 톤 준수.</td>
+        </tr>
+        <tr>
+          <td><code>NFR-003</code></td>
+          <td><strong>반응형 대응</strong></td>
+          <td>데스크톱뿐만 아니라 모바일에서도 레이아웃 유지. 필요 시 mobile.css 별도 운영.</td>
+        </tr>
+        <tr>
+          <td><code>NFR-004</code></td>
+          <td><strong>API 호출 최적화</strong></td>
+          <td>ouid DB 캐싱을 적극 활용하여 429 Too Many Requests 에러 방지. 불필요한 중복 호출 제거.</td>
+        </tr>
+        <tr>
+          <td><code>NFR-005</code></td>
+          <td><strong>시간대 변환</strong></td>
+          <td>API 응답의 <code>date_match</code>(UTC)를 KST(+9시간)로 변환하여 표시.</td>
+        </tr>
+        <tr>
+          <td><code>NFR-006</code></td>
+          <td><strong>한글 인코딩</strong></td>
+          <td>닉네임, match_mode 등 한글 파라미터는 <code>URLEncoder.encode(value, StandardCharsets.UTF_8)</code> 필수 적용.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 id="s2-3">2.3 제약사항</h3>
+
+    <div class="card">
+      <ul>
+        <li><strong>데이터 제공 시점:</strong> 게임 종료 후 평균 10분 소요</li>
+        <li><strong>조회 가능 기간:</strong> 2025년 1월 24일 이후 데이터만 조회 가능</li>
+        <li><strong>ouid 변경 가능성:</strong> 게임 콘텐츠 변경 시 ouid가 변경될 수 있음 → 주기적 갱신 고려</li>
+        <li><strong>매치 목록:</strong> 최대 1,000개까지 조회 가능</li>
+        <li><strong>match_result 규칙:</strong> "1"=승리, "2"=패배, "3"=무승부 (문자열 타입)</li>
+        <li><strong>진짜를 모아라 모드:</strong> 승패 미기록</li>
+        <li><strong>개인전/진짜를 모아라:</strong> 킬 수 높은 순 → 동일 시 데스 적은 순으로 순위 결정</li>
+        <li><strong>clan_name 노출:</strong> 클랜전/퀵매치 클랜전/클랜 랭크전에서만 노출</li>
+      </ul>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- 3. 테이블 명세서 -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <div class="section" id="s3">
+    <div class="section-number">SECTION 03</div>
+    <h2>테이블 명세서 (Database Schema)</h2>
+
+    <h3 id="s3-1">3.1 clan_members 테이블</h3>
+    <p>클랜원 정보와 ouid 캐시를 저장하는 핵심 테이블. 1차 완성 범위에서는 이 단일 테이블로 운영한다.</p>
+
+    <table>
+      <thead>
+        <tr><th>컬럼명</th><th>타입</th><th>제약사항</th><th>기본값</th><th>설명</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>id</code></td>
+          <td><code>BIGINT</code></td>
+          <td>PK, AUTO_INCREMENT</td>
+          <td>—</td>
+          <td>고유 식별자</td>
+        </tr>
+        <tr>
+          <td><code>user_name</code></td>
+          <td><code>VARCHAR(50)</code></td>
+          <td>NOT NULL, UNIQUE</td>
+          <td>—</td>
+          <td>서든어택 닉네임</td>
+        </tr>
+        <tr>
+          <td><code>clan_name</code></td>
+          <td><code>VARCHAR(50)</code></td>
+          <td>—</td>
+          <td><code>'모'</code></td>
+          <td>소속 클랜명</td>
+        </tr>
+        <tr>
+          <td><code>ouid</code></td>
+          <td><code>VARCHAR(200)</code></td>
+          <td>NULLABLE</td>
+          <td><code>NULL</code></td>
+          <td>NEXON API용 계정 식별자 (캐시)</td>
+        </tr>
+        <tr>
+          <td><code>created_at</code></td>
+          <td><code>DATETIME</code></td>
+          <td>—</td>
+          <td><code>CURRENT_TIMESTAMP</code></td>
+          <td>레코드 생성 일시</td>
+        </tr>
+        <tr>
+          <td><code>updated_at</code></td>
+          <td><code>DATETIME</code></td>
+          <td>—</td>
+          <td><code>CURRENT_TIMESTAMP ON UPDATE</code></td>
+          <td>레코드 수정 일시 (ouid 갱신 시 자동 업데이트)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 id="s3-2">3.2 DDL (Data Definition Language)</h3>
+
+    <pre><code><span class="comment">-- 데이터베이스 생성</span>
+<span class="keyword">CREATE DATABASE</span> sa_match
+  <span class="keyword">DEFAULT CHARACTER SET</span> utf8mb4
+  <span class="keyword">DEFAULT COLLATE</span> utf8mb4_general_ci;
+
+<span class="keyword">USE</span> sa_match;
+
+<span class="comment">-- clan_members 테이블 생성</span>
+<span class="keyword">CREATE TABLE</span> clan_members (
+    id          <span class="type">BIGINT</span> <span class="keyword">AUTO_INCREMENT PRIMARY KEY</span>,
+    user_name   <span class="type">VARCHAR(50)</span>  <span class="keyword">NOT NULL</span> <span class="keyword">COMMENT</span> <span class="string">'서든어택 닉네임'</span>,
+    clan_name   <span class="type">VARCHAR(50)</span>  <span class="keyword">DEFAULT</span> <span class="string">'모'</span> <span class="keyword">COMMENT</span> <span class="string">'클랜명'</span>,
+    ouid        <span class="type">VARCHAR(200)</span> <span class="keyword">COMMENT</span> <span class="string">'NEXON API ouid (캐시용)'</span>,
+    created_at  <span class="type">DATETIME</span>     <span class="keyword">DEFAULT</span> <span class="func">CURRENT_TIMESTAMP</span>,
+    updated_at  <span class="type">DATETIME</span>     <span class="keyword">DEFAULT</span> <span class="func">CURRENT_TIMESTAMP</span> <span class="keyword">ON UPDATE</span> <span class="func">CURRENT_TIMESTAMP</span>,
+    <span class="keyword">UNIQUE KEY</span> uk_user_name (user_name)
+) <span class="keyword">ENGINE</span>=InnoDB <span class="keyword">DEFAULT CHARSET</span>=utf8mb4;
+
+<span class="comment">-- 초기 클랜원 데이터 INSERT (예시)</span>
+<span class="keyword">INSERT INTO</span> clan_members (user_name, clan_name) <span class="keyword">VALUES</span>
+(<span class="string">'닉네임1'</span>, <span class="string">'모'</span>),
+(<span class="string">'닉네임2'</span>, <span class="string">'모'</span>),
+(<span class="string">'닉네임3'</span>, <span class="string">'모'</span>);</code></pre>
+
+    <h3 id="s3-3">3.3 ERD (Entity Relationship Diagram)</h3>
+
+    <div class="card">
+      <div class="card-title">1차 완성 범위 ERD</div>
+      <p>1차 범위에서는 <code>clan_members</code> 단일 테이블로 운영. 외부 API 데이터(유저 정보, 매치 기록 등)는 DB에 저장하지 않고 API 실시간 호출 → DTO 매핑으로 처리한다.</p>
+      <pre><code>┌─────────────────────────────────────────┐
+│              clan_members               │
+├─────────────────────────────────────────┤
+│  PK  id          BIGINT AUTO_INCREMENT  │
+│  UK  user_name   VARCHAR(50) NOT NULL   │
+│      clan_name   VARCHAR(50) DEFAULT '모'│
+│      ouid        VARCHAR(200) NULLABLE  │
+│      created_at  DATETIME               │
+│      updated_at  DATETIME               │
+└─────────────────────────────────────────┘
+         │
+         │  ouid 캐싱
+         ▼
+   ┌──────────────┐
+   │ NEXON Open   │
+   │ API (외부)    │  ← 실시간 REST 호출
+   └──────────────┘</code></pre>
+      <p style="font-size:12px; color:var(--text-dim);">※ 2차 확장 시 매치 기록 캐싱 테이블, 유저 통계 테이블 등 추가 검토</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- 4. 구조 명세서 -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <div class="section" id="s4">
+    <div class="section-number">SECTION 04</div>
+    <h2>구조 명세서 (Architectural Specs)</h2>
+
+    <h3 id="s4-1">4.1 계층 구조 및 설계 원칙</h3>
+
+    <h4>계층 흐름 (필수 준수)</h4>
+    <div class="flow">
+      <div class="flow-step"><strong>Controller</strong><br><span style="font-size:11px;color:var(--text-dim)">요청/응답 진입만</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><strong>Service</strong><br><span style="font-size:11px;color:var(--text-dim)">API 호출 / 조합</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><strong>DTO</strong><br><span style="font-size:11px;color:var(--text-dim)">응답 바인딩</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><strong>Entity</strong><br><span style="font-size:11px;color:var(--text-dim)">DB 저장 구조</span></div>
+    </div>
+    <div class="flow">
+      <div class="flow-step"><strong>Repository</strong><br><span style="font-size:11px;color:var(--text-dim)">DB 접근</span></div>
+      <div class="flow-arrow">←</div>
+      <div class="flow-step"><strong>View (Thymeleaf)</strong><br><span style="font-size:11px;color:var(--text-dim)">화면 렌더링만</span></div>
+    </div>
+
+    <h4>역할 분리 원칙</h4>
+    <table>
+      <thead>
+        <tr><th>계층</th><th>역할</th><th>금지사항</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Controller</strong></td><td>웹 요청 처리 및 화면 매핑 담당</td><td>RestTemplate 직접 호출 금지</td></tr>
+        <tr><td><strong>Service</strong></td><td>외부 API 호출 및 조합 담당</td><td>HttpServletRequest 접근 금지</td></tr>
+        <tr><td><strong>DTO</strong></td><td>외부 API 응답 구조 담당</td><td>비즈니스 로직 포함 금지</td></tr>
+        <tr><td><strong>Entity</strong></td><td>DB 저장 구조 담당</td><td>API 응답과 혼합 금지</td></tr>
+        <tr><td><strong>Repository</strong></td><td>DB 접근 담당</td><td>Service 로직 포함 금지</td></tr>
+        <tr><td><strong>View</strong></td><td>화면 표시만 담당</td><td>API KEY 노출 금지</td></tr>
+      </tbody>
+    </table>
+
+    <h4>금지 원칙</h4>
+    <div class="card">
+      <ul>
+        <li>Controller에서 RestTemplate 직접 호출 금지</li>
+        <li>HTML에 API KEY 노출 금지</li>
+        <li>하나의 클래스에 여러 역할 혼합 금지</li>
+        <li>JS/CSS/HTML 한 파일 혼합 금지 (분리 운영)</li>
+        <li>공통 레이아웃 중복 작성 금지 (Thymeleaf fragments 활용)</li>
+      </ul>
+    </div>
+
+    <h3 id="s4-2">4.2 최종 패키지 구조</h3>
+
+    <p>기본 루트 패키지: <code>com.sa.trk</code></p>
+
+    <pre><code>com.sa.trk
+├── <span class="func">SATrkApplication.java</span>           <span class="comment">// Spring Boot 메인 클래스</span>
+│
+├── config/
+│   ├── <span class="func">NexonApiConfig.java</span>           <span class="comment">// RestTemplate Bean + API KEY 설정</span>
+│   └── <span class="func">WebConfig.java</span>                <span class="comment">// 정적 리소스, CORS 등 웹 설정</span>
+│
+├── controller/
+│   ├── <span class="func">HomeController.java</span>           <span class="comment">// GET / → 메인 페이지 (index.html)</span>
+│   ├── <span class="func">PlayerController.java</span>         <span class="comment">// GET /player?name= → 전적 페이지</span>
+│   ├── <span class="func">MatchController.java</span>          <span class="comment">// GET /match?id= → 매치 상세 페이지</span>
+│   └── <span class="func">ClanController.java</span>           <span class="comment">// 클랜원 관리 (API용, 필요 시)</span>
+│
+├── service/
+│   ├── <span class="func">NexonApiService.java</span>          <span class="comment">// 외부 API 통신 및 데이터 매핑 전담</span>
+│   ├── <span class="func">PlayerService.java</span>            <span class="comment">// 여러 API 데이터를 조합하여 화면용 DTO 생성</span>
+│   ├── <span class="func">MatchService.java</span>             <span class="comment">// 매치 목록/상세 데이터 조합</span>
+│   ├── <span class="func">ClanService.java</span>              <span class="comment">// DB 접근 및 ouid 캐싱 로직 관리</span>
+│   └── <span class="func">MetaService.java</span>              <span class="comment">// 메타데이터(계급/티어 이미지) 캐싱</span>
+│
+├── dto/
+│   ├── common/
+│   │   ├── <span class="func">ErrorResponseDto.java</span>     <span class="comment">// API 에러 응답 구조</span>
+│   │   └── <span class="func">ApiErrorDto.java</span>          <span class="comment">// 에러 상세 (name, message)</span>
+│   ├── player/
+│   │   ├── <span class="func">OuidResponseDto.java</span>      <span class="comment">// ouid 조회 응답</span>
+│   │   ├── <span class="func">UserBasicDto.java</span>          <span class="comment">// 기본 정보 응답</span>
+│   │   ├── <span class="func">UserRankDto.java</span>           <span class="comment">// 계급 정보 응답</span>
+│   │   ├── <span class="func">UserTierDto.java</span>           <span class="comment">// 티어 정보 응답</span>
+│   │   ├── <span class="func">UserRecentInfoDto.java</span>     <span class="comment">// 최근 동향 응답</span>
+│   │   └── <span class="func">PlayerPageDto.java</span>         <span class="comment">// 전적 페이지 통합 DTO (화면 전달용)</span>
+│   ├── match/
+│   │   ├── <span class="func">MatchDto.java</span>              <span class="comment">// 매치 목록 단일 항목</span>
+│   │   ├── <span class="func">MatchListResponseDto.java</span>  <span class="comment">// 매치 목록 응답 래퍼</span>
+│   │   ├── <span class="func">MatchDetailDto.java</span>        <span class="comment">// 매치 상세 응답</span>
+│   │   └── <span class="func">MatchDetailPlayerDto.java</span>  <span class="comment">// 매치 상세 내 개별 유저</span>
+│   ├── meta/
+│   │   ├── <span class="func">GradeMetaDto.java</span>          <span class="comment">// 통합 계급 메타 (grade, grade_image)</span>
+│   │   ├── <span class="func">SeasonGradeMetaDto.java</span>    <span class="comment">// 시즌 계급 메타</span>
+│   │   ├── <span class="func">TierMetaDto.java</span>           <span class="comment">// 티어 메타 (tier, tier_image)</span>
+│   │   └── <span class="func">LogoMetaDto.java</span>           <span class="comment">// 로고 메타 (logo_image)</span>
+│   └── clan/
+│       └── <span class="func">ClanMemberDto.java</span>         <span class="comment">// 클랜원 DTO (화면 전달용)</span>
+│
+├── entity/
+│   └── <span class="func">ClanMember.java</span>               <span class="comment">// JPA 엔티티 (@Entity)</span>
+│
+└── repository/
+    └── <span class="func">ClanMemberRepository.java</span>     <span class="comment">// Spring Data JPA Repository</span>
+
+
+<span class="comment">── 리소스 구조 ──</span>
+
+src/main/resources/
+├── static/
+│   ├── css/
+│   │   ├── <span class="func">common.css</span>                <span class="comment">// 공통 스타일 (변수, 리셋, 폰트)</span>
+│   │   ├── <span class="func">index.css</span>                 <span class="comment">// 메인 페이지 전용</span>
+│   │   ├── <span class="func">player.css</span>                <span class="comment">// 전적 페이지 전용</span>
+│   │   └── <span class="func">match.css</span>                 <span class="comment">// 매치 상세 전용</span>
+│   ├── js/
+│   │   ├── <span class="func">common.js</span>                 <span class="comment">// 공통 JS (유틸, 이벤트)</span>
+│   │   ├── <span class="func">index.js</span>                  <span class="comment">// 인트로 + 검색 로직</span>
+│   │   ├── <span class="func">player.js</span>                 <span class="comment">// 필터, 동적 UI</span>
+│   │   └── <span class="func">match.js</span>                  <span class="comment">// 매치 상세 동적 UI</span>
+│   └── video/
+│       └── <span class="func">loading.mp4</span>               <span class="comment">// 인트로 로딩 영상</span>
+│
+├── templates/
+│   ├── fragments/
+│   │   ├── <span class="func">header.html</span>               <span class="comment">// 공통 헤더 (Thymeleaf fragment)</span>
+│   │   └── <span class="func">footer.html</span>               <span class="comment">// 공통 푸터</span>
+│   ├── <span class="func">index.html</span>                    <span class="comment">// 메인 페이지</span>
+│   ├── <span class="func">player.html</span>                   <span class="comment">// 유저 전적 페이지</span>
+│   ├── <span class="func">match-detail.html</span>             <span class="comment">// 매치 상세 페이지</span>
+│   └── <span class="func">error.html</span>                    <span class="comment">// 에러 페이지</span>
+│
+└── <span class="func">application.properties</span>            <span class="comment">// 서버/DB/API 설정</span></code></pre>
+
+    <h3 id="s4-3">4.3 DTO 상세 명세</h3>
+
+    <h4>player 패키지 DTO</h4>
+    <table>
+      <thead>
+        <tr><th>클래스</th><th>필드</th><th>타입</th><th>매핑 API</th></tr>
+      </thead>
+      <tbody>
+        <tr><td rowspan="1"><code>OuidResponseDto</code></td><td>ouid</td><td>String</td><td><code>/suddenattack/v1/id</code></td></tr>
+        <tr><td rowspan="5"><code>UserBasicDto</code></td><td>user_name</td><td>String</td><td rowspan="5"><code>/v1/user/basic</code></td></tr>
+        <tr><td>user_date_create</td><td>String</td></tr>
+        <tr><td>title_name</td><td>String</td></tr>
+        <tr><td>clan_name</td><td>String</td></tr>
+        <tr><td>manner_grade</td><td>String</td></tr>
+        <tr><td rowspan="7"><code>UserRankDto</code></td><td>user_name</td><td>String</td><td rowspan="7"><code>/v1/user/rank</code></td></tr>
+        <tr><td>grade</td><td>String</td></tr>
+        <tr><td>grade_exp</td><td>int</td></tr>
+        <tr><td>grade_ranking</td><td>int</td></tr>
+        <tr><td>season_grade</td><td>String</td></tr>
+        <tr><td>season_grade_exp</td><td>int</td></tr>
+        <tr><td>season_grade_ranking</td><td>int</td></tr>
+        <tr><td rowspan="5"><code>UserTierDto</code></td><td>user_name</td><td>String</td><td rowspan="5"><code>/v1/user/tier</code></td></tr>
+        <tr><td>solo_rank_match_tier</td><td>int</td></tr>
+        <tr><td>solo_rank_match_score</td><td>int</td></tr>
+        <tr><td>party_rank_match_tier</td><td>int</td></tr>
+        <tr><td>party_rank_match_score</td><td>int</td></tr>
+        <tr><td rowspan="6"><code>UserRecentInfoDto</code></td><td>user_name</td><td>String</td><td rowspan="6"><code>/v1/user/recent-info</code></td></tr>
+        <tr><td>recent_win_rate</td><td>double</td></tr>
+        <tr><td>recent_kill_death_rate</td><td>double</td></tr>
+        <tr><td>recent_assault_rate</td><td>double</td></tr>
+        <tr><td>recent_sniper_rate</td><td>double</td></tr>
+        <tr><td>recent_special_rate</td><td>double</td></tr>
+      </tbody>
+    </table>
+
+    <h4>match 패키지 DTO</h4>
+    <table>
+      <thead>
+        <tr><th>클래스</th><th>필드</th><th>타입</th><th>매핑 API</th></tr>
+      </thead>
+      <tbody>
+        <tr><td rowspan="8"><code>MatchDto</code></td><td>match_id</td><td>String</td><td rowspan="8"><code>/v1/match</code></td></tr>
+        <tr><td>match_type</td><td>String</td></tr>
+        <tr><td>match_mode</td><td>String</td></tr>
+        <tr><td>date_match</td><td>String</td></tr>
+        <tr><td>match_result</td><td>String</td></tr>
+        <tr><td>kill</td><td>int</td></tr>
+        <tr><td>death</td><td>int</td></tr>
+        <tr><td>assist</td><td>int</td></tr>
+        <tr><td rowspan="10"><code>MatchDetailPlayerDto</code></td><td>team_id</td><td>String</td><td rowspan="10"><code>/v1/match-detail</code></td></tr>
+        <tr><td>match_result</td><td>String</td></tr>
+        <tr><td>user_name</td><td>String</td></tr>
+        <tr><td>season_grade</td><td>String</td></tr>
+        <tr><td>clan_name</td><td>String</td></tr>
+        <tr><td>kill</td><td>int</td></tr>
+        <tr><td>death</td><td>int</td></tr>
+        <tr><td>headshot</td><td>int</td></tr>
+        <tr><td>damage</td><td>double</td></tr>
+        <tr><td>assist</td><td>int</td></tr>
+      </tbody>
+    </table>
+
+    <h4>meta 패키지 DTO</h4>
+    <table>
+      <thead>
+        <tr><th>클래스</th><th>필드</th><th>타입</th><th>매핑 API</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>LogoMetaDto</code></td><td>logo_image</td><td>String</td><td><code>/static/.../meta/logo</code></td></tr>
+        <tr><td rowspan="2"><code>GradeMetaDto</code></td><td>grade</td><td>String</td><td rowspan="2"><code>/static/.../meta/grade</code></td></tr>
+        <tr><td>grade_image</td><td>String</td></tr>
+        <tr><td rowspan="2"><code>SeasonGradeMetaDto</code></td><td>season_grade</td><td>String</td><td rowspan="2"><code>/static/.../meta/season_grade</code></td></tr>
+        <tr><td>season_grade_image</td><td>String</td></tr>
+        <tr><td rowspan="2"><code>TierMetaDto</code></td><td>tier</td><td>String</td><td rowspan="2"><code>/static/.../meta/tier</code></td></tr>
+        <tr><td>tier_image</td><td>String</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- 5. API 연동 명세서 -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <div class="section" id="s5">
+    <div class="section-number">SECTION 05</div>
+    <h2>API 연동 명세서 (API Integration Specs)</h2>
+
+    <h3 id="s5-1">5.1 공통 사항</h3>
+
+    <div class="card">
+      <table>
+        <tbody>
+          <tr><td><strong>Base URL</strong></td><td><code>https://open.api.nexon.com</code></td></tr>
+          <tr><td><strong>인증 방식</strong></td><td>HTTP Header — <code>x-nxopen-api-key: {API_KEY}</code></td></tr>
+          <tr><td><strong>응답 포맷</strong></td><td><code>application/json</code></td></tr>
+          <tr><td><strong>에러 응답 구조</strong></td><td><code>{ "error": { "name": "string", "message": "string" } }</code></td></tr>
+        </tbody>
+      </table>
+
+      <h4>HTTP 상태 코드</h4>
+      <table>
+        <thead><tr><th>코드</th><th>설명</th><th>대응</th></tr></thead>
+        <tbody>
+          <tr><td><code>200</code></td><td>SUCCESS</td><td>정상 처리</td></tr>
+          <tr><td><code>400</code></td><td>Bad Request</td><td>파라미터 검증 후 에러 페이지 표시</td></tr>
+          <tr><td><code>403</code></td><td>Forbidden</td><td>API KEY 확인 필요</td></tr>
+          <tr><td><code>429</code></td><td>Too Many Requests</td><td>ouid 캐싱 강화, 재시도 로직 검토</td></tr>
+          <tr><td><code>500</code></td><td>Internal Server Error</td><td>에러 페이지 표시, 로그 기록</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="s5-2">5.2 엔드포인트 전체 목록</h3>
+
+    <table>
+      <thead>
+        <tr><th>#</th><th>용도</th><th>메서드</th><th>엔드포인트</th><th>필수 파라미터</th><th>선택 파라미터</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td><strong>ouid 조회</strong></td>
+          <td><span class="tag blue">GET</span></td>
+          <td><code>/suddenattack/v1/id</code></td>
+          <td><code>user_name</code></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td><strong>기본 정보</strong></td>
+          <td><span class="tag blue">GET</span></td>
+          <td><code>/suddenattack/v1/user/basic</code></td>
+          <td><code>ouid</code></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><strong>계급 정보</strong></td>
+          <td><span class="tag blue">GET</span></td>
+          <td><code>/suddenattack/v1/user/rank</code></td>
+          <td><code>ouid</code></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td><strong>티어 정보</strong></td>
+          <td><span class="tag blue">GET</span></td>
+          <td><code>/suddenattack/v1/user/tier</code></td>
+          <td><code>ouid</code></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td><strong>최근 동향</strong></td>
+          <td><span class="tag blue">GET</span></td>
+          <td><code>/suddenattack/v1/user/recent-info</code></td>
+          <td><code>ouid</code></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>6</td>
+          <td><strong>매치 목록</strong></td>
+          <td><span class="tag blue">GET</span></td>
+          <td><code>/suddenattack/v1/match</code></td>
+          <td><code>ouid</code></td>
+          <td><code>match_mode</code>, <code>match_type</code></td>
+        </tr>
+        <tr>
+          <td>7</td>
+          <td><strong>매치 상세</strong></td>
+          <td><span class="tag blue">GET</span></td>
+          <td><code>/suddenattack/v1/match-detail</code></td>
+          <td><code>match_id</code></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>8</td>
+          <td><strong>로고 메타</strong></td>
+          <td><span class="tag blue">GET</span></td>
+          <td><code>/static/suddenattack/meta/logo</code></td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>9</td>
+          <td><strong>통합 계급 메타</strong></td>
+          <td><span class="tag blue">GET</span></td>
+          <td><code>/static/suddenattack/meta/grade</code></td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>10</td>
+          <td><strong>시즌 계급 메타</strong></td>
+          <td><span class="tag blue">GET</span></td>
+          <td><code>/static/suddenattack/meta/season_grade</code></td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>11</td>
+          <td><strong>티어 메타</strong></td>
+          <td><span class="tag blue">GET</span></td>
+          <td><code>/static/suddenattack/meta/tier</code></td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h4>match_mode 허용 값</h4>
+    <p>
+      <span class="tag">개인전</span>
+      <span class="tag">데스매치</span>
+      <span class="tag">폭파미션</span>
+      <span class="tag">진짜를 모아라</span>
+    </p>
+
+    <h4>match_type 허용 값</h4>
+    <p>
+      <span class="tag">일반전</span>
+      <span class="tag">클랜전</span>
+      <span class="tag">퀵매치 클랜전</span>
+      <span class="tag">클랜 랭크전</span>
+      <span class="tag">랭크전 솔로</span>
+      <span class="tag">랭크전 파티</span>
+      <span class="tag">토너먼트</span>
+    </p>
+
+    <h3 id="s5-3">5.3 서비스 데이터 흐름</h3>
+
+    <h4>전적 조회 흐름</h4>
+    <div class="flow">
+      <div class="flow-step">사용자<br>닉네임 입력</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">ClanService<br><span style="font-size:11px;color:var(--text-dim)">DB에 ouid 있는지 확인</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="border-color:var(--draw)">캐시 HIT?</div>
+    </div>
+    <div class="flow" style="padding-left: 40px;">
+      <div class="flow-step" style="border-color:var(--win)">YES → DB ouid 사용</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">NexonApiService<br><span style="font-size:11px;color:var(--text-dim)">basic + rank + tier + recent + match 일괄 호출</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">PlayerPageDto<br><span style="font-size:11px;color:var(--text-dim)">통합 DTO 생성</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">player.html<br><span style="font-size:11px;color:var(--text-dim)">Thymeleaf 렌더링</span></div>
+    </div>
+    <div class="flow" style="padding-left: 40px;">
+      <div class="flow-step" style="border-color:var(--lose)">NO → API 호출</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><code>/v1/id?user_name=</code><br><span style="font-size:11px;color:var(--text-dim)">ouid 획득 → DB 저장</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="color:var(--text-dim)">이후 동일 흐름</div>
+    </div>
+
+    <h4>매치 상세 조회 흐름</h4>
+    <div class="flow">
+      <div class="flow-step">매치 목록에서<br>매치 클릭</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">MatchController<br><code>GET /match?id={match_id}</code></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">NexonApiService<br><code>/v1/match-detail</code></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">MatchDetailDto<br><span style="font-size:11px;color:var(--text-dim)">team_id별 그룹핑</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">match-detail.html</div>
+    </div>
+
+    <h4>application.properties 설정</h4>
+    <pre><code><span class="comment"># 서버</span>
+server.port=<span class="string">8085</span>
+
+<span class="comment"># MySQL</span>
+spring.datasource.url=<span class="string">jdbc:mysql://localhost:3306/sa_match?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=utf8mb4</span>
+spring.datasource.username=<span class="string">root</span>
+spring.datasource.password=<span class="string">{비밀번호}</span>
+spring.datasource.driver-class-name=<span class="string">com.mysql.cj.jdbc.Driver</span>
+
+<span class="comment"># JPA</span>
+spring.jpa.hibernate.ddl-auto=<span class="string">update</span>
+spring.jpa.show-sql=<span class="string">true</span>
+
+<span class="comment"># Thymeleaf</span>
+spring.thymeleaf.cache=<span class="string">false</span>
+
+<span class="comment"># NEXON API (서버 사이드 전용 — 절대 프론트엔드 노출 금지)</span>
+nexon.api.key=<span class="string">{YOUR_API_KEY_HERE}</span></code></pre>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- 6. 화면 설계서 -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <div class="section" id="s6">
+    <div class="section-number">SECTION 06</div>
+    <h2>화면 설계서 (UI/UX Storyboard)</h2>
+
+    <h3 id="s6-1">6.1 로딩 인트로</h3>
+
+    <div class="card">
+      <div class="card-title">인트로 시퀀스</div>
+      <div class="flow">
+        <div class="flow-step">사이트 최초 접속</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">전체화면 MP4 재생<br><span style="font-size:11px;color:var(--text-dim)">loading.mp4</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">영상 종료 감지<br><span style="font-size:11px;color:var(--text-dim)">ended 이벤트</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">인트로 fade-out<br><span style="font-size:11px;color:var(--text-dim)">opacity 0.5s</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">메인 콘텐츠<br>fade-in</div>
+      </div>
+      <ul>
+        <li><strong>파일 위치:</strong> <code>src/main/resources/static/video/loading.mp4</code></li>
+        <li><strong>재생 속성:</strong> autoplay, muted, playsinline</li>
+        <li><strong>재방문 스킵:</strong> sessionStorage에 플래그 저장, 이후 방문 시 인트로 건너뛰기</li>
+        <li><strong>z-index:</strong> 9999 (모든 요소 위에 고정 표시)</li>
+      </ul>
+    </div>
+
+    <h3 id="s6-2">6.2 메인 페이지 (index.html)</h3>
+
+    <div class="wireframe">
+      <div class="wf-header">
+        ■ SA-Tracker &nbsp;&nbsp;&nbsp; 로고 + 네비게이션 바
+      </div>
+      <div style="text-align:center; padding: 40px 0 16px;">
+        <div style="font-size:24px; font-weight:900; color:var(--accent); margin-bottom:8px;">SA-Tracker</div>
+        <div style="font-size:12px; color:var(--text-dim); margin-bottom:20px;">서든어택 전적 조회 서비스</div>
+      </div>
+      <div class="wf-search">
+        🔍 닉네임을 입력하세요 &nbsp; [ 검색 ]
+      </div>
+      <div style="margin-top:32px;">
+        <div style="font-size:14px; font-weight:700; color:var(--accent); margin-bottom:12px;">■ "모" 클랜원</div>
+        <div class="wf-cards">
+          <div class="wf-card">클랜원 1<br><span style="color:var(--accent)">닉네임</span></div>
+          <div class="wf-card">클랜원 2<br><span style="color:var(--accent)">닉네임</span></div>
+          <div class="wf-card">클랜원 3<br><span style="color:var(--accent)">닉네임</span></div>
+          <div class="wf-card">클랜원 4<br><span style="color:var(--accent)">닉네임</span></div>
+        </div>
+      </div>
+      <div class="wf-header" style="margin-top:24px; margin-bottom:0;">
+        ■■ 푸터 — 장식 블록 패턴 (■초록 ■회색)
+      </div>
+    </div>
+
+    <h3 id="s6-3">6.3 플레이어 전적 페이지 (player.html)</h3>
+
+    <div class="wireframe">
+      <div class="wf-header">■ SA-Tracker &nbsp; 네비게이션</div>
+
+      <div class="wf-profile">
+        <div class="wf-profile-img">계급<br>이미지</div>
+        <div class="wf-profile-info">
+          <div style="font-size:18px; font-weight:700; color:var(--text-primary);">닉네임</div>
+          <div>클랜: <span style="color:var(--accent)">모</span> | 칭호: 칭호명</div>
+          <div>매너등급: ★★★ | 통합 계급: 대위 | 시즌 계급: 중위</div>
+          <div>솔로 티어: <span style="color:var(--accent)">Gold</span> | 파티 티어: <span style="color:var(--accent)">Silver</span></div>
+        </div>
+      </div>
+
+      <div class="wf-stats">
+        <div class="wf-stat"><span style="color:var(--accent); font-size:24px; font-weight:900;">67.3%</span><br>최근 승률</div>
+        <div class="wf-stat"><span style="color:var(--accent); font-size:24px; font-weight:900;">2.45</span><br>최근 K/D</div>
+        <div class="wf-stat"><span style="color:var(--accent); font-size:24px; font-weight:900;">1.82</span><br>돌격소총 K/D</div>
+      </div>
+      <div class="wf-stats">
+        <div class="wf-stat"><span style="color:var(--accent); font-size:20px; font-weight:700;">3.10</span><br>저격소총 K/D</div>
+        <div class="wf-stat"><span style="color:var(--accent); font-size:20px; font-weight:700;">1.50</span><br>특수총 K/D</div>
+        <div class="wf-stat" style="border-color:var(--border);">
+          <span style="font-size:11px;">모드 필터</span><br>
+          [ 셀렉트 박스 ]<br>
+          <span style="font-size:11px;">유형 필터</span><br>
+          [ 셀렉트 박스 ]
+        </div>
+      </div>
+
+      <div style="font-size:13px; font-weight:700; color:var(--text-primary); margin:16px 0 8px;">최근 매치 기록</div>
+      <div class="wf-match"><div class="wf-match-bar win"></div> 승리 | 폭파미션 | 일반전 | K 15 / D 3 / A 5 | 2026.04.19 21:30</div>
+      <div class="wf-match"><div class="wf-match-bar lose"></div> 패배 | 데스매치 | 랭크전 솔로 | K 8 / D 12 / A 2 | 2026.04.19 20:45</div>
+      <div class="wf-match"><div class="wf-match-bar win"></div> 승리 | 폭파미션 | 클랜전 | K 20 / D 7 / A 8 | 2026.04.19 19:20</div>
+      <div class="wf-match"><div class="wf-match-bar lose"></div> 패배 | 개인전 | 일반전 | K 5 / D 9 / A 1 | 2026.04.19 18:00</div>
+    </div>
+
+    <h3 id="s6-4">6.4 매치 상세 페이지 (match-detail.html)</h3>
+
+    <div class="wireframe">
+      <div class="wf-header">■ SA-Tracker &nbsp; 네비게이션</div>
+
+      <div style="text-align:center; padding:16px 0;">
+        <span class="tag">폭파미션</span> <span class="tag blue">일반전</span>
+        <div style="font-size:18px; font-weight:700; margin-top:8px;">맵: 용의 골짜기</div>
+        <div style="font-size:12px; color:var(--text-dim);">2026.04.19 21:30 (KST)</div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <div style="text-align:center; font-weight:700; color:var(--win); margin-bottom:8px;">■ TEAM A (승리)</div>
+          <table>
+            <thead><tr><th>닉네임</th><th>K</th><th>D</th><th>HS</th><th>DMG</th><th>A</th></tr></thead>
+            <tbody>
+              <tr><td>유저1</td><td style="color:var(--accent)">20</td><td>5</td><td>8</td><td>2450.5</td><td>3</td></tr>
+              <tr><td>유저2</td><td style="color:var(--accent)">15</td><td>7</td><td>5</td><td>1820.0</td><td>6</td></tr>
+              <tr><td>유저3</td><td style="color:var(--accent)">12</td><td>8</td><td>3</td><td>1560.0</td><td>4</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <div style="text-align:center; font-weight:700; color:var(--lose); margin-bottom:8px;">■ TEAM B (패배)</div>
+          <table>
+            <thead><tr><th>닉네임</th><th>K</th><th>D</th><th>HS</th><th>DMG</th><th>A</th></tr></thead>
+            <tbody>
+              <tr><td>유저4</td><td>10</td><td style="color:var(--lose)">12</td><td>4</td><td>1350.0</td><td>2</td></tr>
+              <tr><td>유저5</td><td>7</td><td style="color:var(--lose)">15</td><td>2</td><td>980.5</td><td>3</td></tr>
+              <tr><td>유저6</td><td>3</td><td style="color:var(--lose)">20</td><td>1</td><td>540.0</td><td>1</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <h3 id="s6-5">6.5 디자인 가이드 (Design System)</h3>
+
+    <h4>컬러 팔레트</h4>
+    <div class="grid-4">
+      <div class="stat-card" style="border-left:4px solid var(--accent);">
+        <div style="width:40px;height:40px;background:#7ED957;border-radius:6px;margin:0 auto 8px;"></div>
+        <div style="font-size:12px;color:var(--text-primary);">네온 그린 (메인)</div>
+        <div style="font-size:11px;color:var(--text-dim);">#7ED957</div>
+      </div>
+      <div class="stat-card">
+        <div style="width:40px;height:40px;background:#0D0D0D;border:1px solid var(--border);border-radius:6px;margin:0 auto 8px;"></div>
+        <div style="font-size:12px;color:var(--text-primary);">배경 (블랙)</div>
+        <div style="font-size:11px;color:var(--text-dim);">#0D0D0D</div>
+      </div>
+      <div class="stat-card">
+        <div style="width:40px;height:40px;background:#1A1A1A;border:1px solid var(--border);border-radius:6px;margin:0 auto 8px;"></div>
+        <div style="font-size:12px;color:var(--text-primary);">카드 배경</div>
+        <div style="font-size:11px;color:var(--text-dim);">#1A1A1A</div>
+      </div>
+      <div class="stat-card">
+        <div style="width:40px;height:40px;background:#E74C3C;border-radius:6px;margin:0 auto 8px;"></div>
+        <div style="font-size:12px;color:var(--text-primary);">패배 (레드)</div>
+        <div style="font-size:11px;color:var(--text-dim);">#E74C3C</div>
+      </div>
+    </div>
+
+    <h4>CSS 변수 정의</h4>
+    <pre><code><span class="keyword">:root</span> {
+    <span class="comment">/* 배경 */</span>
+    --bg-primary: <span class="string">#0D0D0D</span>;
+    --bg-card: <span class="string">#1A1A1A</span>;
+    --bg-hover: <span class="string">#2A2A2A</span>;
+
+    <span class="comment">/* 포인트 */</span>
+    --accent: <span class="string">#7ED957</span>;
+    --accent-glow: <span class="string">rgba(126, 217, 87, 0.2)</span>;
+
+    <span class="comment">/* 텍스트 */</span>
+    --text-primary: <span class="string">#FFFFFF</span>;
+    --text-secondary: <span class="string">#AAAAAA</span>;
+
+    <span class="comment">/* 승패 */</span>
+    --win: <span class="string">#7ED957</span>;
+    --lose: <span class="string">#E74C3C</span>;
+    --draw: <span class="string">#F39C12</span>;
+
+    <span class="comment">/* 테두리 */</span>
+    --border: <span class="string">#333333</span>;
+}</code></pre>
+
+    <h4>핵심 UI 규칙</h4>
+    <div class="card">
+      <ul>
+        <li><strong>밝은 배경 절대 사용 금지</strong> — 전체 다크 테마 유지</li>
+        <li>큰 수치(킬/데스/승률 등)는 <strong>네온 그린 + 굵은 폰트</strong>로 강조 표시</li>
+        <li>카드형 UI에 <strong>미세한 glow 효과</strong> 적용: <code>box-shadow: 0 0 10px rgba(126,217,87,0.2)</code></li>
+        <li>매치 카드 승패 구분: 왼쪽 <strong>4px 컬러 바</strong> (승리=초록, 패배=빨강, 무승부=주황)</li>
+        <li>테이블 행 hover 시 <strong>#2A2A2A 배경</strong> 변경</li>
+        <li>좌하단 <strong>장식 블록 패턴</strong> (■초록 ■회색) 활용</li>
+        <li>폰트: <strong>Noto Sans KR</strong> (Google Fonts)</li>
+      </ul>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- 7. 개발 일정표 -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <div class="section" id="s7">
+    <div class="section-number">SECTION 07</div>
+    <h2>개발 일정표 (Development Timeline)</h2>
+
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-phase">PHASE 1 — 환경 구축 (1~2일)</div>
+        <div class="timeline-title">프로젝트 초기 설정</div>
+        <div class="timeline-desc">
+          STS에서 Spring Boot 프로젝트 생성 (Gradle, Java 21) → MySQL sa_match DB 생성 → clan_members 테이블 + 초기 데이터 INSERT → application.properties 설정 → 서버 구동 확인 (<code>localhost:8085</code>)
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-phase">PHASE 2 — 백엔드 코어 (3~4일)</div>
+        <div class="timeline-title">API 연동 및 서비스 계층 구축</div>
+        <div class="timeline-desc">
+          NexonApiConfig (RestTemplate Bean + API KEY) → NexonApiService (ouid 조회부터 단계별 테스트) → ClanMember Entity + Repository + ClanService (ouid 캐싱) → PlayerService / MatchService (데이터 조합) → MetaService (메타데이터 캐싱) → 각 API 호출 단위 테스트
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-phase">PHASE 3 — 컨트롤러 + 기본 화면 (2~3일)</div>
+        <div class="timeline-title">페이지 연결 및 기본 UI</div>
+        <div class="timeline-desc">
+          HomeController (메인) + PlayerController (전적) + MatchController (매치 상세) 작성 → Thymeleaf fragments (header, footer) → index.html / player.html / match-detail.html 기본 구조 작성 → 데이터 바인딩 검증
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-phase">PHASE 4 — 디자인 적용 (2~3일)</div>
+        <div class="timeline-title">PPTX 톤 맞춤 UI 완성</div>
+        <div class="timeline-desc">
+          common.css (다크 테마 변수, 리셋) → 페이지별 CSS 분리 적용 → 매치 카드 승패 컬러 바, glow 효과, 장식 블록 등 디자인 디테일 → 로딩 인트로 MP4 구현 → 반응형 대응
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-phase">PHASE 5 — 필터 + 동적 기능 (1~2일)</div>
+        <div class="timeline-title">검색/필터/인터랙션</div>
+        <div class="timeline-desc">
+          검색창 엔터/버튼 동작 → match_mode / match_type 필터 셀렉트 박스 → 클랜원 카드 클릭 이동 → date_match UTC→KST 변환 표시 → 에러 페이지 처리
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-phase">PHASE 6 — 검증 + 마무리 (1~2일)</div>
+        <div class="timeline-title">에러 처리 및 최적화</div>
+        <div class="timeline-desc">
+          전체 흐름 테스트 (닉네임 검색 → 전적 → 매치 상세) → 429 에러 대비 ouid 캐싱 최적화 → 에러 핸들링 → 크로스 브라우저 테스트 → 최종 배포 준비
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">예상 총 소요 기간</div>
+      <div class="grid-3">
+        <div class="stat-card">
+          <div class="stat-value">10~16</div>
+          <div class="stat-label">총 소요일 (일)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">6</div>
+          <div class="stat-label">개발 단계 (Phase)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">30+</div>
+          <div class="stat-label">생성 파일 수</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- 8. 확장 로드맵 -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <div class="section" id="s8">
+    <div class="section-number">SECTION 08</div>
+    <h2>확장 로드맵 (Future Roadmap)</h2>
+
+    <p>1차 완성 이후, 아래 기능들을 단계적으로 추가하여 서비스를 고도화한다.</p>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">전적 그래프</div>
+        <p>최근 N경기의 승률, K/D 추이를 차트(Chart.js 또는 Recharts)로 시각화. 시계열 데이터로 성장 추이 확인 가능.</p>
+        <span class="tag yellow">2차</span>
+      </div>
+      <div class="card">
+        <div class="card-title">경기 성향 분석</div>
+        <p>최근 매치 데이터를 기반으로 선호 모드, 승률 높은 맵, 주력 무기군 등 자동 분석 리포트 제공.</p>
+        <span class="tag yellow">2차</span>
+      </div>
+      <div class="card">
+        <div class="card-title">클랜 통합 대시보드</div>
+        <p>"모" 클랜원 전체의 통합 전적, 평균 승률/K/D, 클랜 내 랭킹 등을 한 페이지에서 조회.</p>
+        <span class="tag yellow">2차</span>
+      </div>
+      <div class="card">
+        <div class="card-title">AI 경기 분석 봇</div>
+        <p>AI API를 연동하여 최근 경기 데이터를 분석, 플레이 패턴 진단 및 개선 포인트를 자동 생성.</p>
+        <span class="tag red">3차</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 푸터 ── -->
+  <div style="text-align:center; padding:60px 0 20px; border-top:1px solid var(--border); margin-top:40px;">
+    <div style="font-size:20px; font-weight:900; color:var(--accent); margin-bottom:8px;">SA-Tracker</div>
+    <div style="font-size:12px; color:var(--text-dim);">종합 설계 문서 v1.0 Final — 2026.04.20</div>
+    <div style="font-size:11px; color:var(--text-dim); margin-top:4px;">NEXON Open API 기반 서든어택 전적 조회 서비스</div>
+    <div class="deco-blocks" style="justify-content:center; margin-top:16px;">
+      <span class="g"></span><span class="g"></span><span class="d"></span><span class="w"></span><span class="d"></span><span class="g"></span>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
