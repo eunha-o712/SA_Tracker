@@ -1,0 +1,112 @@
+/* =========================
+   WEAPON SUMMARY 전체 영역
+   ========================= */
+
+.weapon-summary-grid {
+  padding: 32px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+/* =========================
+   카드
+   ========================= */
+
+.weapon-summary-card {
+  min-height: 156px;
+  padding: 24px;
+  background: #22262B;
+  border: 1px solid rgba(127, 217, 89, 0.35);
+}
+
+/* =========================
+   상단 영역
+   텍스트 + 총기 이미지
+   ========================= */
+
+.weapon-summary-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+/* =========================
+   무기명
+   ========================= */
+
+.weapon-summary-label {
+  color: var(--text-secondary);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+/* =========================
+   퍼센트
+   ========================= */
+
+.weapon-summary-value {
+  margin-top: 12px;
+  color: var(--accent);
+  font-size: 34px;
+  font-weight: 900;
+}
+
+/* =========================
+   총기 이미지 공통
+   ========================= */
+
+.weapon-summary-image {
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+/* 돌격소총 전용 */
+.weapon-rifle {
+  width: 240px;
+  height: 80px;
+}
+
+/* 저격총 전용 */
+.weapon-sniper {
+  width: 280px;
+  height: 90px;
+}
+
+/* 특수/샷건 전용 */
+.weapon-shotgun {
+  width: 260px;
+  height: 90px;
+}
+
+/* =========================
+   칸칸이 게이지
+   ========================= */
+
+.weapon-summary-progress {
+  width: 100%;
+  height: 10px;
+  margin-top: 18px;
+  border: 1px solid rgba(127, 217, 89, 0.2);
+  background: #161a1f;
+  overflow: hidden;
+}
+
+.weapon-summary-progress span {
+  display: block;
+  height: 100%;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #7ed957 0px,
+      #7ed957 12px,
+      #a4ff84 12px,
+      #a4ff84 14px,
+      transparent 14px,
+      transparent 16px
+    );
+  box-shadow:
+    0 0 8px rgba(127, 217, 89, 0.5),
+    inset 0 0 4px rgba(255, 255, 255, 0.15);
+}

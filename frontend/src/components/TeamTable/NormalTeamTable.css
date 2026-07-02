@@ -1,0 +1,51 @@
+.normal-team-table {
+  background: var(--bg-card);
+  border: 1px solid rgba(126, 217, 87, 0.32);
+}
+
+.normal-team-table-title {
+  padding: 18px 22px;
+  border-bottom: 1px solid rgba(126, 217, 87, 0.22);
+  color: var(--accent);
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.normal-team-table-head,
+.normal-team-table-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 1.5fr) repeat(5, minmax(54px, 0.5fr));
+  align-items: center;
+  gap: 12px;
+}
+
+.normal-team-table-head {
+  padding: 12px 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.normal-team-table-row {
+  min-height: 46px;
+  padding: 10px 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.normal-team-table-row:last-child {
+  border-bottom: 0;
+}
+
+.normal-team-table-row strong {
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.normal-team-table-row .death {
+  color: var(--lose);
+}

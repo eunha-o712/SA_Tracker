@@ -1,0 +1,315 @@
+.match-summary-grid {
+  padding: 32px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.match-summary-card {
+  min-height: 172px;
+  padding: 24px;
+  background: #22262B;
+  border: 1px solid rgba(127, 217, 89, 0.35);
+}
+
+.match-summary-title {
+  color: var(--accent);
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.match-summary-sub {
+  margin-top: 4px;
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.match-summary-values {
+  margin-top: 28px;
+  display: flex;
+  gap: 8px;
+}
+
+.match-summary-values strong {
+  font-size: 30px;
+  font-weight: 900;
+}
+
+.match-summary-values .death {
+  color: var(--lose);
+}
+
+.match-summary-values .assist {
+  color: var(--draw);
+}
+
+.match-summary-values em {
+  color: var(--text-dim);
+  font-style: normal;
+}
+
+.play-style-grid {
+  padding: 30px 32px 20px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.play-style-card {
+  min-height: 116px;
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: #22262b;
+  border: 1px solid rgba(127, 217, 89, 0.35);
+}
+
+.play-style-card span,
+.kd-trend-head span {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1.4px;
+}
+
+.play-style-card strong {
+  color: var(--text-primary);
+  font-size: clamp(20px, 2vw, 30px);
+  font-weight: 900;
+  letter-spacing: -1px;
+  overflow-wrap: anywhere;
+}
+
+.kd-trend-panel {
+  margin: 0 32px 32px;
+  padding: 26px 28px 22px;
+  background: rgba(17, 17, 17, 0.92);
+  border: 1px solid rgba(127, 217, 89, 0.24);
+}
+
+.kd-trend-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.kd-trend-head > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.kd-trend-head strong {
+  color: var(--text-primary);
+  font-size: 20px;
+}
+
+.kd-trend-legend {
+  display: flex;
+  gap: 18px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.kd-trend-legend span::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+}
+
+.kd-trend-legend .win::before {
+  background: var(--accent);
+}
+
+.kd-trend-legend .draw::before {
+  background: var(--draw);
+}
+
+.kd-trend-legend .lose::before {
+  background: var(--lose);
+}
+
+.kd-trend-chart-wrap {
+  width: 100%;
+}
+
+.kd-trend-chart {
+  width: 100%;
+  min-height: 220px;
+  display: block;
+  overflow: visible;
+}
+
+.kd-grid-line {
+  vector-effect: non-scaling-stroke;
+}
+
+.kd-grid-line.minor {
+  stroke: rgba(255, 255, 255, 0.035);
+  stroke-width: 0.6;
+}
+
+.kd-grid-line.major {
+  stroke: rgba(255, 255, 255, 0.14);
+  stroke-width: 1.2;
+}
+
+.kd-grid-label {
+  fill: var(--text-dim);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.kd-result-line {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.kd-result-line.win {
+  stroke: var(--accent);
+  filter: drop-shadow(0 0 5px rgba(127, 217, 89, 0.55));
+}
+
+.kd-result-line.lose {
+  stroke: var(--lose);
+  filter: drop-shadow(0 0 5px rgba(244, 77, 64, 0.5));
+}
+
+.kd-trend-point {
+  stroke: #0b0b0b;
+  stroke-width: 3;
+  cursor: pointer;
+  outline: none;
+}
+
+.kd-trend-point:focus {
+  stroke: #ffffff;
+}
+
+.kd-tooltip {
+  pointer-events: none;
+}
+
+.kd-tooltip rect {
+  fill: rgba(13, 15, 16, 0.97);
+  stroke: rgba(127, 217, 89, 0.7);
+  stroke-width: 1;
+  filter: drop-shadow(0 5px 8px rgba(0, 0, 0, 0.55));
+}
+
+.kd-tooltip text {
+  font-family: inherit;
+}
+
+.kd-tooltip-title {
+  fill: var(--text-primary);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.kd-tooltip-detail {
+  fill: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.kd-tooltip-average {
+  fill: var(--text-dim);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.kd-trend-point.win {
+  fill: var(--accent);
+}
+
+.kd-trend-point.draw {
+  fill: var(--draw);
+}
+
+.kd-trend-point.lose {
+  fill: var(--lose);
+}
+
+.kd-trend-point.unknown {
+  fill: var(--text-dim);
+}
+
+.kd-trend-axis {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  color: var(--text-dim);
+  font-size: 11px;
+}
+
+.kd-trend-axis strong {
+  color: var(--accent);
+  font-weight: 800;
+}
+
+.kd-trend-axis span:last-child {
+  text-align: right;
+}
+
+.kd-trend-empty {
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+}
+
+@media (max-width: 1200px) {
+  .match-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .play-style-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .match-summary-grid {
+    padding: 20px;
+    grid-template-columns: 1fr;
+  }
+
+  .match-summary-card {
+    padding: 20px;
+  }
+
+  .play-style-grid {
+    padding: 20px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .play-style-card {
+    min-height: 100px;
+    padding: 18px;
+  }
+
+  .kd-trend-panel {
+    margin: 0 20px 20px;
+    padding: 20px 16px 16px;
+  }
+
+  .kd-trend-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .kd-trend-chart {
+    min-height: 180px;
+  }
+}

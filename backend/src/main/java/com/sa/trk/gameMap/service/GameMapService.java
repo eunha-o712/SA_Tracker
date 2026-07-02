@@ -20,16 +20,27 @@ public class GameMapService {
         this.matchService = matchService;
     }
 
-    public GameMapResponseDto getMapMatches(String userName, String mapName, Integer page) {
-        MatchListResponseDto matchListResponse = matchService.getMatches(userName, page);
+    public GameMapResponseDto getMapMatches(
+            String userName,
+            String mapName,
+            Integer page,
+            String scope,
+            String matchType) {
+        MatchListResponseDto matchListResponse = matchService.getMatches(
+                userName,
+                page,
+                scope,
+                matchType,
+                "ALL",
+                mapName
+        );
+
         List<MatchDetailResponseDto> filteredMatches = new ArrayList<>();
 
         for (MatchDto match : matchListResponse.getMatches()) {
             MatchDetailResponseDto detail = matchService.getMatchDetail(match.getMatch_id());
 
-            if (detail.getMatchMap() != null && detail.getMatchMap().equals(mapName)) {
-                filteredMatches.add(detail);
-            }
+            filteredMatches.add(detail);
         }
 
         GameMapResponseDto responseDto = new GameMapResponseDto();

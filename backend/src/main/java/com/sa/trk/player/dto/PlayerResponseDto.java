@@ -4,6 +4,7 @@ import com.sa.trk.nexon.dto.UserBasicDto;
 import com.sa.trk.nexon.dto.UserRankDto;
 import com.sa.trk.nexon.dto.UserRecentInfoDto;
 import com.sa.trk.nexon.dto.UserTierDto;
+import com.sa.trk.common.dto.ImagesDto;
 
 import lombok.Data;
 
@@ -16,4 +17,5 @@ public class PlayerResponseDto {
     private UserRankDto rank;
     private UserTierDto tier;
     private UserRecentInfoDto recent;
+    private ImagesDto images;
 }

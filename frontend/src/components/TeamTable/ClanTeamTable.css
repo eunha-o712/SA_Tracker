@@ -1,0 +1,65 @@
+.clan-team-table {
+  background: var(--bg-card);
+  border: 1px solid rgba(126, 217, 87, 0.36);
+}
+
+.clan-team-table-title {
+  padding: 18px 22px;
+  border-bottom: 1px solid rgba(126, 217, 87, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.clan-team-table-title span {
+  color: var(--accent);
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.clan-team-table-title em {
+  color: var(--text-primary);
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.clan-team-table-head,
+.clan-team-table-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 1.3fr) minmax(110px, 1fr) repeat(5, minmax(54px, 0.5fr));
+  align-items: center;
+  gap: 12px;
+}
+
+.clan-team-table-head {
+  padding: 12px 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.clan-team-table-row {
+  min-height: 46px;
+  padding: 10px 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.clan-team-table-row:last-child {
+  border-bottom: 0;
+}
+
+.clan-team-table-row strong {
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.clan-team-table-row .death {
+  color: var(--lose);
+}

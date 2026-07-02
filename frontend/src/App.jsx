@@ -9,6 +9,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/player/:name" element={<PlayerPage />} />
+        <Route path="/match" element={<MatchDetailPage />} />
         <Route path="/match/:matchId" element={<MatchDetailPage />} />
       </Routes>
     </BrowserRouter>

@@ -20,7 +20,15 @@ public class GameMapController {
     public GameMapResponseDto getMapMatches(
             @RequestParam("userName") String userName,
             @RequestParam("mapName") String mapName,
+            @RequestParam(value = "scope", defaultValue = "RECENT") String scope,
+            @RequestParam("matchType") String matchType,
             @RequestParam(value = "page", defaultValue = "1") Integer page) {
-        return gameMapService.getMapMatches(userName, mapName, page);
+        return gameMapService.getMapMatches(
+                userName,
+                mapName,
+                page,
+                scope,
+                matchType
+        );
     }
 }

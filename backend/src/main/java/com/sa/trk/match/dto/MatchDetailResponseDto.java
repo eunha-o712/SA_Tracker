@@ -1,5 +1,6 @@
 package com.sa.trk.match.dto;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.sa.trk.nexon.dto.MatchDetailItemDto;
@@ -14,5 +15,5 @@ public class MatchDetailResponseDto {
     private String matchMode;
     private String dateMatch;
     private String matchMap;
-    private List<MatchDetailItemDto> matchDetail;
+    private List<MatchDetailItemDto> matchDetail = new ArrayList<>();
 }

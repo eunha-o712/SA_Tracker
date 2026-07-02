@@ -1,0 +1,140 @@
+.match-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.match-type-tabs {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  border: 1px solid rgba(126, 217, 87, 0.28);
+  background: var(--bg-card);
+}
+
+.match-type-tabs button {
+  height: 48px;
+  min-width: 0;
+  padding: 0 8px;
+  background: transparent;
+  border: 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.match-type-tabs button:last-child {
+  border-right: 0;
+}
+
+.match-type-tabs button:hover,
+.match-type-tabs button.active {
+  color: var(--accent);
+  background: rgba(126, 217, 87, 0.08);
+}
+
+.match-type-tabs button:disabled,
+.match-filter-actions button:disabled,
+.match-filter-actions select:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.match-filter-main {
+  padding: 22px 24px;
+  background: var(--bg-card);
+  border: 1px solid rgba(126, 217, 87, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.match-filter-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.match-filter-title img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.match-filter-title strong {
+  display: block;
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.match-filter-title span {
+  display: block;
+  margin-top: 6px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.match-filter-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.match-filter-actions select,
+.match-filter-actions button {
+  height: 42px;
+  padding: 0 14px;
+  background: var(--bg-secondary);
+  border: 1px solid rgba(126, 217, 87, 0.4);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.match-filter-actions select {
+  min-width: 150px;
+}
+
+.match-filter-actions button {
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.match-filter-actions .match-filter-reset {
+  color: var(--text-secondary);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+@media (max-width: 1200px) {
+  .match-filter-main {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .match-filter-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .match-type-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .match-type-tabs button {
+    height: 44px;
+  }
+
+  .match-filter-actions select,
+  .match-filter-actions button {
+    flex: 1 1 140px;
+    min-width: 0;
+  }
+}

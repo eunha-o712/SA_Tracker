@@ -1,0 +1,113 @@
+/* =========================
+   RANK SUMMARY 전체 영역
+   ========================= */
+
+.rank-summary-grid {
+  padding: 30px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+}
+
+/* =========================
+   개별 카드
+   [라벨] [이미지] [계급/점수]
+   ========================= */
+
+.rank-summary-card {
+  min-height: 135px;
+  padding: 25px 30px;
+
+  display: grid;
+  grid-template-columns: 1fr 96px 1fr;
+  align-items: center;
+  gap: 20px;
+
+  background: #22262B;
+  border: 1px solid rgba(127, 217, 89, 0.35);
+}
+
+/* =========================
+   라벨
+   ========================= */
+
+.rank-summary-label {
+  color: var(--text-secondary);
+  font-size: 23px;
+  font-weight: 600;
+}
+
+/* =========================
+   공통 이미지
+   ========================= */
+
+.rank-summary-card img {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  justify-self: center;
+}
+
+/* =========================
+   통합 계급 이미지
+   검은 여백 제거용
+   ========================= */
+
+.rank-grade-image-box {
+  width: 50px;
+  height: 50px;
+
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: center;
+}
+
+.rank-grade-image {
+  width: 60px;
+  height: 60px;
+
+  object-fit: contain;
+
+  transform: scale(0.65);
+  transform-origin: center;
+}
+
+/* =========================
+   시즌 계급
+   ========================= */
+
+.rank-season-image {
+  width: 60px;
+  height: 60px;
+}
+
+/* =========================
+   랭크전 티어
+   ========================= */
+
+.rank-tier-image {
+  width: 70px;
+  height: 70px;
+}
+
+/* =========================
+   우측 정보 영역
+   ========================= */
+
+.rank-summary-info {
+  text-align: right;
+}
+
+.rank-summary-value {
+  display: block;
+  font-size: 30px;
+  font-weight: 600;
+}
+
+.rank-summary-sub {
+  color: var(--text-secondary);
+  font-size: 17px;
+}

@@ -1,5 +1,6 @@
 package com.sa.trk.match.dto;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.sa.trk.nexon.dto.MatchDto;
@@ -13,5 +14,5 @@ public class MatchListResponseDto {
     private Integer page;
     private Integer size;
     private Integer totalCount;
-    private List<MatchDto> matches;
+    private List<MatchDto> matches = new ArrayList<>();
 }
