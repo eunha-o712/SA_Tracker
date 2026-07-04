@@ -20,8 +20,8 @@ frontend/.vscode/
 frontend/.env
 frontend/.env.*
 
+*.tmp
 *.log
 .DS_Store
 Thumbs.db
 desktop.ini
-frontend/write-test.tmp

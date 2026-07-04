@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import api from '../../api/api'
+import api, { getApiErrorMessage } from '../../api/api'
 import MatchForm from './MatchForm'
 import './MatchSummary.css'
 
@@ -62,7 +62,7 @@ function MatchSummary({ userName, recent = {} }) {
             playStyle: '분석 대기',
             killDeathTrend: [],
           })
-          setError('매치 요약을 불러오지 못했습니다.')
+          setError(getApiErrorMessage(requestError, '매치 요약을 불러오지 못했습니다.'))
         }
       } finally {
         if (active) setLoading(false)

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import api from '../../api/api'
+import api, { getApiErrorMessage } from '../../api/api'
 import Footer from '../../components/Footer/Footer'
 import Header from '../../components/Header/Header'
 import MatchCard from '../../components/MatchCard/MatchCard'
@@ -63,7 +63,7 @@ function MatchDetailPage() {
     } catch (requestError) {
       setMatches([])
       setTotalCount(0)
-      setError('매치 기록을 불러오지 못했습니다.')
+      setError(getApiErrorMessage(requestError, '매치 기록을 불러오지 못했습니다.'))
     } finally {
       setLoading(false)
     }
@@ -157,7 +157,7 @@ function MatchDetailPage() {
       setDetailCache((previousCache) => ({ ...previousCache, [matchId]: detail }))
     } catch (requestError) {
       setMatchDetail(null)
-      setDetailError('상세 기록을 불러오지 못했습니다.')
+      setDetailError(getApiErrorMessage(requestError, '상세 기록을 불러오지 못했습니다.'))
     } finally {
       setDetailLoading(false)
     }

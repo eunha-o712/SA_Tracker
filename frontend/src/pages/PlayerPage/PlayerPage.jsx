@@ -8,7 +8,7 @@ import RankSummary from '../../components/PlayerProfile/RankSummary'
 import WeaponSummary from '../../components/PlayerProfile/WeaponSummary'
 import MatchSummary from '../../components/PlayerProfile/MatchSummary'
 import CombatSummary from '../../components/PlayerProfile/CombatSummary'
-import api from '../../api/api'
+import api, { getApiErrorMessage } from '../../api/api'
 import './PlayerPage.css'
 
 function PlayerPage() {
@@ -29,11 +29,7 @@ function PlayerPage() {
 
         setPlayerData(response.data)
       } catch (err) {
-        setError(
-          err.response?.status === 429
-            ? '조회가 잠시 많아서 잠깐 후 다시 시도해주세요.'
-            : '플레이어 정보를 불러오지 못했습니다.'
-        )
+        setError(getApiErrorMessage(err, '플레이어 정보를 불러오지 못했습니다.'))
       } finally {
         setLoading(false)
       }
