@@ -118,3 +118,39 @@
 .match-card.selected .match-card-detail {
   transform: rotate(90deg);
 }
+
+@media (max-width: 600px) {
+  .match-card-main {
+    min-height: 132px;
+    padding: 16px;
+    grid-template-columns: 72px minmax(0, 1fr) 28px;
+    gap: 10px;
+  }
+
+  .match-card-badge img {
+    width: 68px;
+  }
+
+  .match-card-info strong {
+    font-size: 15px;
+  }
+
+  .match-card-stats {
+    grid-column: 2 / 4;
+    gap: 12px;
+  }
+
+  .match-card-stat strong {
+    font-size: 19px;
+  }
+
+  .match-card-date {
+    grid-column: 1 / 4;
+    font-size: 11px;
+  }
+
+  .match-card-detail {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}

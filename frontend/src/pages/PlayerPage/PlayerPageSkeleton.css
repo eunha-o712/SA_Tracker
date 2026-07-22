@@ -1,0 +1,249 @@
+.player-skeleton {
+  position: relative;
+}
+
+.player-skeleton-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.player-skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+  background: #24292d;
+}
+
+.player-skeleton-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(127, 217, 89, 0.13),
+    transparent
+  );
+  animation: player-skeleton-sweep 1.45s ease-in-out infinite;
+}
+
+.player-skeleton-banner {
+  height: clamp(92px, 8vw, 160px);
+  margin-bottom: 28px;
+  border: 1px solid rgba(127, 217, 89, 0.35);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.player-skeleton-profile {
+  min-height: 202px;
+  padding: 34px 42px;
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr) 180px;
+  gap: 32px;
+  align-items: center;
+}
+
+.player-skeleton-avatar {
+  width: 132px;
+  height: 132px;
+  border: 1px solid rgba(127, 217, 89, 0.35);
+  border-radius: 12px;
+}
+
+.player-skeleton-profile-main {
+  min-width: 0;
+}
+
+.player-skeleton-line {
+  height: 18px;
+  border-radius: 3px;
+}
+
+.player-skeleton-line.title {
+  width: min(330px, 75%);
+  height: 42px;
+}
+
+.player-skeleton-metrics,
+.player-skeleton-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.player-skeleton-metrics {
+  margin-top: 18px;
+}
+
+.player-skeleton-tags {
+  margin-top: 20px;
+}
+
+.player-skeleton-line.metric {
+  width: 120px;
+  height: 28px;
+}
+
+.player-skeleton-line.tag {
+  width: 160px;
+  height: 30px;
+}
+
+.player-skeleton-line.tag.short {
+  width: 120px;
+}
+
+.player-skeleton-line.date {
+  width: 180px;
+  height: 14px;
+  align-self: start;
+}
+
+.player-skeleton-heading {
+  height: 28px;
+  max-width: 55%;
+}
+
+.player-skeleton-heading-sub {
+  width: 92px;
+  height: 14px;
+}
+
+.player-skeleton-card-grid {
+  padding: 30px;
+  display: grid;
+  gap: 18px;
+}
+
+.player-skeleton-card-grid.rank {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.player-skeleton-card-grid.weapon {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.player-skeleton-card {
+  min-height: 142px;
+  padding: 24px;
+  display: grid;
+  grid-template-columns: minmax(90px, 1fr) 68px minmax(90px, 1fr);
+  align-items: center;
+  gap: 20px;
+  background: #22262b;
+  border: 1px solid rgba(127, 217, 89, 0.22);
+}
+
+.player-skeleton-card-grid.weapon .player-skeleton-card {
+  grid-template-columns: minmax(90px, 1fr) 90px;
+}
+
+.player-skeleton-card-grid.weapon .player-skeleton-card-copy {
+  display: none;
+}
+
+.player-skeleton-line.card-label {
+  width: 74%;
+  height: 22px;
+}
+
+.player-skeleton-card-icon {
+  width: 60px;
+  height: 60px;
+  justify-self: center;
+  border-radius: 50%;
+}
+
+.player-skeleton-card-grid.weapon .player-skeleton-card-icon {
+  width: 90px;
+  height: 34px;
+  border-radius: 3px;
+}
+
+.player-skeleton-card-copy {
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.player-skeleton-line.card-value {
+  width: 86%;
+  height: 28px;
+}
+
+.player-skeleton-line.card-sub {
+  width: 58%;
+  height: 14px;
+}
+
+@keyframes player-skeleton-sweep {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@media (max-width: 1100px) {
+  .player-skeleton-profile {
+    grid-template-columns: 110px minmax(0, 1fr);
+  }
+
+  .player-skeleton-avatar {
+    width: 110px;
+    height: 110px;
+  }
+
+  .player-skeleton-line.date {
+    display: none;
+  }
+
+  .player-skeleton-card-grid.weapon {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .player-skeleton-profile {
+    padding: 24px;
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: 20px;
+  }
+
+  .player-skeleton-avatar {
+    width: 76px;
+    height: 76px;
+  }
+
+  .player-skeleton-line.title {
+    height: 30px;
+  }
+
+  .player-skeleton-metrics {
+    display: none;
+  }
+
+  .player-skeleton-card-grid {
+    padding: 20px;
+  }
+
+  .player-skeleton-card-grid.rank {
+    grid-template-columns: 1fr;
+  }
+
+  .player-skeleton-card-grid.rank .player-skeleton-card:nth-child(n + 3) {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .player-skeleton-shimmer::after {
+    animation: none;
+  }
+}

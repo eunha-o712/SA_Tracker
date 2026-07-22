@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import api, { getApiErrorMessage } from '../../api/api'
+import { getApiErrorMessage } from '../../api/api'
+import { cachedGet } from '../../api/apiCache'
 import MatchForm from './MatchForm'
 import './MatchSummary.css'
 
@@ -34,7 +35,7 @@ function MatchSummary({ userName, recent = {} }) {
         setLoading(true)
         setError('')
 
-        const response = await api.get('/api/match/summary', {
+        const response = await cachedGet('/api/match/summary', {
           params: { userName },
         })
 
@@ -167,9 +168,8 @@ function PlayStyleAnalysis({ analysis, recent, loading, error }) {
             <strong>최근 {trend.length || 20}경기 킬데스 흐름</strong>
           </div>
           <div className="kd-trend-legend">
-            <span className="win">승리</span>
-            <span className="draw">무승부</span>
-            <span className="lose">패배</span>
+            <span className="kill">킬</span>
+            <span className="death">데스</span>
           </div>
         </div>
 
@@ -191,34 +191,46 @@ function KillDeathTrendChart({ trend }) {
   const height = 270
   const paddingX = 48
   const paddingY = 34
-  const ratios = trend.map((point) => Number(point.killDeathRatio) || 0)
-  const maxRatio = Math.max(30, Math.ceil(Math.max(...ratios) / 5) * 5)
+  const values = trend.flatMap((point) => [
+    Number(point.kill) || 0,
+    Number(point.death) || 0,
+  ])
+  const observedMax = Math.max(...values)
+  const chartMax = Math.min(30, Math.max(5, Math.ceil(observedMax / 5) * 5))
   const plotWidth = width - paddingX * 2
   const plotHeight = height - paddingY * 2
+  const toY = (value) => (
+    paddingY + plotHeight - (Math.min(value, chartMax) / chartMax) * plotHeight
+  )
   const points = trend.map((point, index) => {
     const x = trend.length === 1
       ? width / 2
       : paddingX + (index / (trend.length - 1)) * plotWidth
+    const kill = Number(point.kill) || 0
+    const death = Number(point.death) || 0
     const ratio = Number(point.killDeathRatio) || 0
-    const y = paddingY + plotHeight - (Math.min(ratio, maxRatio) / maxRatio) * plotHeight
-    return { ...point, x, y, ratio }
+    return { ...point, x, kill, death, ratio, killY: toY(kill), deathY: toY(death) }
   })
-  const winPoints = points.filter((point) => point.result === 'W')
-  const losePoints = points.filter((point) => point.result === 'L')
-  const winLinePoints = winPoints.map((point) => `${point.x},${point.y}`).join(' ')
-  const loseLinePoints = losePoints.map((point) => `${point.x},${point.y}`).join(' ')
-  const gridValues = Array.from({ length: maxRatio + 1 }, (_, index) => index)
-  const averageRatio = ratios.reduce((sum, ratio) => sum + ratio, 0) / ratios.length
+  const killLinePoints = points
+    .map((point) => `${point.x},${point.killY}`)
+    .join(' ')
+  const deathLinePoints = points
+    .map((point) => `${point.x},${point.deathY}`)
+    .join(' ')
+  const areaPoints = points.length > 0
+    ? `${points[0].x},${paddingY + plotHeight} ${killLinePoints} ${points.at(-1).x},${paddingY + plotHeight}`
+    : ''
+  const gridValues = Array.from({ length: chartMax + 1 }, (_, index) => index)
   const hoveredPoint = hoveredIndex === null ? null : points[hoveredIndex]
   const tooltipWidth = 176
-  const tooltipHeight = 74
+  const tooltipHeight = 78
   const tooltipX = hoveredPoint
     ? Math.min(hoveredPoint.x + 12, width - tooltipWidth - 4)
     : 0
   const tooltipY = hoveredPoint
-    ? hoveredPoint.y > 104
-      ? hoveredPoint.y - tooltipHeight - 12
-      : hoveredPoint.y + 14
+    ? Math.min(hoveredPoint.killY, hoveredPoint.deathY) > 110
+      ? Math.min(hoveredPoint.killY, hoveredPoint.deathY) - tooltipHeight - 12
+      : Math.max(hoveredPoint.killY, hoveredPoint.deathY) + 14
     : 0
 
   return (
@@ -227,21 +239,28 @@ function KillDeathTrendChart({ trend }) {
         className="kd-trend-chart"
         viewBox={`0 0 ${width} ${height}`}
         role="img"
-        aria-label="최근 경기별 K/D 추이 그래프"
+        aria-label="최근 경기별 킬과 데스 추이 그래프"
       >
+        <defs>
+          <linearGradient id="kd-kill-gradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#9aff68" stopOpacity="0.42" />
+            <stop offset="58%" stopColor="#78d957" stopOpacity="0.14" />
+            <stop offset="100%" stopColor="#78d957" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+
         {gridValues.map((value) => {
-          const y = paddingY + plotHeight - (value / maxRatio) * plotHeight
-          const isMajor = value % 5 === 0
+          const y = paddingY + plotHeight - (value / chartMax) * plotHeight
           return (
             <g key={value}>
               <line
-                className={`kd-grid-line ${isMajor ? 'major' : 'minor'}`}
+                className={`kd-grid-line ${value % 5 === 0 ? 'major' : 'minor'}`}
                 x1={paddingX}
                 x2={width - paddingX}
                 y1={y}
                 y2={y}
               />
-              {isMajor && (
+              {value % 5 === 0 && (
                 <text className="kd-grid-label" x="6" y={y + 4}>
                   {value}
                 </text>
@@ -250,40 +269,69 @@ function KillDeathTrendChart({ trend }) {
           )
         })}
 
-        {winPoints.length > 1 && (
-          <polyline className="kd-result-line win" points={winLinePoints} />
-        )}
-        {losePoints.length > 1 && (
-          <polyline className="kd-result-line lose" points={loseLinePoints} />
-        )}
+        {points.length > 1 && <polygon className="kd-kill-area" points={areaPoints} />}
+        {points.length > 1 && <polyline className="kd-result-line kill" points={killLinePoints} />}
+        {points.length > 1 && <polyline className="kd-result-line death" points={deathLinePoints} />}
 
         {points.map((point, index) => (
-          <circle
-            className={`kd-trend-point ${getResultClass(point.result)}`}
-            cx={point.x}
-            cy={point.y}
-            r="7"
+          <g
+            className={`kd-trend-point-group${hoveredIndex === index ? ' active' : ''}`}
             key={`${point.dateMatch}-${index}`}
             tabIndex="0"
-            aria-label={`${index + 1}경기 K/D ${point.ratio.toFixed(2)}`}
+            role="img"
+            aria-label={`${index + 1}경기 ${point.kill}킬 ${point.death}데스, K/D ${point.ratio.toFixed(2)}`}
             onMouseEnter={() => setHoveredIndex(index)}
             onMouseLeave={() => setHoveredIndex(null)}
+            onPointerEnter={() => setHoveredIndex(index)}
+            onPointerLeave={() => setHoveredIndex(null)}
             onFocus={() => setHoveredIndex(index)}
             onBlur={() => setHoveredIndex(null)}
-          />
+          >
+            {hoveredIndex === index && (
+              <line
+                className="kd-hover-guide"
+                x1={point.x}
+                x2={point.x}
+                y1={paddingY}
+                y2={paddingY + plotHeight}
+              />
+            )}
+            <circle
+              className="kd-point-hit-area death"
+              cx={point.x}
+              cy={point.deathY}
+              r="12"
+              onMouseEnter={() => setHoveredIndex(index)}
+              onPointerEnter={() => setHoveredIndex(index)}
+              onClick={() => setHoveredIndex(index)}
+            />
+            <circle
+              className="kd-point-hit-area kill"
+              cx={point.x}
+              cy={point.killY}
+              r="12"
+              onMouseEnter={() => setHoveredIndex(index)}
+              onPointerEnter={() => setHoveredIndex(index)}
+              onClick={() => setHoveredIndex(index)}
+            />
+            <circle className="kd-trend-point-ring death" cx={point.x} cy={point.deathY} r="5.5" />
+            <circle className="kd-trend-point death" cx={point.x} cy={point.deathY} r="3" />
+            <circle className="kd-trend-point-ring kill" cx={point.x} cy={point.killY} r="6" />
+            <circle className="kd-trend-point kill" cx={point.x} cy={point.killY} r="3.3" />
+          </g>
         ))}
 
         {hoveredPoint && (
           <g className="kd-tooltip" transform={`translate(${tooltipX} ${tooltipY})`}>
             <rect width={tooltipWidth} height={tooltipHeight} rx="4" />
             <text className="kd-tooltip-title" x="12" y="20">
-              {`${hoveredIndex + 1}경기 · K/D ${hoveredPoint.ratio.toFixed(2)}`}
+              {`${hoveredIndex + 1}경기 · ${getResultLabel(hoveredPoint.result)}`}
             </text>
             <text className="kd-tooltip-detail" x="12" y="42">
               {`${hoveredPoint.kill}K / ${hoveredPoint.death}D`}
             </text>
             <text className="kd-tooltip-average" x="12" y="62">
-              {`최근 평균 K/D ${averageRatio.toFixed(2)}`}
+              {`K/D ${hoveredPoint.ratio.toFixed(2)}`}
             </text>
           </g>
         )}
@@ -313,11 +361,11 @@ function getWeaponStyle(recent) {
   return weapons.find((weapon) => weapon.value === maxValue)?.label || '올라운더'
 }
 
-function getResultClass(result) {
-  if (result === 'W') return 'win'
-  if (result === 'D') return 'draw'
-  if (result === 'L') return 'lose'
-  return 'unknown'
+function getResultLabel(result) {
+  if (result === 'W') return '승리'
+  if (result === 'D') return '무승부'
+  if (result === 'L') return '패배'
+  return '결과 없음'
 }
 
 function getSummaryMessage(loading, error, matchCount) {

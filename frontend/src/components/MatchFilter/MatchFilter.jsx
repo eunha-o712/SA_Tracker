@@ -24,17 +24,28 @@ const MATCH_MODES = [
   { label: '개인전', value: '개인전' },
 ]
 
-const MATCH_MAPS = [
-  '3보급창고',
-  'A보급창고',
-  '웨어하우스',
-  '민속촌',
-  '드래곤로드',
-  '프로방스',
-  '크로스포트',
-  '시티캣',
-  '듀오',
-]
+const MATCH_MAPS_BY_MODE = {
+  폭파미션: [
+    '3보급창고',
+    'A보급창고',
+    '드래곤로드',
+    '프로방스',
+    '크로스포트',
+    '시티캣',
+    '듀오',
+  ],
+  데스매치: [
+    '웨어하우스',
+    '민속촌',
+  ],
+  개인전: [
+    '빌라',
+    '케이지-개인전',
+    '3보급-개인전',
+    '스쿨',
+    '3보급-웨폰챌린지',
+  ],
+}
 
 function MatchFilter({
   scope,
@@ -49,6 +60,8 @@ function MatchFilter({
   onReset,
   disabled = false,
 }) {
+  const availableMaps = MATCH_MAPS_BY_MODE[matchMode] ?? []
+
   return (
     <div className="match-filter">
       <div className="match-type-tabs" role="tablist" aria-label="빠른 매치 조회">
@@ -106,7 +119,7 @@ function MatchFilter({
             onChange={(event) => onMatchMapChange(event.target.value)}
           >
             <option value="ALL">전체 맵</option>
-            {MATCH_MAPS.map((map) => (
+            {availableMaps.map((map) => (
               <option key={map} value={map}>{map}</option>
             ))}
           </select>

@@ -6,6 +6,7 @@ import MatchCard from '../../components/MatchCard/MatchCard'
 import MatchFilter from '../../components/MatchFilter/MatchFilter'
 import NavBar from '../../components/NavBar/NavBar'
 import TeamTable from '../../components/TeamTable/TeamTable'
+import { addRecentSearch } from '../../utils/recentSearches'
 import './MatchDetailPage.css'
 
 const PAGE_SIZE = 20
@@ -73,6 +74,7 @@ function MatchDetailPage() {
     const nextUserName = searchName.trim()
     if (!nextUserName) return
 
+    addRecentSearch(nextUserName)
     const filters = { scope: 'RECENT', matchType, matchMode: 'ALL', matchMap: 'ALL' }
     setScope('RECENT')
     setMatchMode(DEFAULT_FILTERS.matchMode)
@@ -113,6 +115,7 @@ function MatchDetailPage() {
   const handleMatchModeChange = (nextMatchMode) => {
     setMatchMode(nextMatchMode)
     setScope(getMatchModeScope(nextMatchMode))
+    setMatchMap('ALL')
   }
 
   const handleFilterReset = () => {
@@ -180,9 +183,9 @@ function MatchDetailPage() {
       <NavBar />
 
       <main className="match-detail-page">
-        <div className="match-detail-container">
+        <div className="match-detail-container banner-content-layout">
           <div className="match-archive-banner">
-            <img src="/sa-assets/sa-match-banner.png" alt="Match Archive" />
+            <img src="/sa-assets/banner-preview/no-outer-frame/sa-match-banner-no-outer-frame.png" alt="Match Archive" />
           </div>
 
           <section className="record-section match-data-section">
@@ -218,17 +221,19 @@ function MatchDetailPage() {
               onSearch={handleFilterSearch}
               onReset={handleFilterReset}
             />
+          </section>
 
+          <section className={`record-section match-archive-section${!loading && !error && matches.length === 0 ? ' is-empty' : ''}`}>
             <div className="match-page-info">
               <span>MATCH ARCHIVE</span>
               <em>PAGE {page} / {totalPages}</em>
             </div>
 
-            {loading && <div className="match-page-state">매치 기록을 불러오는 중입니다.</div>}
+            {loading && <MatchListSkeleton />}
             {!loading && error && <div className="match-page-state error">{error}</div>}
 
             {!loading && !error && (
-              <div className="match-page-list">
+              <div className={`match-page-list${matches.length === 0 ? ' is-empty' : ''}`}>
                 {matches.length === 0 ? (
                   <div className="match-page-state">표시할 매치 기록이 없습니다.</div>
                 ) : (
@@ -243,7 +248,7 @@ function MatchDetailPage() {
                       {selectedMatchId === match.match_id && (
                         <div className="match-inline-detail">
                           {detailLoading ? (
-                            <div className="match-page-state">상세 기록을 불러오는 중입니다.</div>
+                            <MatchDetailSkeleton />
                           ) : detailError ? (
                             <div className="match-page-state error">{detailError}</div>
                           ) : matchDetail ? (
@@ -321,6 +326,70 @@ function MatchInlineDetail({ match, detail, teams }) {
         <TeamTable title="BLUE TEAM" players={teams.blue} matchType={matchType} />
       </div>
     </>
+  )
+}
+
+function MatchListSkeleton() {
+  return (
+    <div className="match-page-list match-list-skeleton" role="status" aria-live="polite" aria-busy="true">
+      <span className="match-skeleton-status">매치 기록을 불러오는 중입니다.</span>
+      {Array.from({ length: 4 }, (_, index) => (
+        <div className="match-list-skeleton-card" key={index}>
+          <div className="match-skeleton-badge match-skeleton-shimmer" />
+          <div className="match-skeleton-copy">
+            <div className="match-skeleton-line mode match-skeleton-shimmer" />
+            <div className="match-skeleton-line type match-skeleton-shimmer" />
+          </div>
+          <div className="match-skeleton-stats">
+            {Array.from({ length: 3 }, (_, statIndex) => (
+              <div className="match-skeleton-stat" key={statIndex}>
+                <div className="match-skeleton-line stat-label match-skeleton-shimmer" />
+                <div className="match-skeleton-line stat-value match-skeleton-shimmer" />
+              </div>
+            ))}
+          </div>
+          <div className="match-skeleton-line date match-skeleton-shimmer" />
+          <div className="match-skeleton-detail match-skeleton-shimmer" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function MatchDetailSkeleton() {
+  return (
+    <div className="match-detail-skeleton" role="status" aria-live="polite" aria-busy="true">
+      <span className="match-skeleton-status">매치 상세 기록을 불러오는 중입니다.</span>
+      <div className="match-detail-skeleton-summary">
+        <div className="match-skeleton-line map match-skeleton-shimmer" />
+        <div className="match-skeleton-line meta match-skeleton-shimmer" />
+        <div className="match-skeleton-line time match-skeleton-shimmer" />
+      </div>
+      <div className="match-detail-skeleton-teams">
+        <TeamSkeleton />
+        <TeamSkeleton />
+      </div>
+    </div>
+  )
+}
+
+function TeamSkeleton() {
+  return (
+    <div className="match-team-skeleton">
+      <div className="match-skeleton-line team-title match-skeleton-shimmer" />
+      <div className="match-team-skeleton-head">
+        {Array.from({ length: 6 }, (_, index) => (
+          <div className="match-skeleton-line head-cell match-skeleton-shimmer" key={index} />
+        ))}
+      </div>
+      {Array.from({ length: 4 }, (_, rowIndex) => (
+        <div className="match-team-skeleton-row" key={rowIndex}>
+          {Array.from({ length: 6 }, (_, cellIndex) => (
+            <div className="match-skeleton-line row-cell match-skeleton-shimmer" key={cellIndex} />
+          ))}
+        </div>
+      ))}
+    </div>
   )
 }
 

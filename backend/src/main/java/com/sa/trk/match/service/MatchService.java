@@ -1,9 +1,13 @@
 package com.sa.trk.match.service;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -15,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 
 import com.sa.trk.match.dto.MatchDetailResponseDto;
+import com.sa.trk.match.dto.HeadshotStatsDto;
 import com.sa.trk.match.dto.MatchListResponseDto;
 import com.sa.trk.match.dto.MatchSummaryItemDto;
 import com.sa.trk.match.dto.MatchSummaryResponseDto;
@@ -33,6 +38,7 @@ public class MatchService {
 
     private static final int PAGE_SIZE = 20;
     private static final int SUMMARY_SIZE = 20;
+    private static final int HEADSHOT_SAMPLE_SIZE = 20;
     private static final int MAP_SEARCH_LIMIT = 100;
     private static final int MAX_OUID_CACHE_ENTRIES = 500;
     private static final int MAX_LIST_CACHE_ENTRIES = 100;
@@ -168,6 +174,106 @@ public class MatchService {
                 createSummary("GENERAL", "일반전", generalMatches)
         ));
         return response;
+    }
+
+    public List<MatchDto> getRecentMatchesWithMap(String userName) {
+        return getRecentMatchesWithMap(userName, SUMMARY_SIZE);
+    }
+
+    public List<MatchDto> getRecentMatchesWithMap(String userName, int sampleSize) {
+        List<MatchDto> recentMatches = getRecentMatchSample(userName, sampleSize);
+
+        for (MatchDto match : recentMatches) {
+            if (!isBlank(match.getMatch_map())) {
+                continue;
+            }
+            MatchDetailDto detail = getDetailSafely(match.getMatch_id());
+            if (detail != null && !isBlank(detail.getMatch_map())) {
+                match.setMatch_map(detail.getMatch_map().trim());
+            }
+        }
+        return recentMatches;
+    }
+
+    public String getRecentMatchVersion(String userName, int sampleSize) {
+        List<MatchDto> recentMatches = getRecentMatchSample(userName, sampleSize);
+        StringBuilder snapshot = new StringBuilder();
+        for (MatchDto match : recentMatches) {
+            snapshot.append(textValue(match.getMatch_id())).append('|')
+                    .append(textValue(match.getDate_match())).append('|')
+                    .append(textValue(match.getMatch_result())).append('|')
+                    .append(numberOrZero(match.getKill())).append('|')
+                    .append(numberOrZero(match.getDeath())).append('|')
+                    .append(numberOrZero(match.getAssist())).append(';');
+        }
+        return sha256(snapshot.toString());
+    }
+
+    private List<MatchDto> getRecentMatchSample(String userName, int sampleSize) {
+        String normalizedUserName = requireValue(userName, "닉네임");
+        int normalizedSampleSize = Math.max(1, Math.min(sampleSize, SUMMARY_SIZE));
+        List<MatchDto> mergedMatches = mergeMatches(
+                loadSummaryMatches(normalizedUserName, GENERAL_SUMMARY_QUERIES),
+                loadSummaryMatches(normalizedUserName, CLAN_SUMMARY_QUERIES),
+                loadSummaryMatches(normalizedUserName, RANKED_SUMMARY_QUERIES)
+        );
+        return mergedMatches.size() <= normalizedSampleSize
+                ? new ArrayList<>(mergedMatches)
+                : new ArrayList<>(mergedMatches.subList(0, normalizedSampleSize));
+    }
+
+    private String sha256(String value) {
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256")
+                    .digest(value.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(digest);
+        } catch (NoSuchAlgorithmException exception) {
+            throw new IllegalStateException("매치 버전을 생성할 수 없습니다.", exception);
+        }
+    }
+
+    private String textValue(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    public HeadshotStatsDto getHeadshotStats(String userName) {
+        String normalizedUserName = requireValue(userName, "닉네임");
+        List<MatchDto> recentMatches = sampleMatches(mergeMatches(
+                loadSummaryMatches(normalizedUserName, GENERAL_SUMMARY_QUERIES),
+                loadSummaryMatches(normalizedUserName, CLAN_SUMMARY_QUERIES),
+                loadSummaryMatches(normalizedUserName, RANKED_SUMMARY_QUERIES)
+        ));
+
+        int sampleMatchCount = 0;
+        int totalKills = 0;
+        int totalHeadshots = 0;
+
+        for (MatchDto match : recentMatches.stream().limit(HEADSHOT_SAMPLE_SIZE).toList()) {
+            MatchDetailDto detail = getDetailSafely(match.getMatch_id());
+            if (detail == null || detail.getMatch_detail() == null) {
+                continue;
+            }
+
+            MatchDetailItemDto player = detail.getMatch_detail().stream()
+                    .filter(item -> sameText(item.getUser_name(), normalizedUserName))
+                    .findFirst()
+                    .orElse(null);
+            if (player == null) {
+                continue;
+            }
+
+            sampleMatchCount++;
+            totalKills += numberOrZero(player.getKill());
+            totalHeadshots += numberOrZero(player.getHeadshot());
+        }
+
+        HeadshotStatsDto stats = new HeadshotStatsDto();
+        stats.setSampleMatchCount(sampleMatchCount);
+        stats.setTotalKills(totalKills);
+        stats.setTotalHeadshots(totalHeadshots);
+        stats.setHeadshotRate(totalKills == 0 ? 0.0 : roundOne(totalHeadshots * 100.0 / totalKills));
+        stats.setAverageHeadshots(sampleMatchCount == 0 ? 0.0 : roundOne(totalHeadshots / (double) sampleMatchCount));
+        return stats;
     }
 
     private List<MatchDto> sampleMatches(List<MatchDto> matches) {
@@ -369,6 +475,10 @@ public class MatchService {
             return 0.0;
         }
         return Math.round((total * 10.0 / count)) / 10.0;
+    }
+
+    private double roundOne(double value) {
+        return Math.round(value * 10.0) / 10.0;
     }
 
     private List<String> resolveMatchModes(String scope) {

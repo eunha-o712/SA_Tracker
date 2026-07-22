@@ -111,3 +111,22 @@
   color: var(--text-secondary);
   font-size: 17px;
 }
+
+@media (max-width: 1100px) {
+  .rank-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .rank-summary-grid { padding: 16px; grid-template-columns: 1fr; gap: 12px; }
+  .rank-summary-card {
+    min-height: 104px;
+    padding: 18px 16px;
+    grid-template-columns: minmax(78px, 1fr) 56px minmax(88px, 1fr);
+    gap: 8px;
+  }
+  .rank-summary-label { font-size: 15px; }
+  .rank-summary-value { font-size: 19px; }
+  .rank-summary-sub { font-size: 12px; }
+}

@@ -4,7 +4,7 @@ function RankSummary({ rank, tier, images }) {
   return (
     <section className="record-section">
       <div className="record-section-header">
-        <h2 className="record-section-title">RANK Summ.</h2>
+        <h2 className="record-section-title">RANK SUMMARY</h2>
         <span className="record-section-sub">랭킹요약</span>
       </div>
 
