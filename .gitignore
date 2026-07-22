@@ -4,6 +4,7 @@
 backend/build/
 backend/bin/
 backend/out/
+backend/uploads/
 backend/.settings/
 backend/.classpath
 backend/.project
@@ -12,6 +13,10 @@ backend/*.iml
 
 backend/src/main/resources/application.properties
 backend/src/main/resources/application-*.properties
+backend/.env
+backend/.env.*
+!backend/.env.example
+!backend/.env.local.example
 
 frontend/node_modules/
 frontend/dist/
@@ -20,8 +25,14 @@ frontend/.vscode/
 frontend/.env
 frontend/.env.*
 
+uploads/
+
 *.tmp
 *.log
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Local review artifacts
+/tmp/
+/frontend/public/sa-assets/banner-preview/
