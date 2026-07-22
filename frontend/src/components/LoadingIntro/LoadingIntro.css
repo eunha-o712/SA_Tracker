@@ -13,3 +13,25 @@
   height: 100%;
   object-fit: cover;
 }
+
+.loading-intro__skip {
+  position: absolute;
+  right: clamp(18px, 4vw, 64px);
+  bottom: clamp(18px, 4vw, 52px);
+  min-width: 132px;
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1px solid var(--accent);
+  background: rgba(0, 0, 0, 0.82);
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.loading-intro__skip:hover,
+.loading-intro__skip:focus-visible {
+  background: var(--accent);
+  color: #071006;
+}
