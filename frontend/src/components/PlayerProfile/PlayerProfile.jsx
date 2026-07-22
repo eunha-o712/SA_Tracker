@@ -5,7 +5,11 @@ const fmt = (value, suffix = '') => {
   return `${Number(value).toFixed(1)}${suffix}`
 }
 
-function PlayerProfile({ basic, recent, name }) {
+function PlayerProfile({ basic, recent, name, clanName: resolvedClanName, favoriteId, favoritePending, favoriteMessage, onFavoriteToggle, onCompare }) {
+  const titleName = cleanProfileText(basic.title_name)
+  const clanName = cleanProfileText(resolvedClanName)
+  const mannerGrade = cleanProfileText(basic.manner_grade)
+
   return (
     <section className="record-section">
       <div className="player-profile">
@@ -21,7 +25,7 @@ function PlayerProfile({ basic, recent, name }) {
               <div className="player-profile-metric">
                 <img
                   src="/sa-assets/sa-stat-winrate.png"
-                  alt="승률"
+                  alt="win rate"
                   className="player-profile-metric-icon"
                 />
                 <span>승률</span>
@@ -41,18 +45,37 @@ function PlayerProfile({ basic, recent, name }) {
           </div>
 
           <div className="player-profile-tags">
-            <span className="player-profile-tag">#칭호 : {basic.title_name || 'NO TITLE'}</span>
-            <span className="player-profile-tag">#CLAN : {basic.clan_name || 'NO CLAN'}</span>
-            <span className="player-profile-tag">#매너지수 : {basic.manner_grade || '-'}</span>
+            {titleName && <span className="player-profile-tag">#칭호 : {titleName}</span>}
+            <span className="player-profile-tag">#클랜 : {clanName || '-'}</span>
+            {mannerGrade && <span className="player-profile-tag">#매너지수 : {mannerGrade}</span>}
           </div>
         </div>
 
-        <div className="player-profile-date">
-          Day of First Shot : {basic.user_date_create?.slice(0, 10) || 'YYYY-MM-DD'}
+        <div className="player-profile-side">
+          <div className="player-profile-date">최초 전투일 : {basic.user_date_create?.slice(0, 10) || 'YYYY-MM-DD'}</div>
+          <button className={favoriteId ? 'player-favorite-button active' : 'player-favorite-button'} type="button" disabled={favoritePending} onClick={onFavoriteToggle}>
+            {favoritePending ? '저장 중' : favoriteId ? '즐겨찾기 완료' : '즐겨찾기 추가'}
+          </button>
+          <button className="player-compare-button" type="button" onClick={onCompare}>플레이어 비교</button>
+          <span className="player-favorite-message" aria-live="polite">{favoriteMessage}</span>
         </div>
       </div>
     </section>
   )
+}
+
+function cleanProfileText(value) {
+  if (value === null || value === undefined) return ''
+
+  const normalized = String(value).trim()
+  if (!normalized) return ''
+
+  const lowered = normalized.toLowerCase()
+  if (['-', 'null', 'undefined', 'none', 'no clan', 'no title'].includes(lowered)) {
+    return ''
+  }
+
+  return normalized
 }
 
 export default PlayerProfile

@@ -28,7 +28,10 @@ public class PlayerService {
 
     public PlayerResponseDto getPlayer(String userName) {
         OuidResponseDto ouidResponse = nexonApiClient.getOuid(userName);
-        String ouid = ouidResponse.getOuid();
+        return getPlayerByOuid(ouidResponse.getOuid());
+    }
+
+    public PlayerResponseDto getPlayerByOuid(String ouid) {
 
         UserBasicDto basic = nexonApiClient.getUserBasic(ouid);
         UserRankDto rank = nexonApiClient.getUserRank(ouid);

@@ -1,0 +1,47 @@
+.record-room-empty-body {
+  min-height: 140px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--bg-primary);
+  text-align: center;
+}
+
+.record-room-empty-body span {
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+.record-room-empty-body strong {
+  color: var(--text-primary);
+  font-size: 24px;
+}
+
+.record-room-empty-body p {
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+@media (max-width: 760px) {
+  .record-room-page {
+    padding-bottom: 18px;
+  }
+
+  .record-room-page .player-container {
+    padding-bottom: 20px;
+  }
+
+  .record-room-empty-body {
+    min-height: 130px;
+    padding: 24px 16px;
+  }
+
+  .record-room-empty-body strong { font-size: 19px; }
+  .record-room-empty-body p { font-size: 12px; }
+}

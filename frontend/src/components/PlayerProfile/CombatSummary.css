@@ -3,10 +3,204 @@
   padding: 32px 36px;
   background: rgba(17, 17, 17, 0.88);
   color: var(--text-secondary);
-  font-size: 20px;
-  line-height: 1.8;
+  font-size: 16px;
+  line-height: 1.7;
 }
 
 .combat-summary-box strong {
   color: var(--accent);
+}
+
+.combat-summary-box p {
+  margin: 0;
+}
+
+.combat-summary-box.loading {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+}
+
+.combat-summary-line {
+  position: relative;
+  overflow: hidden;
+  width: 62%;
+  height: 18px;
+  border-radius: 3px;
+  background: #292e32;
+}
+
+.combat-summary-line.wide {
+  width: 88%;
+}
+
+.combat-summary-line.short {
+  width: 42%;
+}
+
+.combat-summary-line::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(126, 217, 87, .14), transparent);
+  animation: combat-summary-sweep 1.4s ease-in-out infinite;
+}
+
+.combat-summary-error {
+  color: var(--lose);
+  font-weight: 800;
+}
+
+.combat-ai-report {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.combat-ai-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.combat-ai-head > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.combat-ai-head span,
+.combat-ai-list span,
+.combat-ai-meta {
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 1.7px;
+}
+
+.combat-ai-head strong {
+  color: var(--text-primary);
+  font-size: clamp(24px, 2.5vw, 38px);
+  font-weight: 950;
+  line-height: 1.1;
+}
+
+.combat-ai-head em {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.combat-ai-summary {
+  padding: 20px 22px;
+  background: var(--bg-primary);
+  border: 1px solid rgba(126, 217, 87, .28);
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.75;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  text-wrap: pretty;
+}
+
+.combat-ai-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.combat-ai-list {
+  min-width: 0;
+  padding: 20px;
+  background: #1d2124;
+  border: 1px solid rgba(126, 217, 87, .24);
+}
+
+.combat-ai-list.danger {
+  border-color: rgba(255, 82, 82, .24);
+}
+
+.combat-ai-list.danger span {
+  color: var(--lose);
+}
+
+.combat-ai-list ul {
+  margin: 13px 0 0;
+  padding-left: 17px;
+}
+
+.combat-ai-list li {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.65;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  text-wrap: pretty;
+}
+
+.combat-ai-list li + li {
+  margin-top: 9px;
+}
+
+.combat-ai-meta {
+  align-self: flex-end;
+  color: rgba(126, 217, 87, .72);
+}
+
+@keyframes combat-summary-sweep {
+  to { transform: translateX(100%); }
+}
+
+@media (max-width: 900px) {
+  .combat-ai-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .combat-summary-box {
+    padding: 24px 20px;
+    font-size: 16px;
+    line-height: 1.7;
+  }
+
+  .combat-summary-line,
+  .combat-summary-line.wide,
+  .combat-summary-line.short {
+    width: 100%;
+  }
+
+  .combat-ai-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .combat-ai-head em {
+    white-space: normal;
+  }
+
+  .combat-ai-summary {
+    padding: 16px;
+    font-size: 15px;
+  }
+
+  .combat-ai-list {
+    padding: 16px;
+  }
+
+  .combat-ai-meta {
+    align-self: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .combat-summary-line::after {
+    animation: none;
+  }
 }

@@ -53,11 +53,14 @@ src/main/resources/application-*.properties
 .env
 .env.*
 *.env
+!.env.example
+!.env.local.example
 
 # 로그
 
 *.log
 logs/
+uploads/
 
 # 운영체제
 

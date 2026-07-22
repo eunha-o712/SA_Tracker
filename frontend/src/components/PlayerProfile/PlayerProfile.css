@@ -117,9 +117,15 @@
 
 /* 가입일 */
 
-.player-profile-date {
+.player-profile-side {
   align-self: start;
-  padding-top: -5px;
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.player-profile-date {
 
   white-space: nowrap;
 
@@ -143,4 +149,78 @@
 
   background: var(--accent);
   box-shadow: 0 0 8px var(--accent);
+}
+
+.player-favorite-button {
+  min-width: 148px;
+  height: 40px;
+  padding: 0 18px;
+  background: transparent;
+  border: 1px solid rgba(126, 217, 87, .55);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+.player-favorite-button:hover:not(:disabled),
+.player-favorite-button.active {
+  background: var(--accent);
+  color: var(--bg-primary);
+}
+
+.player-favorite-button:disabled { opacity: .55; cursor: wait; }
+.player-compare-button {
+  min-width: 148px;
+  height: 40px;
+  padding: 0 18px;
+  background: rgba(255, 255, 255, .03);
+  border: 1px solid rgba(255, 255, 255, .24);
+  color: var(--text-primary);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+.player-compare-button:hover { border-color: var(--accent); color: var(--accent); }
+.player-favorite-message { min-height: 16px; max-width: 210px; color: var(--text-secondary); font-size: 11px; font-weight: 700; text-align: right; }
+
+@media (max-width: 900px) {
+  .player-profile {
+    padding: 24px;
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+  }
+
+  .player-profile-avatar { width: 96px; height: 96px; }
+  .player-profile-top { align-items: flex-start; flex-direction: column; gap: 14px; }
+  .player-profile-name { font-size: 34px; }
+  .player-profile-metrics {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .player-profile-metric { min-width: 0; gap: 8px; }
+  .player-profile-metric-icon { width: 30px; height: 30px; }
+  .player-profile-metric span { font-size: 13px; }
+  .player-profile-metric strong { font-size: 22px; }
+  .player-profile-tags { gap: 8px; margin-top: 14px; }
+  .player-profile-tag { padding: 5px 10px; font-size: 13px; }
+  .player-profile-side { grid-column: 1 / -1; width: 100%; align-items: flex-start; }
+  .player-profile-date { padding-top: 0; white-space: normal; }
+  .player-favorite-message { max-width: none; text-align: left; }
+}
+
+@media (max-width: 480px) {
+  .player-profile {
+    padding: 20px 16px;
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 16px;
+  }
+  .player-profile-avatar { width: 72px; height: 72px; }
+  .player-profile-name { font-size: 30px; }
+  .player-profile-metrics { grid-template-columns: 1fr; }
 }

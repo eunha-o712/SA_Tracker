@@ -5,7 +5,7 @@
 .weapon-summary-grid {
   padding: 32px;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 24px;
 }
 
@@ -14,6 +14,7 @@
    ========================= */
 
 .weapon-summary-card {
+  min-width: 0;
   min-height: 156px;
   padding: 24px;
   background: #22262B;
@@ -26,10 +27,17 @@
    ========================= */
 
 .weapon-summary-top {
-  display: flex;
-  justify-content: space-between;
+  min-height: 90px;
+  display: grid;
+  grid-template-columns: minmax(88px, auto) minmax(0, 1fr);
   align-items: center;
-  gap: 20px;
+  gap: 12px;
+}
+
+.weapon-summary-top > div {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
 }
 
 /* =========================
@@ -58,26 +66,25 @@
    ========================= */
 
 .weapon-summary-image {
+  width: 100%;
+  max-width: 220px;
+  justify-self: end;
   object-fit: contain;
-  flex-shrink: 0;
 }
 
 /* 돌격소총 전용 */
 .weapon-rifle {
-  width: 240px;
   height: 80px;
 }
 
 /* 저격총 전용 */
 .weapon-sniper {
-  width: 280px;
-  height: 90px;
+  height: 80px;
 }
 
 /* 특수/샷건 전용 */
 .weapon-shotgun {
-  width: 260px;
-  height: 90px;
+  height: 80px;
 }
 
 /* =========================
@@ -109,4 +116,25 @@
   box-shadow:
     0 0 8px rgba(127, 217, 89, 0.5),
     inset 0 0 4px rgba(255, 255, 255, 0.15);
+}
+
+@media (max-width: 1100px) {
+  .weapon-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .weapon-summary-card:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 700px) {
+  .weapon-summary-grid { padding: 16px; grid-template-columns: 1fr; gap: 12px; }
+  .weapon-summary-card { min-height: 132px; padding: 18px; }
+  .weapon-summary-label { font-size: 16px; }
+  .weapon-summary-value { font-size: 28px; }
+  .weapon-summary-top { grid-template-columns: minmax(74px, auto) minmax(0, 1fr); }
+  .weapon-rifle,
+  .weapon-sniper,
+  .weapon-shotgun { max-width: 210px; height: 64px; }
 }

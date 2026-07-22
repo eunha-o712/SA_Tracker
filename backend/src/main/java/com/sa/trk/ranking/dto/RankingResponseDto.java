@@ -1,5 +1,7 @@
 package com.sa.trk.ranking.dto;
 
+import com.sa.trk.common.dto.ImagesDto;
+
 import lombok.Data;
 
 @Data
@@ -14,4 +16,5 @@ public class RankingResponseDto {
     private Integer soloRankMatchScore;
     private String partyRankMatchTier;
     private Integer partyRankMatchScore;
+    private ImagesDto images;
 }

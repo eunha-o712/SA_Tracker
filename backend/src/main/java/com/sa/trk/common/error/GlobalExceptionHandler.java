@@ -15,10 +15,37 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import java.time.Instant;
 
+import com.sa.trk.ai.service.OpenAiException;
+import com.sa.trk.auth.service.AuthException;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    @ExceptionHandler(AuthException.class)
+    public ResponseEntity<ApiErrorResponse> handleAuthError(
+            AuthException exception,
+            HttpServletRequest request) {
+        return response(
+                exception.getStatus(),
+                exception.getCode(),
+                exception.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(OpenAiException.class)
+    public ResponseEntity<ApiErrorResponse> handleOpenAiError(
+            OpenAiException exception,
+            HttpServletRequest request) {
+        return response(
+                exception.getStatus(),
+                exception.getCode(),
+                exception.getMessage(),
+                request
+        );
+    }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiErrorResponse> handleBadRequest(

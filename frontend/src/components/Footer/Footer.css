@@ -52,14 +52,26 @@
   margin-bottom: 20px;
 }
 
-.footer-links a {
+.footer-links a,
+.footer-links button {
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: var(--accent);
+  cursor: pointer;
+  font-family: inherit;
   font-size: 13px;
   transition: all 0.2s ease;
 }
 
-.footer-links a:hover {
+.footer-links a:hover,
+.footer-links button:hover {
   color: var(--accent-dark);
+}
+
+.footer-links button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 4px;
 }
 
 .footer-links span {

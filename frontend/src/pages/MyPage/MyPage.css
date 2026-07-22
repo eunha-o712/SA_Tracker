@@ -1,0 +1,414 @@
+.mypage-panel {
+  border: 1px solid rgba(126, 217, 87, 0.42);
+  background: var(--bg-primary);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
+}
+
+.mypage-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 28px;
+  padding: 42px 44px 28px;
+  border-bottom: 1px solid rgba(126, 217, 87, 0.18);
+}
+
+.mypage-panel__header span {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 4px;
+}
+
+.mypage-panel h1,
+.mypage-action-card h2 {
+  margin: 0;
+  color: #fff;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+.mypage-panel h1 {
+  font-size: clamp(32px, 5vw, 58px);
+}
+
+.mypage-panel p {
+  margin: 8px 0 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.mypage-identity {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 28px 44px 0;
+  padding: 24px;
+  border: 1px solid rgba(126, 217, 87, 0.2);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.mypage-identity span {
+  display: block;
+  margin-bottom: 10px;
+  color: #909892;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+.mypage-identity strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+}
+
+.mypage-identity p {
+  max-width: 460px;
+  margin: 0;
+  text-align: right;
+}
+
+.account-heart-badge {
+  width: 24px;
+  height: 24px;
+  display: inline-block;
+  flex: 0 0 auto;
+  background: url('/sa-assets/sa-heart-or.png') 50% 29% / 170% 170% no-repeat;
+  filter: drop-shadow(0 0 5px rgba(255, 159, 28, 0.38));
+}
+
+.account-heart-badge.verified {
+  background-image: url('/sa-assets/sa-heart-gr.png');
+  filter: drop-shadow(0 0 5px rgba(126, 217, 87, 0.42));
+}
+
+.mypage-outline-button,
+.mypage-action-card button {
+  min-height: 42px;
+  padding: 0 18px;
+  border: 1px solid rgba(126, 217, 87, 0.62);
+  background: rgba(126, 217, 87, 0.08);
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-decoration: none;
+  transition: 0.15s ease;
+}
+
+.mypage-outline-button {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.mypage-outline-button:hover,
+.mypage-action-card button:hover:not(:disabled) {
+  border-color: var(--accent);
+  box-shadow: 0 0 16px rgba(126, 217, 87, 0.18);
+}
+
+.mypage-action-card button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.mypage-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 28px 44px;
+}
+
+.mypage-info-card {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.mypage-info-card span {
+  display: block;
+  margin-bottom: 12px;
+  color: #909892;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+.mypage-info-card strong {
+  display: block;
+  overflow: hidden;
+  color: var(--accent);
+  font-size: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mypage-info-card strong.is-muted {
+  color: #cfd6d0;
+  font-size: 12px;
+}
+
+.mypage-actions {
+  display: grid;
+  gap: 14px;
+  padding: 0 44px 42px;
+}
+
+.mypage-action-card,
+.mypage-link-card,
+.mypage-clan-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px;
+  border: 1px solid rgba(126, 217, 87, 0.18);
+  background: rgba(0, 0, 0, 0.26);
+}
+
+.mypage-action-card h2,
+.mypage-link-card h2,
+.mypage-clan-card h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+.mypage-link-card {
+  align-items: stretch;
+  flex-direction: column;
+}
+
+.mypage-clan-card {
+  align-items: stretch;
+  flex-direction: column;
+}
+
+.mypage-clan-card p {
+  margin: 8px 0 0;
+}
+
+.mypage-clan-card small {
+  color: #909892;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.mypage-clan-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  width: fit-content;
+  color: #d8ded9;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.mypage-clan-toggle input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.mypage-clan-toggle__control {
+  position: relative;
+  width: 42px;
+  height: 22px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  transition: 0.18s ease;
+}
+
+.mypage-clan-toggle__control::after {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #a4aba6;
+  content: '';
+  transition: 0.18s ease;
+}
+
+.mypage-clan-toggle.is-active {
+  color: #fff;
+}
+
+.mypage-clan-toggle.is-active .mypage-clan-toggle__control {
+  border-color: var(--accent);
+  background: rgba(126, 217, 87, 0.16);
+  box-shadow: 0 0 14px rgba(126, 217, 87, 0.16);
+}
+
+.mypage-clan-toggle.is-active .mypage-clan-toggle__control::after {
+  left: 24px;
+  background: var(--accent);
+  box-shadow: 0 0 8px rgba(126, 217, 87, 0.6);
+}
+
+.mypage-clan-toggle:has(input:focus-visible) .mypage-clan-toggle__control {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+.mypage-clan-toggle:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.mypage-link-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 170px;
+  gap: 12px;
+}
+
+.mypage-link-form input {
+  min-width: 0;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid rgba(126, 217, 87, 0.4);
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  outline: none;
+}
+
+.mypage-link-form input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(126, 217, 87, 0.12);
+}
+
+.mypage-link-form button {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #071006;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+}
+
+.mypage-link-form input:disabled,
+.mypage-link-form button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.mypage-link-card small {
+  color: #909892;
+  font-size: 11px;
+}
+
+.mypage-link-card small a {
+  color: #ffb067;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.mypage-link-card small a:hover {
+  color: #fff;
+}
+
+.mypage-state,
+.mypage-message {
+  margin: 28px 44px 42px;
+  padding: 18px;
+  border: 1px solid rgba(126, 217, 87, 0.28);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+}
+
+.mypage-message span {
+  white-space: pre-line;
+}
+
+.mypage-message {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.mypage-message.is-error {
+  border-color: rgba(255, 78, 64, 0.45);
+  color: var(--lose);
+}
+
+.mypage-message a {
+  color: #fff;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .mypage-panel__header,
+  .mypage-identity,
+  .mypage-action-card,
+  .mypage-message {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .mypage-identity p {
+    text-align: left;
+  }
+
+  .mypage-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .mypage-panel__header,
+  .mypage-identity,
+  .mypage-grid,
+  .mypage-actions {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .mypage-identity {
+    margin-left: 18px;
+    margin-right: 18px;
+  }
+
+  .mypage-identity strong {
+    font-size: 28px;
+  }
+
+  .mypage-link-form {
+    grid-template-columns: 1fr;
+  }
+
+  .mypage-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mypage-state,
+  .mypage-message {
+    margin-left: 18px;
+    margin-right: 18px;
+  }
+}

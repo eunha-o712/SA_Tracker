@@ -1,7 +1,16 @@
 import axios from 'axios'
+import { readAuthSession } from '../utils/authSession'
 
 const api = axios.create({
-  baseURL: 'http://localhost:8085',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8085',
+})
+
+api.interceptors.request.use((config) => {
+  const token = readAuthSession()?.token
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
 })
 
 export function getApiErrorMessage(error, fallbackMessage) {

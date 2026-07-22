@@ -5,6 +5,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sa.trk.gameMap.dto.GameMapResponseDto;
+import com.sa.trk.gameMap.dto.GameMapStatsResponseDto;
+import com.sa.trk.gameMap.dto.GameMapStatsStatusDto;
 import com.sa.trk.gameMap.service.GameMapService;
 
 @RestController
@@ -30,5 +32,17 @@ public class GameMapController {
                 scope,
                 matchType
         );
+    }
+
+    @GetMapping("/api/map/stats")
+    public GameMapStatsResponseDto getMapStats(@RequestParam("userName") String userName) {
+        return gameMapService.getMapStats(userName);
+    }
+
+    @GetMapping("/api/map/stats/status")
+    public GameMapStatsStatusDto getMapStatsStatus(
+            @RequestParam("userName") String userName,
+            @RequestParam(value = "version", required = false) String version) {
+        return gameMapService.getMapStatsStatus(userName, version);
     }
 }

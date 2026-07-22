@@ -1,0 +1,17 @@
+.privacy-shell {
+  min-height: 100vh;
+  background: var(--bg-primary);
+}
+
+.privacy-page {
+  width: min(100% - 40px, 1120px);
+  margin: 0 auto;
+  padding: 64px 0 84px;
+}
+
+@media (max-width: 640px) {
+  .privacy-page {
+    width: min(100% - 24px, 1120px);
+    padding: 28px 0 44px;
+  }
+}

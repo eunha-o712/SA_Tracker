@@ -1,76 +1,187 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import api from '../../api/api'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import api, { getApiErrorMessage } from '../../api/api'
+import { cachedGet, invalidateCachedGet } from '../../api/apiCache'
+import { readAuthSession, subscribeToAuthSession } from '../../utils/authSession'
 import './PlayerFavorites.css'
 
-const mockFavorites = [
-  {
-    id: 1,
-    userName: '원장',
-    titleName: 'NO TITLE',
-    seasonGrade: '',
-    seasonGradeImage: null,
-    clanName: '다봄',
-    latestMatchDate: null,
-    kda: { kill: 48.32, death: 23.21, assist: 11.5 },
-  },
-]
+const FAVORITE_CACHE_TTL_MS = 5 * 60_000
 
 function PlayerFavorites() {
   const navigate = useNavigate()
-  const [favorites, setFavorites] = useState(mockFavorites)
+  const [favorites, setFavorites] = useState(readInitialFavoriteCache)
+  const [loading, setLoading] = useState(shouldShowInitialFavoriteLoader)
+  const [error, setError] = useState('')
+  const [removingId, setRemovingId] = useState(null)
   const [now, setNow] = useState(() => Date.now())
+  const [authSession, setAuthSession] = useState(readAuthSession)
+  const carouselRef = useRef(null)
+  const [carouselState, setCarouselState] = useState({
+    canPrevious: false,
+    canNext: false,
+    thumbSize: 100,
+    thumbOffset: 0,
+  })
+  const isLoggedIn = Boolean(authSession)
+
+  const syncCarousel = useCallback(() => {
+    const viewport = carouselRef.current
+    if (!viewport) return
+
+    const maxScroll = Math.max(0, viewport.scrollWidth - viewport.clientWidth)
+    const thumbSize = viewport.scrollWidth > 0
+      ? Math.max(12, Math.min(100, (viewport.clientWidth / viewport.scrollWidth) * 100))
+      : 100
+    const thumbOffset = maxScroll > 0
+      ? (viewport.scrollLeft / maxScroll) * (100 - thumbSize)
+      : 0
+
+    setCarouselState({
+      canPrevious: viewport.scrollLeft > 2,
+      canNext: viewport.scrollLeft < maxScroll - 2,
+      thumbSize,
+      thumbOffset,
+    })
+  }, [])
+
+  useEffect(() => subscribeToAuthSession(() => {
+    const nextSession = readAuthSession()
+    setAuthSession(nextSession)
+
+    if (!nextSession) {
+      setFavorites([])
+      setError('')
+      setRemovingId(null)
+      setLoading(false)
+      return
+    }
+
+    const cacheKey = getFavoriteCacheKey(nextSession)
+    setFavorites(applyOwnClanEvidence(readFavoriteCache(cacheKey), nextSession))
+    setLoading(!hasFavoriteCache(cacheKey))
+  }), [])
 
   useEffect(() => {
     let active = true
+    const sessionToken = authSession?.token
 
-    const loadFavoriteData = async () => {
-      const updatedFavorites = await Promise.all(
-        mockFavorites.map(async (favorite) => {
+    const loadFavorites = async () => {
+      if (!sessionToken) {
+        setFavorites([])
+        setLoading(false)
+        return
+      }
+
+      try {
+        setError('')
+        const cacheKey = getFavoriteCacheKey(authSession)
+        const cachedFavorites = readFavoriteCache(cacheKey)
+        const hasCachedSnapshot = hasFavoriteCache(cacheKey)
+
+        if (hasCachedSnapshot) {
+          setFavorites(applyOwnClanEvidence(cachedFavorites, authSession))
+          setLoading(false)
+        } else {
+          setLoading(true)
+        }
+
+        const response = await cachedGet('/api/favorite')
+        const storedFavorites = Array.isArray(response.data) ? response.data : []
+        const initialFavorites = applyOwnClanEvidence(
+          mergeFavoriteDetails(storedFavorites, cachedFavorites),
+          authSession,
+        )
+
+        if (active && isSameSession(sessionToken)) {
+          setFavorites(initialFavorites)
+          setLoading(false)
+        }
+
+        if (storedFavorites.length === 0) {
+          writeFavoriteCache(cacheKey, [])
+          return
+        }
+
+        let roster
+        if (containsOwnFavorite(storedFavorites, authSession)) {
           try {
-            const [playerResult, summaryResult] = await Promise.allSettled([
-              api.get('/api/player', { params: { userName: favorite.userName } }),
-              api.get('/api/match/summary', { params: { userName: favorite.userName } }),
-            ])
-            const playerData = playerResult.status === 'fulfilled'
-              ? playerResult.value.data
-              : null
-            const summaryData = summaryResult.status === 'fulfilled'
-              ? summaryResult.value.data
-              : null
-            const recentSummary = summaryData?.summaries?.find(
-              (summary) => summary.key === 'RECENT'
-            )
-            const basic = playerData?.basic ?? {}
-            const rank = playerData?.rank ?? {}
-            const images = playerData?.images ?? {}
-
-            return {
-              ...favorite,
-              titleName: basic.title_name || 'NO TITLE',
-              seasonGrade: rank.season_grade || '시즌 계급',
-              seasonGradeImage: images.seasonGradeImage || null,
-              clanName: basic.clan_name || 'NO CLAN',
-              latestMatchDate: recentSummary?.latestMatchDate || null,
-            }
+            const rosterResponse = await cachedGet('/api/clan/members')
+            roster = Array.isArray(rosterResponse.data) ? rosterResponse.data : []
           } catch {
-            return favorite
+            roster = undefined
           }
-        })
-      )
-      if (active) setFavorites(updatedFavorites)
+        }
+
+        const verifiedInitialFavorites = applyOwnClanEvidence(initialFavorites, authSession, roster)
+        if (active && isSameSession(sessionToken)) setFavorites(verifiedInitialFavorites)
+
+        if (hasCompleteCache(storedFavorites, cachedFavorites) && isFavoriteCacheFresh(cacheKey)) {
+          writeFavoriteCache(cacheKey, verifiedInitialFavorites)
+          return
+        }
+
+        const enriched = applyOwnClanEvidence(
+          await Promise.all(storedFavorites.map(enrichFavorite)),
+          authSession,
+          roster,
+        )
+        writeFavoriteCache(cacheKey, enriched)
+        if (active && isSameSession(sessionToken)) setFavorites(enriched)
+      } catch (requestError) {
+        if (active && isSameSession(sessionToken)) setError(getApiErrorMessage(requestError, 'Failed to load favorites.'))
+      } finally {
+        if (active && isSameSession(sessionToken)) setLoading(false)
+      }
     }
 
-    loadFavoriteData()
+    loadFavorites()
     const timerId = window.setInterval(() => setNow(Date.now()), 60_000)
     return () => {
       active = false
       window.clearInterval(timerId)
     }
-  }, [])
+  }, [authSession])
 
-  const handleDelete = (id) => {
-    setFavorites((current) => current.filter((favorite) => favorite.id !== id))
+  useEffect(() => {
+    const viewport = carouselRef.current
+    if (!viewport) return undefined
+
+    syncCarousel()
+    viewport.addEventListener('scroll', syncCarousel, { passive: true })
+    const resizeObserver = new ResizeObserver(syncCarousel)
+    resizeObserver.observe(viewport)
+
+    return () => {
+      viewport.removeEventListener('scroll', syncCarousel)
+      resizeObserver.disconnect()
+    }
+  }, [favorites.length, loading, syncCarousel])
+
+  const slideFavorites = (direction) => {
+    const viewport = carouselRef.current
+    if (!viewport) return
+    viewport.scrollBy({
+      left: direction * Math.max(320, viewport.clientWidth * 0.82),
+      behavior: 'smooth',
+    })
+  }
+
+  const handleDelete = async (id) => {
+    try {
+      setRemovingId(id)
+      setError('')
+      await api.delete(`/api/favorite/${id}`)
+      invalidateCachedGet('/api/favorite')
+      setFavorites((current) => {
+        const nextFavorites = current.filter((favorite) => favorite.id !== id)
+        writeFavoriteCache(getFavoriteCacheKey(authSession), nextFavorites)
+        return nextFavorites
+      })
+    } catch (requestError) {
+      setError(getApiErrorMessage(requestError, 'Failed to remove favorite.'))
+    } finally {
+      setRemovingId(null)
+    }
   }
 
   return (
@@ -80,95 +191,295 @@ function PlayerFavorites() {
         <h2>PLAYERS</h2>
       </div>
 
-      {favorites.length === 0 && (
-        <div className="player-favorites-message">등록된 즐겨찾기가 없습니다.</div>
+      {loading && <FavoritesSkeleton />}
+      {!loading && error && <div className="player-favorites-message error" role="alert">{error}</div>}
+
+      {!loading && !error && !isLoggedIn && (
+        <div className="player-favorites-message">
+          로그인하면 즐겨찾기한 플레이어를 확인할 수 있습니다.
+          <small><Link to="/login">로그인하기</Link></small>
+        </div>
       )}
 
-      {favorites.length > 0 && (
-        <div className="player-card-grid">
-          {favorites.map((favorite) => {
+      {!loading && !error && isLoggedIn && favorites.length === 0 && (
+        <div className="player-favorites-message">
+          No favorite players yet.
+          <small>Add favorites from a player profile.</small>
+        </div>
+      )}
+
+      {!loading && favorites.length > 0 && (
+        <div className="favorite-carousel">
+          <div
+            className="player-card-grid"
+            ref={carouselRef}
+            tabIndex="0"
+            aria-label="즐겨찾기 플레이어 목록"
+          >
+            {favorites.map((favorite) => {
             const matchStatus = getMatchStatus(favorite.latestMatchDate, now)
             return (
               <article className="favorite-player-card" key={favorite.id}>
                 <div className="favorite-top">
                   <div className="favorite-rank">
-                    {favorite.seasonGradeImage ? (
-                      <img src={favorite.seasonGradeImage} alt={favorite.seasonGrade} />
-                    ) : (
-                      <span className="favorite-image-placeholder" aria-hidden="true">?</span>
-                    )}
+                    {favorite.seasonGradeImage
+                      ? <img src={favorite.seasonGradeImage} alt={favorite.seasonGrade} />
+                      : <img src="/sa-assets/sa-profile-basic.png" alt="" />}
                   </div>
-
                   <div className="favorite-name">
                     <h3>{favorite.userName}</h3>
                     <p>{favorite.titleName}</p>
                   </div>
-
                   <div className="favorite-login">
-                    <span>
-                      <i className={matchStatus.recent ? 'active' : ''} />
-                      LAST MATCH
-                    </span>
-                    <strong className={matchStatus.recent ? 'active' : ''}>
-                      {matchStatus.label}
-                    </strong>
+                    <span><i className={matchStatus.recent ? 'active' : ''} />LAST MATCH</span>
+                    <strong className={matchStatus.recent ? 'active' : ''}>{matchStatus.label}</strong>
                   </div>
                 </div>
-
                 <div className="favorite-divider" />
-
                 <div className="favorite-clan">
-                  <div className="favorite-clan-mark">
-                    <img src="/sa-assets/sa-clan-basic.png" alt="클랜 기본 이미지" />
-                  </div>
+                  <div className="favorite-clan-mark"><img src="/sa-assets/sa-clan-basic.png" alt="" /></div>
                   <strong>{favorite.clanName}</strong>
                 </div>
-
                 <div className="favorite-divider" />
-
                 <div className="favorite-kda">
-                  <span>K/D/A</span>
+                  <span>AVG K / D / A</span>
                   <div>
-                    <b>{favorite.kda.kill.toFixed(2)}</b><em>/</em>
-                    <b className="death">{favorite.kda.death.toFixed(2)}</b><em>/</em>
-                    <b className="assist">{favorite.kda.assist.toFixed(2)}</b>
+                    <b>{formatStat(favorite.kda.kill)}</b>
+                    <em>/</em>
+                    <b className="death">{formatStat(favorite.kda.death)}</b>
+                    <em>/</em>
+                    <b className="assist">{formatStat(favorite.kda.assist)}</b>
                   </div>
                 </div>
-
                 <div className="favorite-actions">
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/player/${encodeURIComponent(favorite.userName)}`)}
-                  >
-                    VIEW PROFILE
-                  </button>
-                  <button type="button" className="remove" onClick={() => handleDelete(favorite.id)}>
-                    REMOVE
+                  <button type="button" onClick={() => navigate(`/player/${encodeURIComponent(favorite.userName)}`)}>프로필 보기</button>
+                  <button type="button" className="remove" disabled={removingId === favorite.id} onClick={() => handleDelete(favorite.id)}>
+                    {removingId === favorite.id ? '삭제 중' : '삭제'}
                   </button>
                 </div>
               </article>
             )
-          })}
+            })}
+          </div>
+          <div className="favorite-carousel-controls">
+            <button
+              type="button"
+              aria-label="이전 즐겨찾기"
+              disabled={!carouselState.canPrevious}
+              onClick={() => slideFavorites(-1)}
+            >
+              이전
+            </button>
+            <div className="favorite-carousel-track" aria-hidden="true">
+              <span
+                style={{
+                  width: `${carouselState.thumbSize}%`,
+                  left: `${carouselState.thumbOffset}%`,
+                }}
+              />
+            </div>
+            <button
+              type="button"
+              aria-label="다음 즐겨찾기"
+              disabled={!carouselState.canNext}
+              onClick={() => slideFavorites(1)}
+            >
+              다음
+            </button>
+          </div>
         </div>
       )}
     </section>
   )
 }
 
-function getMatchStatus(latestMatchDate, now) {
-  if (!latestMatchDate) return { label: '-', recent: false }
-  const matchTime = new Date(latestMatchDate).getTime()
-  if (!Number.isFinite(matchTime)) return { label: '-', recent: false }
+async function enrichFavorite(favorite) {
+  const [playerResult, summaryResult] = await Promise.allSettled([
+    cachedGet('/api/player', { params: { userName: favorite.userName } }),
+    cachedGet('/api/match/summary', { params: { userName: favorite.userName } }),
+  ])
+  const player = playerResult.status === 'fulfilled' ? playerResult.value.data : null
+  const summary = summaryResult.status === 'fulfilled' ? summaryResult.value.data : null
+  const recent = summary?.summaries?.find((item) => item.key === 'RECENT')
 
-  const elapsedMs = Math.max(0, now - matchTime)
-  const elapsedMinutes = Math.floor(elapsedMs / 60_000)
-  const elapsedHours = Math.floor(elapsedMs / 3_600_000)
-  const elapsedDays = Math.floor(elapsedMs / 86_400_000)
+  return {
+    ...favorite,
+    titleName: cleanText(player?.basic?.title_name) || 'NO TITLE',
+    seasonGrade: player?.rank?.season_grade || 'SEASON GRADE',
+    seasonGradeImage: player?.images?.seasonGradeImage || null,
+    clanName: cleanText(player?.basic?.clan_name) || 'NO CLAN',
+    latestMatchDate: recent?.latestMatchDate || null,
+    kda: { kill: recent?.averageKill, death: recent?.averageDeath, assist: recent?.averageAssist },
+  }
+}
 
-  if (elapsedMinutes < 1) return { label: 'JUST NOW', recent: true }
-  if (elapsedMinutes < 60) return { label: `${elapsedMinutes}M AGO`, recent: true }
-  if (elapsedHours < 24) return { label: `${elapsedHours}H AGO`, recent: true }
-  return { label: `${elapsedDays}D AGO`, recent: false }
+function isSameSession(sessionToken) {
+  return readAuthSession()?.token === sessionToken
+}
+
+function getFavoriteCacheKey(session) {
+  const user = session?.user
+  const ownerKey = user?.id || user?.email || user?.loginId || 'guest'
+  return `satrk.favorite.details.${ownerKey}`
+}
+
+function readFavoriteCache(cacheKey) {
+  try {
+    const cached = JSON.parse(localStorage.getItem(cacheKey))
+    if (!cached?.cachedAt || !Array.isArray(cached?.items)) return []
+    return cached.items
+  } catch {
+    return []
+  }
+}
+
+function hasFavoriteCache(cacheKey) {
+  try {
+    const cached = JSON.parse(localStorage.getItem(cacheKey))
+    return Boolean(cached?.cachedAt && Array.isArray(cached?.items))
+  } catch {
+    return false
+  }
+}
+
+function isFavoriteCacheFresh(cacheKey) {
+  try {
+    const cached = JSON.parse(localStorage.getItem(cacheKey))
+    return Boolean(cached?.cachedAt && Date.now() - cached.cachedAt <= FAVORITE_CACHE_TTL_MS)
+  } catch {
+    return false
+  }
+}
+
+function writeFavoriteCache(cacheKey, items) {
+  try {
+    localStorage.setItem(cacheKey, JSON.stringify({ cachedAt: Date.now(), items }))
+  } catch {
+    // Local cache is optional.
+  }
+}
+
+function mergeFavoriteDetails(storedFavorites, cachedFavorites) {
+  const cachedByName = new Map(cachedFavorites.map((favorite) => [
+    normalizeFavoriteName(favorite.userName),
+    favorite,
+  ]))
+
+  return storedFavorites.map((favorite) => {
+    const cached = cachedByName.get(normalizeFavoriteName(favorite.userName))
+    return cached
+      ? { ...cached, id: favorite.id, userName: favorite.userName }
+      : toPendingFavorite(favorite)
+  })
+}
+
+function hasCompleteCache(storedFavorites, cachedFavorites) {
+  if (storedFavorites.length === 0) return true
+  const cachedNames = new Set(cachedFavorites.map((favorite) => normalizeFavoriteName(favorite.userName)))
+  return storedFavorites.every((favorite) => cachedNames.has(normalizeFavoriteName(favorite.userName)))
+}
+
+function toPendingFavorite(favorite) {
+  return {
+    ...favorite,
+    titleName: 'LOADING',
+    seasonGrade: 'SEASON GRADE',
+    seasonGradeImage: null,
+    clanName: 'LOADING',
+    latestMatchDate: null,
+    kda: { kill: null, death: null, assist: null },
+  }
+}
+
+function normalizeFavoriteName(userName) {
+  return String(userName || '').trim().toLowerCase()
+}
+
+function readInitialFavoriteCache() {
+  const session = readAuthSession()
+  if (!session) return []
+  return applyOwnClanEvidence(readFavoriteCache(getFavoriteCacheKey(session)), session)
+}
+
+function shouldShowInitialFavoriteLoader() {
+  const session = readAuthSession()
+  return Boolean(session && !hasFavoriteCache(getFavoriteCacheKey(session)))
+}
+
+function containsOwnFavorite(favorites, session) {
+  const accountName = session?.user?.suddenNickname || session?.user?.displayName || ''
+  if (!accountName) return false
+  return favorites.some((favorite) => normalizeFavoriteName(favorite.userName) === normalizeFavoriteName(accountName))
+}
+
+function applyOwnClanEvidence(favorites, session, roster) {
+  const accountName = session?.user?.suddenNickname || session?.user?.displayName || ''
+  if (!accountName) return favorites
+
+  return favorites.map((favorite) => {
+    if (normalizeFavoriteName(favorite.userName) !== normalizeFavoriteName(accountName)) return favorite
+
+    if (!Array.isArray(roster)) {
+      return favorite.clanVerified
+        ? favorite
+        : { ...favorite, clanName: 'NO CLAN', clanVerified: false }
+    }
+
+    const reportedClanName = cleanText(favorite.clanName)
+    const membership = roster.find((member) => (
+      normalizeFavoriteName(member.userName) === normalizeFavoriteName(accountName)
+      && normalizeFavoriteName(member.clanName) === normalizeFavoriteName(reportedClanName)
+    ))
+
+    return {
+      ...favorite,
+      clanName: membership?.clanName || 'NO CLAN',
+      clanVerified: true,
+    }
+  })
+}
+
+function FavoritesSkeleton() {
+  return (
+    <div className="player-card-grid favorite-skeleton-grid" aria-busy="true" aria-label="Loading favorites.">
+      {[0, 1].map((item) => (
+        <div className="favorite-skeleton-card" key={item}>
+          <div className="favorite-skeleton-avatar favorite-skeleton-shimmer" />
+          <div className="favorite-skeleton-lines">
+            <span className="favorite-skeleton-shimmer" />
+            <span className="favorite-skeleton-shimmer" />
+          </div>
+          <div className="favorite-skeleton-block favorite-skeleton-shimmer" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function cleanText(value) {
+  if (value === null || value === undefined) return ''
+  const normalized = String(value).trim()
+  if (!normalized) return ''
+  if (['-', 'null', 'undefined', 'none', 'no clan', 'no title'].includes(normalized.toLowerCase())) return ''
+  return normalized
+}
+
+function formatStat(value) {
+  const number = Number(value)
+  return Number.isFinite(number) ? number.toFixed(1) : '-'
+}
+
+function getMatchStatus(value, now) {
+  if (!value) return { label: '-', recent: false }
+  const elapsed = Math.max(0, now - new Date(value).getTime())
+  if (!Number.isFinite(elapsed)) return { label: '-', recent: false }
+  const minutes = Math.floor(elapsed / 60_000)
+  const hours = Math.floor(elapsed / 3_600_000)
+  const days = Math.floor(elapsed / 86_400_000)
+  if (minutes < 1) return { label: 'JUST NOW', recent: true }
+  if (minutes < 60) return { label: `${minutes}M AGO`, recent: true }
+  if (hours < 24) return { label: `${hours}H AGO`, recent: true }
+  return { label: `${days}D AGO`, recent: false }
 }
 
 export default PlayerFavorites

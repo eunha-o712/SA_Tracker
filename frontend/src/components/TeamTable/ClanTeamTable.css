@@ -63,3 +63,23 @@
 .clan-team-table-row .death {
   color: var(--lose);
 }
+
+@media (max-width: 600px) {
+  .clan-team-table-title { padding: 16px; }
+  .clan-team-table-title span { font-size: 18px; }
+  .clan-team-table-head,
+  .clan-team-table-row {
+    grid-template-columns: minmax(76px, 1.2fr) minmax(54px, 0.8fr) repeat(5, minmax(22px, 0.4fr));
+    gap: 4px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  .clan-team-table-head { font-size: 9px; }
+  .clan-team-table-row,
+  .clan-team-table-row strong { font-size: 11px; }
+  .clan-team-table-row > span:nth-child(-n + 2) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

@@ -8,7 +8,7 @@
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   border: 1px solid rgba(126, 217, 87, 0.28);
-  background: var(--bg-card);
+  background: var(--bg-primary);
 }
 
 .match-type-tabs button {
@@ -44,7 +44,7 @@
 
 .match-filter-main {
   padding: 22px 24px;
-  background: var(--bg-card);
+  background: var(--bg-primary);
   border: 1px solid rgba(126, 217, 87, 0.28);
   display: flex;
   align-items: center;
