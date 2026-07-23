@@ -3,11 +3,11 @@ import './PrivacyPolicyContent.css'
 const POLICY_SECTIONS = [
   {
     title: '1. 수집하는 정보',
-    content: '회원 가입과 로그인 과정에서 이메일, 암호화된 비밀번호, 서든어택 닉네임과 닉네임 확인을 위한 OUID를 처리합니다. 실명, 전화번호, 생년월일은 수집하지 않습니다.',
+    content: '회원 가입과 로그인 과정에서 이메일, 암호화된 비밀번호, 서든어택 닉네임과 계정 연결을 위한 OUID를 처리합니다. 비공개 문의를 작성하면 문의 내용과 이용자가 직접 첨부한 증빙 이미지를 함께 처리합니다. 실명, 전화번호, 생년월일은 필수로 수집하지 않습니다.',
   },
   {
     title: '2. 이용 목적',
-    content: '회원 인증, 본인 닉네임 기준 전적 제공, 즐겨찾기와 클랜 기능 제공, 서비스 오류 대응과 보안 유지를 위해 정보를 이용합니다.',
+    content: '회원 로그인, 닉네임 기준 전적 제공, 즐겨찾기와 클랜 기능 제공, OUID 중복 연결 분쟁 처리, 서비스 오류 대응과 보안 유지를 위해 정보를 이용합니다.',
   },
   {
     title: '3. 외부 서비스 이용',
@@ -31,7 +31,7 @@ function PrivacyPolicyContent({ titleId = 'privacy-title' }) {
       <p className="privacy-lead">
         SA-TRACKER는 서비스에 필요한 최소한의 정보만 처리하고 안전하게 관리합니다.
       </p>
-      <div className="privacy-date">시행일: 2026년 7월 13일</div>
+      <div className="privacy-date">시행일: 2026년 7월 24일</div>
 
       <div className="privacy-sections">
         {POLICY_SECTIONS.map((section) => (

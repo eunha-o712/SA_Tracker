@@ -185,7 +185,16 @@ function MyPage() {
                     </div>
                     <small>
                       이 OUID가 이미 다른 계정에 연결되어 있다면 비공개 문의게시판을 이용해 주세요.
-                      {' '}<Link to="/board/support">OPEN PRIVATE INQUIRY</Link>
+                      {' '}<Link
+                        to="/board/write"
+                        state={{
+                          type: 'support',
+                          supportCategory: 'OUID_DISPUTE',
+                          suddenNickname: linkNickname.trim(),
+                        }}
+                      >
+                        OPEN PRIVATE INQUIRY
+                      </Link>
                     </small>
                   </form>
 

@@ -13,11 +13,21 @@ const BOARD_OPTIONS = [
   { value: 'support', apiType: 'SUPPORT', label: '문의사항', description: '작성자와 관리자만 확인하는 비공개 문의를 등록합니다.' },
 ]
 
+const SUPPORT_CATEGORIES = [
+  { value: 'GENERAL', label: '일반 문의', description: '서비스 이용, 오류, 건의사항을 문의합니다.' },
+  { value: 'OUID_DISPUTE', label: 'OUID 연결 분쟁', description: '본인 서든 계정이 다른 회원에게 연결된 경우 소유권 확인을 요청합니다.' },
+]
+
 function BoardWritePage() {
   const navigate = useNavigate()
   const location = useLocation()
   const initialType = BOARD_OPTIONS.some((option) => option.value === location.state?.type) ? location.state.type : 'free'
+  const initialSupportCategory = SUPPORT_CATEGORIES.some((option) => option.value === location.state?.supportCategory)
+    ? location.state.supportCategory
+    : 'GENERAL'
   const [type, setType] = useState(initialType)
+  const [supportCategory, setSupportCategory] = useState(initialSupportCategory)
+  const [suddenNickname, setSuddenNickname] = useState(location.state?.suddenNickname || '')
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [images, setImages] = useState([])
@@ -58,6 +68,12 @@ function BoardWritePage() {
     const normalizedContent = content.trim()
     if (!normalizedTitle) return setError('제목을 입력해주세요.')
     if (!normalizedContent) return setError('내용을 입력해주세요.')
+    if (type === 'support' && supportCategory === 'OUID_DISPUTE' && suddenNickname.trim().length < 2) {
+      return setError('연결하려는 서든어택 닉네임을 입력해주세요.')
+    }
+    if (type === 'support' && supportCategory === 'OUID_DISPUTE' && images.length === 0) {
+      return setError('OUID 분쟁 문의에는 로그인 상태를 확인할 수 있는 증빙 이미지를 한 장 이상 첨부해주세요.')
+    }
 
     try {
       setPending(true)
@@ -66,6 +82,10 @@ function BoardWritePage() {
       formData.append('type', selectedBoard.apiType)
       formData.append('title', normalizedTitle)
       formData.append('content', normalizedContent)
+      if (type === 'support') {
+        formData.append('supportCategory', supportCategory)
+        if (supportCategory === 'OUID_DISPUTE') formData.append('suddenNickname', suddenNickname.trim())
+      }
       if (isAdminWriteMode) formData.append('notice', String(notice))
       images.forEach((image) => formData.append('images', image))
       await api.post(isAdminWriteMode && notice ? '/api/admin/board/posts' : '/api/board/posts', formData)
@@ -115,9 +135,43 @@ function BoardWritePage() {
               </label>}
 
               {type === 'support' && !notice && (
-                <div className="board-private-notice">
-                  문의글과 첨부 이미지는 작성자 본인과 관리자만 확인할 수 있습니다.
-                </div>
+                <>
+                  <fieldset className="board-type-selector board-support-category">
+                    <legend>문의 유형</legend>
+                    <div className="board-type-options">
+                      {SUPPORT_CATEGORIES.map((option) => <label className={supportCategory === option.value ? 'board-type-option active' : 'board-type-option'} key={option.value}>
+                        <input type="radio" name="supportCategory" value={option.value} checked={supportCategory === option.value} onChange={() => setSupportCategory(option.value)} />
+                        <span>{option.label}</span>
+                        <small>{option.description}</small>
+                      </label>)}
+                    </div>
+                  </fieldset>
+
+                  <div className="board-private-notice">
+                    문의글과 첨부 이미지는 작성자 본인과 관리자만 확인할 수 있습니다.
+                  </div>
+
+                  {supportCategory === 'OUID_DISPUTE' && (
+                    <div className="board-dispute-evidence">
+                      <label className="board-form-field" htmlFor="dispute-nickname">
+                        <span>연결하려는 서든어택 닉네임</span>
+                        <input
+                          id="dispute-nickname"
+                          value={suddenNickname}
+                          onChange={(event) => setSuddenNickname(event.target.value)}
+                          maxLength={20}
+                          placeholder="서든어택 닉네임"
+                          required
+                        />
+                      </label>
+                      <div className="board-evidence-guide">
+                        <strong>증빙 이미지 안내</strong>
+                        <p>해당 닉네임으로 로그인한 상태를 확인할 수 있는 화면을 첨부해주세요.</p>
+                        <p>비밀번호, 이메일, 실명, PC 정보 등 불필요한 개인정보는 반드시 가려주세요.</p>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
 
               <label className="board-form-field" htmlFor="board-title">
@@ -146,7 +200,11 @@ function BoardWritePage() {
                     <figcaption>{preview.file.name}</figcaption>
                     <button type="button" aria-label={`${preview.file.name} 삭제`} onClick={() => setImages((current) => current.filter((_, imageIndex) => imageIndex !== index))}>×</button>
                   </figure>)}</div>
-                  : <div className="board-image-empty">본문과 함께 보여줄 이미지를 추가할 수 있습니다.</div>}
+                  : <div className="board-image-empty">
+                    {type === 'support' && supportCategory === 'OUID_DISPUTE'
+                      ? 'OUID 분쟁 확인을 위한 증빙 이미지를 한 장 이상 추가해주세요.'
+                      : '본문과 함께 보여줄 이미지를 추가할 수 있습니다.'}
+                  </div>}
               </section>
 
               {error && <div className="board-write-error" role="alert">{error}</div>}

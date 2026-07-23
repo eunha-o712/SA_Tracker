@@ -823,6 +823,280 @@
   text-decoration: none;
 }
 
+.board-support-category {
+  margin-top: 4px;
+}
+
+.board-dispute-evidence {
+  display: grid;
+  gap: 12px;
+}
+
+.board-evidence-guide {
+  padding: 15px 16px;
+  border: 1px solid rgba(255, 176, 103, 0.34);
+  background: rgba(255, 176, 103, 0.06);
+}
+
+.board-evidence-guide strong {
+  display: block;
+  margin-bottom: 7px;
+  color: #ffb067;
+  font-size: 11px;
+}
+
+.board-evidence-guide p {
+  margin: 3px 0;
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.board-support-status,
+.support-list-status,
+.support-status {
+  color: #ffb067;
+}
+
+.board-support-status.status-resolved,
+.support-list-status.status-resolved,
+.support-status.status-resolved {
+  color: var(--accent);
+}
+
+.board-support-status.status-rejected,
+.support-list-status.status-rejected,
+.support-status.status-rejected {
+  color: #ff6969;
+}
+
+.board-support-status {
+  padding: 2px 6px;
+  border: 1px solid currentColor;
+  font-style: normal;
+  font-size: 8px;
+  white-space: nowrap;
+}
+
+.board-support-summary {
+  margin: 18px 34px 0;
+  padding: 15px 17px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  border: 1px solid rgba(126, 217, 87, 0.18);
+  background: rgba(126, 217, 87, 0.035);
+}
+
+.board-support-summary > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.board-support-summary span {
+  color: var(--text-dim);
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.board-support-summary strong {
+  color: var(--text-primary);
+  font-size: 12px;
+}
+
+.board-admin-response,
+.board-support-history,
+.board-support-admin-panel {
+  margin: 0 34px 30px;
+  padding: 22px;
+  border: 1px solid rgba(126, 217, 87, 0.22);
+  background: rgba(6, 12, 5, 0.76);
+}
+
+.board-admin-response > span,
+.board-support-admin-heading > span {
+  color: var(--accent);
+  font-size: 9px;
+  font-weight: 1000;
+  letter-spacing: 1.6px;
+}
+
+.board-admin-response h2,
+.board-support-history h2,
+.board-support-admin-heading h2 {
+  margin: 5px 0 14px;
+  color: var(--text-primary);
+  font-size: 16px;
+}
+
+.board-admin-response p {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+.board-admin-response small {
+  display: block;
+  margin-top: 14px;
+  color: var(--text-dim);
+}
+
+.board-support-history ol {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  list-style: none;
+}
+
+.board-support-history li {
+  padding: 12px 14px;
+  border-left: 2px solid rgba(126, 217, 87, 0.5);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.board-support-history li > span {
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.board-support-history p {
+  margin: 6px 0;
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.board-support-history small {
+  color: var(--text-dim);
+  font-size: 9px;
+}
+
+.board-support-admin-panel {
+  border-color: rgba(255, 176, 103, 0.34);
+  background: rgba(18, 10, 3, 0.7);
+}
+
+.board-dispute-owner,
+.board-closed-dispute {
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(255, 176, 103, 0.25);
+}
+
+.board-dispute-owner span,
+.board-dispute-owner small {
+  color: var(--text-dim);
+  font-size: 10px;
+}
+
+.board-dispute-owner strong {
+  color: #ffb067;
+  font-size: 12px;
+}
+
+.board-closed-dispute {
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+.board-closed-dispute strong {
+  color: var(--accent);
+}
+
+.board-closed-dispute p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.board-admin-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.board-admin-form label {
+  display: grid;
+  gap: 7px;
+}
+
+.board-admin-form label:has(textarea),
+.board-admin-form .board-admin-checkbox,
+.board-admin-form > button {
+  grid-column: 1 / -1;
+}
+
+.board-admin-form label > span {
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.board-admin-form select,
+.board-admin-form textarea,
+.board-admin-form input {
+  width: 100%;
+  border: 1px solid rgba(255, 176, 103, 0.28);
+  outline: none;
+  background: #080604;
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.board-admin-form select {
+  min-height: 42px;
+  padding: 0 12px;
+}
+
+.board-admin-form textarea {
+  padding: 12px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.board-admin-form input {
+  min-height: 42px;
+  padding: 0 12px;
+}
+
+.board-owner-status-form {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 176, 103, 0.2);
+}
+
+.board-admin-form .board-admin-checkbox {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+}
+
+.board-admin-checkbox input {
+  accent-color: var(--accent);
+}
+
+.board-admin-form > button {
+  min-height: 44px;
+  border: 1px solid #ffb067;
+  background: rgba(255, 176, 103, 0.08);
+  color: #ffb067;
+  font-size: 11px;
+  font-weight: 1000;
+  cursor: pointer;
+}
+
+.board-admin-form > button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
 @media (max-width: 760px) {
   .board-container { padding-top: 24px; }
   .board-list-section .record-section-header { align-items: flex-start; flex-direction: column; justify-content: center; }
@@ -858,7 +1132,17 @@
   .board-detail-header { padding: 24px 18px 18px; align-items: flex-start; flex-direction: column; }
   .board-detail-header dl { width: 100%; justify-content: space-between; }
   .board-detail-section > .board-private-notice { margin: 18px 18px 0; }
+  .board-support-summary { margin: 14px 18px 0; grid-template-columns: 1fr; }
   .board-detail-content { min-height: 220px; padding: 28px 18px; }
   .board-detail-images { padding: 0 18px 24px; grid-template-columns: 1fr; }
+  .board-admin-response,
+  .board-support-history,
+  .board-support-admin-panel { margin: 0 18px 20px; padding: 16px; }
+  .board-admin-form { grid-template-columns: 1fr; }
+  .board-admin-form label,
+  .board-admin-form label:has(textarea),
+  .board-admin-form .board-admin-checkbox,
+  .board-admin-form > button { grid-column: 1; }
+  .board-dispute-owner { align-items: flex-start; flex-direction: column; }
   .board-detail-actions { padding: 18px; }
 }

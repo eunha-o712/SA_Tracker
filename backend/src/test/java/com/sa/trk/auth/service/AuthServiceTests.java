@@ -16,12 +16,14 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import com.sa.trk.auth.dto.AuthLoginRequest;
+import com.sa.trk.auth.dto.AccountStatusUpdateRequest;
 import com.sa.trk.auth.dto.AuthRegisterRequest;
 import com.sa.trk.auth.dto.ClanStatusUpdateRequest;
 import com.sa.trk.auth.dto.PasswordResetConfirmRequest;
 import com.sa.trk.auth.dto.PasswordResetRequest;
 import com.sa.trk.auth.dto.SuddenAccountLinkRequest;
 import com.sa.trk.auth.entity.AuthSession;
+import com.sa.trk.auth.entity.AccountStatus;
 import com.sa.trk.auth.entity.AuthUser;
 import com.sa.trk.auth.entity.PasswordResetToken;
 import com.sa.trk.auth.repository.AuthSessionRepository;
@@ -142,6 +144,17 @@ class AuthServiceTests {
     }
 
     @Test
+    void suspendedUserCannotLogin() {
+        AuthUser user = user("member@satrk.gg", "agent", "ouid-123", "password123!");
+        user.setAccountStatus(AccountStatus.SUSPENDED);
+        when(userRepository.findByEmailIgnoreCase("member@satrk.gg")).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> authService.login(new AuthLoginRequest("member@satrk.gg", null, "password123!")))
+                .isInstanceOf(AuthException.class)
+                .hasMessageContaining("일시 정지");
+    }
+
+    @Test
     void rejectsAnExpiredSession() {
         AuthSession session = session(user("member@satrk.gg", "agent", "ouid-123", "password123!"));
         session.setExpiresAt(Instant.now().minusSeconds(1));
@@ -245,6 +258,33 @@ class AuthServiceTests {
                 .hasMessageContaining("OUID");
     }
 
+    @Test
+    void adminCanSuspendAndRestoreAccount() {
+        AuthUser admin = user("admin@satrk.gg", "operator", "admin-ouid", "password123!");
+        admin.setId(9L);
+        admin.setAdmin(true);
+        AuthUser target = user("member@satrk.gg", "tracker", "ouid-123", "password123!");
+        target.setId(12L);
+        when(sessionRepository.findByTokenHash(any())).thenReturn(Optional.of(session(admin)));
+        when(userRepository.findById(12L)).thenReturn(Optional.of(target));
+
+        var suspended = authService.setAccountStatus(
+                "admin-token",
+                12L,
+                new AccountStatusUpdateRequest("SUSPENDED", "OUID 분쟁 확인 중")
+        );
+        assertThat(suspended.accountStatus()).isEqualTo("SUSPENDED");
+        verify(sessionRepository).deleteByUser(target);
+
+        var restored = authService.setAccountStatus(
+                "admin-token",
+                12L,
+                new AccountStatusUpdateRequest("ACTIVE", null)
+        );
+        assertThat(restored.accountStatus()).isEqualTo("ACTIVE");
+        assertThat(target.getSanctionReason()).isNull();
+    }
+
     private AuthUser user(String email, String suddenNickname, String ouid, String password) {
         String salt = passwordHasher.newSalt();
         AuthUser user = new AuthUser();
@@ -256,6 +296,7 @@ class AuthServiceTests {
         user.setOuid(ouid);
         user.setClanNone(false);
         user.setNicknameVerified(false);
+        user.setAccountStatus(AccountStatus.ACTIVE);
         user.setPasswordSalt(salt);
         user.setPasswordHash(passwordHasher.hash(password, salt));
         user.setCreatedAt(Instant.now());

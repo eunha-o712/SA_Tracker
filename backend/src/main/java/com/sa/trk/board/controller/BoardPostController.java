@@ -75,12 +75,14 @@ public class BoardPostController {
             @RequestParam("type") String type,
             @RequestParam("title") String title,
             @RequestParam("content") String content,
+            @RequestParam(value = "supportCategory", required = false) String supportCategory,
+            @RequestParam(value = "suddenNickname", required = false) String suddenNickname,
             @RequestParam(value = "images", required = false) List<MultipartFile> images) {
         AuthUserResponse author = authService.currentUser(bearerToken(authorization));
         List<String> imageUrls = boardImageStorageService.store(images);
         try {
             return boardPostService.createPost(
-                    new BoardPostCreateRequest(type, title, content),
+                    new BoardPostCreateRequest(type, title, content, supportCategory, suddenNickname),
                     author,
                     imageUrls
             );

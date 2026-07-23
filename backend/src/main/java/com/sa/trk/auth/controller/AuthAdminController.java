@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sa.trk.auth.dto.AuthUserResponse;
+import com.sa.trk.auth.dto.AccountStatusUpdateRequest;
+import com.sa.trk.auth.dto.AdminAccountStatusResponse;
 import com.sa.trk.auth.dto.ManualVerificationRequest;
 import com.sa.trk.auth.service.AuthService;
 
@@ -32,6 +34,14 @@ public class AuthAdminController {
                 userId,
                 request == null ? null : request.verified()
         );
+    }
+
+    @PatchMapping("/{id}/account-status")
+    public AdminAccountStatusResponse updateAccountStatus(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @PathVariable("id") Long userId,
+            @RequestBody AccountStatusUpdateRequest request) {
+        return authService.setAccountStatus(bearerToken(authorization), userId, request);
     }
 
     private String bearerToken(String authorization) {

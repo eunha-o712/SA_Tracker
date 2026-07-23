@@ -4,6 +4,8 @@ import java.time.Instant;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -44,6 +46,19 @@ public class AuthUser {
     @Column
     private Instant verifiedAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private AccountStatus accountStatus;
+
+    @Column(length = 500)
+    private String sanctionReason;
+
+    @Column
+    private Instant sanctionedAt;
+
+    @Column
+    private Long sanctionedById;
+
     @Column(nullable = false, length = 32)
     private String passwordSalt;
 
@@ -73,6 +88,14 @@ public class AuthUser {
     public void setAdmin(boolean admin) { this.admin = admin; }
     public Instant getVerifiedAt() { return verifiedAt; }
     public void setVerifiedAt(Instant verifiedAt) { this.verifiedAt = verifiedAt; }
+    public AccountStatus getAccountStatus() { return accountStatus; }
+    public void setAccountStatus(AccountStatus accountStatus) { this.accountStatus = accountStatus; }
+    public String getSanctionReason() { return sanctionReason; }
+    public void setSanctionReason(String sanctionReason) { this.sanctionReason = sanctionReason; }
+    public Instant getSanctionedAt() { return sanctionedAt; }
+    public void setSanctionedAt(Instant sanctionedAt) { this.sanctionedAt = sanctionedAt; }
+    public Long getSanctionedById() { return sanctionedById; }
+    public void setSanctionedById(Long sanctionedById) { this.sanctionedById = sanctionedById; }
     public String getPasswordSalt() { return passwordSalt; }
     public void setPasswordSalt(String passwordSalt) { this.passwordSalt = passwordSalt; }
     public String getPasswordHash() { return passwordHash; }

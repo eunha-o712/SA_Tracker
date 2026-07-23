@@ -94,7 +94,15 @@ function BoardAdminPage() {
             {!loading && !error && posts.length === 0 && <div className="board-empty-state"><span>BOARD ADMIN</span><strong>아직 등록된 게시글이 없습니다.</strong></div>}
             {!loading && posts.length > 0 && <div className="board-admin-list">{posts.map((post) => <article className={post.notice ? 'board-admin-row is-notice' : 'board-admin-row'} key={post.id}>
               <span>{post.notice ? '공지' : post.type === 'SUPPORT' ? '문의' : '자유'}</span>
-              <div className="board-admin-title"><strong><Link to={`/board/post/${post.id}`}>{post.title}</Link></strong>{post.notice && <small>양쪽 게시판 상단 고정</small>}</div>
+              <div className="board-admin-title">
+                <strong><Link to={`/board/post/${post.id}`}>{post.title}</Link></strong>
+                {post.notice && <small>양쪽 게시판 상단 고정</small>}
+                {post.type === 'SUPPORT' && !post.notice && (
+                  <small className={`support-list-status status-${String(post.supportStatus || 'OPEN').toLowerCase()}`}>
+                    {post.supportCategory === 'OUID_DISPUTE' ? 'OUID 분쟁' : '일반 문의'} · {supportStatusLabel(post.supportStatus)}
+                  </small>
+                )}
+              </div>
               <span className="board-admin-author">
                 {post.authorName}
                 {post.authorVerified && <small className="is-verified"><span className="board-admin-badge verified" aria-hidden="true" />수동 인증</small>}
@@ -125,6 +133,15 @@ function BoardAdminPage() {
       <Footer />
     </div>
   )
+}
+
+function supportStatusLabel(value) {
+  return {
+    OPEN: '접수',
+    IN_PROGRESS: '확인 중',
+    RESOLVED: '처리 완료',
+    REJECTED: '반려',
+  }[value] || '접수'
 }
 
 function formatAdminDate(value) {

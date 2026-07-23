@@ -9,6 +9,8 @@ import org.springframework.data.repository.query.Param;
 
 import com.sa.trk.board.entity.BoardPost;
 import com.sa.trk.board.entity.BoardType;
+import com.sa.trk.board.entity.SupportCategory;
+import com.sa.trk.board.entity.SupportStatus;
 
 public interface BoardPostRepository extends JpaRepository<BoardPost, Long> {
 
@@ -32,4 +34,10 @@ public interface BoardPostRepository extends JpaRepository<BoardPost, Long> {
     Optional<BoardPost> findByImageUrl(@Param("imageUrl") String imageUrl);
 
     List<BoardPost> findAllByOrderByNoticeDescCreatedAtDesc();
+
+    boolean existsByAuthorIdAndSupportCategoryAndClaimedOuidAndSupportStatusIn(
+            Long authorId,
+            SupportCategory supportCategory,
+            String claimedOuid,
+            List<SupportStatus> supportStatuses);
 }

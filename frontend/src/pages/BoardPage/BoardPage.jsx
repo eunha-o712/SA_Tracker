@@ -96,6 +96,11 @@ function BoardPageContent({ type, board }) {
                   <strong>
                     {post.notice && <em className="board-notice-badge">공지</em>}
                     {post.privatePost && <em className="board-private-badge">비공개</em>}
+                    {post.type === 'SUPPORT' && !post.notice && (
+                      <em className={`board-support-status status-${String(post.supportStatus || 'OPEN').toLowerCase()}`}>
+                        {post.supportCategory === 'OUID_DISPUTE' ? 'OUID 분쟁' : '문의'} · {supportStatusLabel(post.supportStatus)}
+                      </em>
+                    )}
                     <Link className="board-post-link" to={`/board/post/${post.id}`}>{post.title}</Link>
                   </strong>
                   <p>{post.content}</p>
@@ -127,6 +132,15 @@ function BoardPageContent({ type, board }) {
       <Footer />
     </div>
   )
+}
+
+function supportStatusLabel(value) {
+  return {
+    OPEN: '접수',
+    IN_PROGRESS: '확인 중',
+    RESOLVED: '완료',
+    REJECTED: '반려',
+  }[value] || '접수'
 }
 
 function formatBoardDate(value) {

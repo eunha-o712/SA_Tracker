@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sa.trk.auth.dto.AuthLoginRequest;
+import com.sa.trk.auth.dto.AccountStatusUpdateRequest;
+import com.sa.trk.auth.dto.AdminAccountStatusResponse;
 import com.sa.trk.auth.dto.AuthRegisterRequest;
 import com.sa.trk.auth.dto.AuthResponse;
 import com.sa.trk.auth.dto.AuthUserResponse;
@@ -26,6 +29,7 @@ import com.sa.trk.auth.dto.PasswordResetRequestResponse;
 import com.sa.trk.auth.dto.SuddenAccountLinkRequest;
 import com.sa.trk.auth.entity.AuthSession;
 import com.sa.trk.auth.entity.AuthUser;
+import com.sa.trk.auth.entity.AccountStatus;
 import com.sa.trk.auth.entity.PasswordResetToken;
 import com.sa.trk.auth.repository.AuthSessionRepository;
 import com.sa.trk.auth.repository.AuthUserRepository;
@@ -87,6 +91,10 @@ public class AuthService {
         user.setNicknameVerified(false);
         user.setVerifiedAt(null);
         user.setAdmin(false);
+        user.setAccountStatus(AccountStatus.ACTIVE);
+        user.setSanctionReason(null);
+        user.setSanctionedAt(null);
+        user.setSanctionedById(null);
         user.setPasswordSalt(salt);
         user.setPasswordHash(passwordHasher.hash(password, salt));
         user.setCreatedAt(Instant.now());
@@ -104,6 +112,7 @@ public class AuthService {
         if (password == null || !passwordHasher.matches(password, user.getPasswordSalt(), user.getPasswordHash())) {
             throw invalidCredentials();
         }
+        requireActiveAccount(user);
         return createSession(user);
     }
 
@@ -141,6 +150,51 @@ public class AuthService {
         user.setNicknameVerified(verified);
         user.setVerifiedAt(verified ? Instant.now() : null);
         return toUserResponse(user);
+    }
+
+    @Transactional
+    public AdminAccountStatusResponse setAccountStatus(
+            String rawToken,
+            Long userId,
+            AccountStatusUpdateRequest request) {
+        AuthUserResponse admin = requireAdmin(rawToken);
+        if (userId == null || userId < 1 || request == null) {
+            throw new AuthException(HttpStatus.BAD_REQUEST, "INVALID_ACCOUNT_STATUS_REQUEST", "계정 상태 정보를 확인해 주세요.");
+        }
+
+        AccountStatus status;
+        try {
+            status = AccountStatus.valueOf(String.valueOf(request.status()).trim().toUpperCase(Locale.ROOT));
+        } catch (RuntimeException exception) {
+            throw new AuthException(HttpStatus.BAD_REQUEST, "INVALID_ACCOUNT_STATUS", "계정 상태를 확인해 주세요.");
+        }
+        if (Objects.equals(admin.id(), userId) && status != AccountStatus.ACTIVE) {
+            throw new AuthException(HttpStatus.BAD_REQUEST, "ADMIN_SELF_SANCTION", "현재 로그인한 관리자 계정은 정지할 수 없습니다.");
+        }
+
+        AuthUser user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthException(HttpStatus.NOT_FOUND, "USER_NOT_FOUND", "회원을 찾을 수 없습니다."));
+        if (status == AccountStatus.ACTIVE) {
+            user.setAccountStatus(AccountStatus.ACTIVE);
+            user.setSanctionReason(null);
+            user.setSanctionedAt(null);
+            user.setSanctionedById(null);
+        } else {
+            String reason = request.reason() == null ? "" : request.reason().trim();
+            if (reason.length() < 5 || reason.length() > 500) {
+                throw new AuthException(
+                        HttpStatus.BAD_REQUEST,
+                        "INVALID_SANCTION_REASON",
+                        "정지 또는 차단 사유를 5~500자로 입력해 주세요."
+                );
+            }
+            user.setAccountStatus(status);
+            user.setSanctionReason(reason);
+            user.setSanctionedAt(Instant.now());
+            user.setSanctionedById(admin.id());
+            sessionRepository.deleteByUser(user);
+        }
+        return toAdminAccountStatusResponse(user);
     }
 
     @Transactional
@@ -299,7 +353,26 @@ public class AuthService {
         if (!session.getExpiresAt().isAfter(Instant.now())) {
             throw unauthorized();
         }
+        requireActiveAccount(session.getUser());
         return session;
+    }
+
+    private void requireActiveAccount(AuthUser user) {
+        AccountStatus status = user.getAccountStatus() == null ? AccountStatus.ACTIVE : user.getAccountStatus();
+        if (status == AccountStatus.SUSPENDED) {
+            throw new AuthException(
+                    HttpStatus.FORBIDDEN,
+                    "ACCOUNT_SUSPENDED",
+                    "운영자 확인을 위해 계정 이용이 일시 정지되었습니다. 문의게시판으로 문의해 주세요."
+            );
+        }
+        if (status == AccountStatus.BANNED) {
+            throw new AuthException(
+                    HttpStatus.FORBIDDEN,
+                    "ACCOUNT_BANNED",
+                    "운영 정책에 따라 계정 이용이 제한되었습니다."
+            );
+        }
     }
 
     private String normalizeEmail(String email) {
@@ -387,6 +460,18 @@ public class AuthService {
                 Boolean.TRUE.equals(user.getNicknameVerified()),
                 user.isAdmin(),
                 Boolean.TRUE.equals(user.getClanNone())
+        );
+    }
+
+    private AdminAccountStatusResponse toAdminAccountStatusResponse(AuthUser user) {
+        AccountStatus status = user.getAccountStatus() == null ? AccountStatus.ACTIVE : user.getAccountStatus();
+        return new AdminAccountStatusResponse(
+                user.getId(),
+                firstNonBlank(user.getSuddenNickname(), user.getDisplayName()),
+                status.name(),
+                user.getSanctionReason(),
+                user.getSanctionedAt(),
+                user.getSanctionedById()
         );
     }
 

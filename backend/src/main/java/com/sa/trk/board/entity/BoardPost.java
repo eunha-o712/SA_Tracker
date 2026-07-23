@@ -1,6 +1,7 @@
 package com.sa.trk.board.entity;
 
 import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,6 +56,44 @@ public class BoardPost {
 
     @Column(nullable = false)
     private boolean notice;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 30)
+    private SupportCategory supportCategory;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private SupportStatus supportStatus;
+
+    @Column(length = 20)
+    private String claimedSuddenNickname;
+
+    @Column(length = 80)
+    private String claimedOuid;
+
+    @Column
+    private Long claimedOwnerId;
+
+    @Lob
+    @Column(columnDefinition = "TEXT")
+    private String adminResponse;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 30)
+    private OuidDisputeResolution resolutionAction;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private AccountSanctionAction accountSanctionAction;
+
+    @Column
+    private Boolean claimantVerified;
+
+    @Column
+    private Long handledById;
+
+    @Column
+    private Instant handledAt;
 
     @ElementCollection
     @CollectionTable(name = "board_post_images", joinColumns = @JoinColumn(name = "post_id"))

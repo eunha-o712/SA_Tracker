@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.time.Instant;
 
@@ -55,6 +56,19 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST,
                 "INVALID_REQUEST",
                 exception.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleDataConflict(
+            DataIntegrityViolationException exception,
+            HttpServletRequest request) {
+        log.warn("Database uniqueness conflict: path={}", request.getRequestURI());
+        return response(
+                HttpStatus.CONFLICT,
+                "RESOURCE_CONFLICT",
+                "이미 다른 요청에서 사용 중인 정보입니다. 새로고침 후 다시 확인해 주세요.",
                 request
         );
     }
