@@ -14,6 +14,7 @@ import BoardPage from './pages/BoardPage/BoardPage'
 import BoardWritePage from './pages/BoardPage/BoardWritePage'
 import BoardAdminPage from './pages/BoardPage/BoardAdminPage'
 import BoardDetailPage from './pages/BoardPage/BoardDetailPage'
+import NotFoundPage from './pages/NotFoundPage/NotFoundPage'
 import { readAuthSession } from './utils/authSession'
 
 function RequireAuth({ children }) {
@@ -56,6 +57,7 @@ function App() {
         <Route path="/board/admin" element={<RequireAuth><BoardAdminPage /></RequireAuth>} />
         <Route path="/board/post/:id" element={<BoardDetailPage />} />
         <Route path="/board/:type" element={<BoardPageRoute />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   )
