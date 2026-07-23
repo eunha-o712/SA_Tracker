@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import api, { getApiErrorMessage } from '../../api/api'
-import { cachedGet, invalidateCachedGet } from '../../api/apiCache'
+import { invalidateCachedGet } from '../../api/apiCache'
 import { readAuthSession, subscribeToAuthSession } from '../../utils/authSession'
 import './PlayerFavorites.css'
-
-const FAVORITE_CACHE_TTL_MS = 5 * 60_000
 
 function PlayerFavorites() {
   const navigate = useNavigate()
   const [favorites, setFavorites] = useState(readInitialFavoriteCache)
   const [loading, setLoading] = useState(shouldShowInitialFavoriteLoader)
+  const [refreshing, setRefreshing] = useState(false)
+  const [lastRefreshedAt, setLastRefreshedAt] = useState(readInitialFavoriteRefreshTime)
   const [error, setError] = useState('')
   const [removingId, setRemovingId] = useState(null)
   const [now, setNow] = useState(() => Date.now())
@@ -53,11 +53,15 @@ function PlayerFavorites() {
       setError('')
       setRemovingId(null)
       setLoading(false)
+      setRefreshing(false)
+      setLastRefreshedAt(null)
       return
     }
 
     const cacheKey = getFavoriteCacheKey(nextSession)
-    setFavorites(applyOwnClanEvidence(readFavoriteCache(cacheKey), nextSession))
+    const cached = readFavoriteCache(cacheKey)
+    setFavorites(applyOwnClanEvidence(cached.items, nextSession))
+    setLastRefreshedAt(cached.refreshedAt)
     setLoading(!hasFavoriteCache(cacheKey))
   }), [])
 
@@ -75,58 +79,22 @@ function PlayerFavorites() {
       try {
         setError('')
         const cacheKey = getFavoriteCacheKey(authSession)
-        const cachedFavorites = readFavoriteCache(cacheKey)
-        const hasCachedSnapshot = hasFavoriteCache(cacheKey)
+        const cached = readFavoriteCache(cacheKey)
 
-        if (hasCachedSnapshot) {
-          setFavorites(applyOwnClanEvidence(cachedFavorites, authSession))
+        if (cached.exists) {
+          setFavorites(applyOwnClanEvidence(cached.items, authSession))
+          setLastRefreshedAt(cached.refreshedAt)
           setLoading(false)
-        } else {
-          setLoading(true)
+          return
         }
 
-        const response = await cachedGet('/api/favorite')
-        const storedFavorites = Array.isArray(response.data) ? response.data : []
-        const initialFavorites = applyOwnClanEvidence(
-          mergeFavoriteDetails(storedFavorites, cachedFavorites),
-          authSession,
-        )
-
+        setLoading(true)
+        const snapshot = await fetchFavoriteSnapshot(authSession)
+        writeFavoriteCache(cacheKey, snapshot.items, snapshot.refreshedAt)
         if (active && isSameSession(sessionToken)) {
-          setFavorites(initialFavorites)
-          setLoading(false)
+          setFavorites(snapshot.items)
+          setLastRefreshedAt(snapshot.refreshedAt)
         }
-
-        if (storedFavorites.length === 0) {
-          writeFavoriteCache(cacheKey, [])
-          return
-        }
-
-        let roster
-        if (containsOwnFavorite(storedFavorites, authSession)) {
-          try {
-            const rosterResponse = await cachedGet('/api/clan/members')
-            roster = Array.isArray(rosterResponse.data) ? rosterResponse.data : []
-          } catch {
-            roster = undefined
-          }
-        }
-
-        const verifiedInitialFavorites = applyOwnClanEvidence(initialFavorites, authSession, roster)
-        if (active && isSameSession(sessionToken)) setFavorites(verifiedInitialFavorites)
-
-        if (hasCompleteCache(storedFavorites, cachedFavorites) && isFavoriteCacheFresh(cacheKey)) {
-          writeFavoriteCache(cacheKey, verifiedInitialFavorites)
-          return
-        }
-
-        const enriched = applyOwnClanEvidence(
-          await Promise.all(storedFavorites.map(enrichFavorite)),
-          authSession,
-          roster,
-        )
-        writeFavoriteCache(cacheKey, enriched)
-        if (active && isSameSession(sessionToken)) setFavorites(enriched)
       } catch (requestError) {
         if (active && isSameSession(sessionToken)) setError(getApiErrorMessage(requestError, 'Failed to load favorites.'))
       } finally {
@@ -141,6 +109,32 @@ function PlayerFavorites() {
       window.clearInterval(timerId)
     }
   }, [authSession])
+
+  const handleRefresh = async () => {
+    const session = readAuthSession()
+    if (!session || refreshing) return
+
+    try {
+      setRefreshing(true)
+      setError('')
+      invalidateCachedGet('/api/favorite')
+      invalidateCachedGet('/api/player')
+      invalidateCachedGet('/api/match/summary')
+      invalidateCachedGet('/api/clan/members')
+      const snapshot = await fetchFavoriteSnapshot(session)
+      if (!isSameSession(session.token)) return
+
+      writeFavoriteCache(getFavoriteCacheKey(session), snapshot.items, snapshot.refreshedAt)
+      setFavorites(snapshot.items)
+      setLastRefreshedAt(snapshot.refreshedAt)
+    } catch (requestError) {
+      if (isSameSession(session.token)) {
+        setError(getApiErrorMessage(requestError, '즐겨찾기 전적을 새로고침하지 못했습니다.'))
+      }
+    } finally {
+      if (isSameSession(session.token)) setRefreshing(false)
+    }
+  }
 
   useEffect(() => {
     const viewport = carouselRef.current
@@ -174,7 +168,7 @@ function PlayerFavorites() {
       invalidateCachedGet('/api/favorite')
       setFavorites((current) => {
         const nextFavorites = current.filter((favorite) => favorite.id !== id)
-        writeFavoriteCache(getFavoriteCacheKey(authSession), nextFavorites)
+        writeFavoriteCache(getFavoriteCacheKey(authSession), nextFavorites, lastRefreshedAt)
         return nextFavorites
       })
     } catch (requestError) {
@@ -187,8 +181,19 @@ function PlayerFavorites() {
   return (
     <section className="player-favorites">
       <div className="player-favorites-header">
-        <span>FAVORITE</span>
-        <h2>PLAYERS</h2>
+        <div className="player-favorites-title">
+          <span>FAVORITE</span>
+          <h2>PLAYERS</h2>
+        </div>
+        {isLoggedIn && (
+          <div className="player-favorites-refresh">
+            <small>{formatRefreshTime(lastRefreshedAt)}</small>
+            <button type="button" disabled={loading || refreshing} onClick={handleRefresh}>
+              <span aria-hidden="true">↻</span>
+              {refreshing ? '새로고침 중...' : '전적 새로고침'}
+            </button>
+          </div>
+        )}
       </div>
 
       {loading && <FavoritesSkeleton />}
@@ -293,10 +298,33 @@ function PlayerFavorites() {
   )
 }
 
+async function fetchFavoriteSnapshot(session) {
+  const response = await api.get('/api/favorite')
+  const storedFavorites = Array.isArray(response.data) ? response.data : []
+  let roster
+
+  if (containsOwnFavorite(storedFavorites, session)) {
+    try {
+      const rosterResponse = await api.get('/api/clan/members')
+      roster = Array.isArray(rosterResponse.data) ? rosterResponse.data : []
+    } catch {
+      roster = undefined
+    }
+  }
+
+  const items = applyOwnClanEvidence(
+    await Promise.all(storedFavorites.map(enrichFavorite)),
+    session,
+    roster,
+  )
+
+  return { items, refreshedAt: Date.now() }
+}
+
 async function enrichFavorite(favorite) {
   const [playerResult, summaryResult] = await Promise.allSettled([
-    cachedGet('/api/player', { params: { userName: favorite.userName } }),
-    cachedGet('/api/match/summary', { params: { userName: favorite.userName } }),
+    api.get('/api/player', { params: { userName: favorite.userName } }),
+    api.get('/api/match/summary', { params: { userName: favorite.userName } }),
   ])
   const player = playerResult.status === 'fulfilled' ? playerResult.value.data : null
   const summary = summaryResult.status === 'fulfilled' ? summaryResult.value.data : null
@@ -326,68 +354,30 @@ function getFavoriteCacheKey(session) {
 function readFavoriteCache(cacheKey) {
   try {
     const cached = JSON.parse(localStorage.getItem(cacheKey))
-    if (!cached?.cachedAt || !Array.isArray(cached?.items)) return []
-    return cached.items
+    if (!Array.isArray(cached?.items)) return { exists: false, refreshedAt: null, items: [] }
+    return {
+      exists: true,
+      refreshedAt: Number(cached.refreshedAt || cached.cachedAt) || null,
+      items: cached.items,
+    }
   } catch {
-    return []
+    return { exists: false, refreshedAt: null, items: [] }
   }
 }
 
 function hasFavoriteCache(cacheKey) {
-  try {
-    const cached = JSON.parse(localStorage.getItem(cacheKey))
-    return Boolean(cached?.cachedAt && Array.isArray(cached?.items))
-  } catch {
-    return false
-  }
+  return readFavoriteCache(cacheKey).exists
 }
 
-function isFavoriteCacheFresh(cacheKey) {
+function writeFavoriteCache(cacheKey, items, refreshedAt = null) {
   try {
-    const cached = JSON.parse(localStorage.getItem(cacheKey))
-    return Boolean(cached?.cachedAt && Date.now() - cached.cachedAt <= FAVORITE_CACHE_TTL_MS)
-  } catch {
-    return false
-  }
-}
-
-function writeFavoriteCache(cacheKey, items) {
-  try {
-    localStorage.setItem(cacheKey, JSON.stringify({ cachedAt: Date.now(), items }))
+    localStorage.setItem(cacheKey, JSON.stringify({
+      refreshedAt: Number(refreshedAt) || null,
+      updatedAt: Date.now(),
+      items,
+    }))
   } catch {
     // Local cache is optional.
-  }
-}
-
-function mergeFavoriteDetails(storedFavorites, cachedFavorites) {
-  const cachedByName = new Map(cachedFavorites.map((favorite) => [
-    normalizeFavoriteName(favorite.userName),
-    favorite,
-  ]))
-
-  return storedFavorites.map((favorite) => {
-    const cached = cachedByName.get(normalizeFavoriteName(favorite.userName))
-    return cached
-      ? { ...cached, id: favorite.id, userName: favorite.userName }
-      : toPendingFavorite(favorite)
-  })
-}
-
-function hasCompleteCache(storedFavorites, cachedFavorites) {
-  if (storedFavorites.length === 0) return true
-  const cachedNames = new Set(cachedFavorites.map((favorite) => normalizeFavoriteName(favorite.userName)))
-  return storedFavorites.every((favorite) => cachedNames.has(normalizeFavoriteName(favorite.userName)))
-}
-
-function toPendingFavorite(favorite) {
-  return {
-    ...favorite,
-    titleName: 'LOADING',
-    seasonGrade: 'SEASON GRADE',
-    seasonGradeImage: null,
-    clanName: 'LOADING',
-    latestMatchDate: null,
-    kda: { kill: null, death: null, assist: null },
   }
 }
 
@@ -398,7 +388,13 @@ function normalizeFavoriteName(userName) {
 function readInitialFavoriteCache() {
   const session = readAuthSession()
   if (!session) return []
-  return applyOwnClanEvidence(readFavoriteCache(getFavoriteCacheKey(session)), session)
+  return applyOwnClanEvidence(readFavoriteCache(getFavoriteCacheKey(session)).items, session)
+}
+
+function readInitialFavoriteRefreshTime() {
+  const session = readAuthSession()
+  if (!session) return null
+  return readFavoriteCache(getFavoriteCacheKey(session)).refreshedAt
 }
 
 function shouldShowInitialFavoriteLoader() {
@@ -467,6 +463,21 @@ function cleanText(value) {
 function formatStat(value) {
   const number = Number(value)
   return Number.isFinite(number) ? number.toFixed(1) : '-'
+}
+
+function formatRefreshTime(value) {
+  if (!value) return '아직 새로고침하지 않았습니다.'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '마지막 새로고침 시간 없음'
+
+  return `마지막 새로고침 ${new Intl.DateTimeFormat('ko-KR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(date)}`
 }
 
 function getMatchStatus(value, now) {

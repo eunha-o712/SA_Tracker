@@ -225,17 +225,18 @@ async function cacheFavoriteSnapshot(session, favorite, playerData, fallbackName
   }
 
   const cacheKey = getFavoriteSnapshotCacheKey(session)
-  const current = readFavoriteSnapshots(cacheKey)
-  const next = [snapshot, ...current.filter((item) => normalizeFavoriteName(item.userName) !== normalizeFavoriteName(userName))]
-  writeFavoriteSnapshots(cacheKey, next)
+  const cached = readFavoriteSnapshots(cacheKey)
+  const next = [snapshot, ...cached.items.filter((item) => normalizeFavoriteName(item.userName) !== normalizeFavoriteName(userName))]
+  writeFavoriteSnapshots(cacheKey, next, cached.refreshedAt || Date.now())
 }
 
 function removeFavoriteSnapshot(session, userName) {
   if (!session) return
   const cacheKey = getFavoriteSnapshotCacheKey(session)
-  const next = readFavoriteSnapshots(cacheKey)
+  const cached = readFavoriteSnapshots(cacheKey)
+  const next = cached.items
     .filter((item) => normalizeFavoriteName(item.userName) !== normalizeFavoriteName(userName))
-  writeFavoriteSnapshots(cacheKey, next)
+  writeFavoriteSnapshots(cacheKey, next, cached.refreshedAt)
 }
 
 function getFavoriteSnapshotCacheKey(session) {
@@ -247,15 +248,22 @@ function getFavoriteSnapshotCacheKey(session) {
 function readFavoriteSnapshots(cacheKey) {
   try {
     const cached = JSON.parse(localStorage.getItem(cacheKey))
-    return Array.isArray(cached?.items) ? cached.items : []
+    return {
+      refreshedAt: Number(cached?.refreshedAt || cached?.cachedAt) || null,
+      items: Array.isArray(cached?.items) ? cached.items : [],
+    }
   } catch {
-    return []
+    return { refreshedAt: null, items: [] }
   }
 }
 
-function writeFavoriteSnapshots(cacheKey, items) {
+function writeFavoriteSnapshots(cacheKey, items, refreshedAt) {
   try {
-    localStorage.setItem(cacheKey, JSON.stringify({ cachedAt: Date.now(), items }))
+    localStorage.setItem(cacheKey, JSON.stringify({
+      refreshedAt: Number(refreshedAt) || null,
+      updatedAt: Date.now(),
+      items,
+    }))
   } catch {
     // Local cache is optional.
   }
