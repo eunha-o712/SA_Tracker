@@ -53,6 +53,8 @@ function ClanPageContent({ name, accountName, isOwnAccount, clanNone }) {
   const [rosterError, setRosterError] = useState('')
   const [dashboard, setDashboard] = useState(null)
   const [dashboardLoading, setDashboardLoading] = useState(true)
+  const [dashboardRefreshing, setDashboardRefreshing] = useState(false)
+  const [refreshDotCount, setRefreshDotCount] = useState(1)
   const [dashboardError, setDashboardError] = useState('')
 
   useEffect(() => {
@@ -183,6 +185,29 @@ function ClanPageContent({ name, accountName, isOwnAccount, clanNone }) {
     return () => { active = false }
   }, [clanName, rosterKey])
 
+  useEffect(() => {
+    if (!dashboardRefreshing) return undefined
+    const timer = window.setInterval(() => {
+      setRefreshDotCount((current) => current >= 3 ? 1 : current + 1)
+    }, 450)
+    return () => window.clearInterval(timer)
+  }, [dashboardRefreshing])
+
+  const handleRefreshDashboard = async () => {
+    if (!clanName || clanRoster.length === 0 || dashboardRefreshing) return
+    try {
+      setRefreshDotCount(1)
+      setDashboardRefreshing(true)
+      setDashboardError('')
+      const response = await api.post('/api/clan/dashboard/refresh', null, { params: { clanName } })
+      setDashboard(response.data ?? null)
+    } catch (requestError) {
+      setDashboardError(getApiErrorMessage(requestError, '전체 전적을 새로고침하지 못했습니다.'))
+    } finally {
+      setDashboardRefreshing(false)
+    }
+  }
+
   return (
     <div className="player-shell">
       <Header /><NavBar />
@@ -228,10 +253,13 @@ function ClanPageContent({ name, accountName, isOwnAccount, clanNone }) {
             <ClanPowerRanking
               dashboard={dashboard}
               loading={dashboardLoading}
+              refreshing={dashboardRefreshing}
+              refreshDotCount={refreshDotCount}
               error={dashboardError}
+              onRefresh={handleRefreshDashboard}
               onView={(member) => navigate(`/player/${encodeURIComponent(member.userName)}`)}
             />
-            <ClanTeamBuilder members={clanRoster} />
+            <ClanTeamBuilder key={dashboard?.lastRefreshedAt ?? 'not-refreshed'} members={clanRoster} />
             <section className="record-section clan-match-section">
               <div className="record-section-header">
                 <h2 className="record-section-title">RECENT CLAN MATCHES</h2>
@@ -258,12 +286,27 @@ function ClanPageContent({ name, accountName, isOwnAccount, clanNone }) {
   )
 }
 
-function ClanPowerRanking({ dashboard, loading, error, onView }) {
+function ClanPowerRanking({ dashboard, loading, refreshing, refreshDotCount, error, onRefresh, onView }) {
   if (loading) return <section className="record-section clan-power-loading" aria-busy="true" aria-label="클랜 전력을 집계하는 중입니다."><div className="clan-power-loading-card clan-shimmer" /><div className="clan-power-loading-card clan-shimmer" /><div className="clan-power-loading-table clan-shimmer" /></section>
 
   const members = Array.isArray(dashboard?.members) ? dashboard.members : []
   return <section className="record-section clan-power-section">
-    <div className="record-section-header"><h2 className="record-section-title">CLAN POWER RANKING</h2><span className="record-section-sub">로스터 전력 집계</span></div>
+    <div className="record-section-header clan-power-header">
+      <div>
+        <h2 className="record-section-title">CLAN POWER RANKING</h2>
+        <span className="record-section-sub">로스터 전력 집계</span>
+      </div>
+      <div className="clan-power-refresh-actions">
+        <span>{dashboard?.lastRefreshedAt ? `전체 새로고침 일시: ${formatDashboardDate(dashboard.lastRefreshedAt)}` : '전체 새로고침 일시: -'}</span>
+        <button type="button" disabled={refreshing || members.length === 0} onClick={onRefresh}>
+          {refreshing ? '새로고침 중' : '전체 전적 새로고침'}
+        </button>
+      </div>
+    </div>
+    {refreshing && <div className="clan-power-refresh-loading" aria-live="polite" aria-busy="true">
+      <strong>전체 전적을 새로고침 중입니다<span className="clan-refresh-dots">{'.'.repeat(refreshDotCount)}</span></strong>
+      <small>로스터가 많으면 정보를 가져오는데 시간이 소요됩니다.</small>
+    </div>}
     {error ? <div className="clan-roster-message error" role="alert">{error}</div> : <>
       <div className="clan-power-summary">
         <PowerMetric label="ROSTER" value={`${dashboard?.memberCount ?? 0}명`} sub={`${dashboard?.analyzedMemberCount ?? 0}명 분석`} />
@@ -522,5 +565,19 @@ function decimal(value) { const number = Number(value); return Number.isFinite(n
 function sameText(left, right) { return String(left ?? '').trim().toLocaleLowerCase('ko-KR') === String(right ?? '').trim().toLocaleLowerCase('ko-KR') }
 function formatDate(value) { const date = new Date(value); return Number.isNaN(date.getTime()) ? '-' : new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', dateStyle: 'short', timeStyle: 'short' }).format(date) }
 function formatRosterDate(value) { const date = new Date(value); return Number.isNaN(date.getTime()) ? '등록일 -' : `등록 ${new Intl.DateTimeFormat('ko-KR', { dateStyle: 'short' }).format(date)}` }
+function formatDashboardDate(value) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '-'
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(date).filter((part) => part.type !== 'literal').map((part) => [part.type, part.value]))
+  return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}`
+}
 
 export default ClanPage

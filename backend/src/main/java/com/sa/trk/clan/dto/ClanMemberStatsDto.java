@@ -1,5 +1,7 @@
 package com.sa.trk.clan.dto;
 
+import java.time.LocalDateTime;
+
 import lombok.Data;
 
 @Data
@@ -14,4 +16,5 @@ public class ClanMemberStatsDto {
     private Double winRate;
     private Double averageKillDeathRatio;
     private Boolean available;
+    private LocalDateTime statsUpdatedAt;
 }

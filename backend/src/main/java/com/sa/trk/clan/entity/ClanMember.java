@@ -48,6 +48,42 @@ public class ClanMember {
     @Column(length = 200)
     private String ouid;
 
+    @Column
+    private Integer statsMatchCount;
+
+    @Column
+    private Integer statsWinCount;
+
+    @Column
+    private Integer statsDrawCount;
+
+    @Column
+    private Integer statsLoseCount;
+
+    @Column
+    private Double statsWinRate;
+
+    @Column
+    private Double statsKillDeathRatio;
+
+    @Column
+    private Double statsAverageKill;
+
+    @Column(length = 20)
+    private String statsPrimaryClass;
+
+    @Column(length = 50)
+    private String statsCombatType;
+
+    @Column
+    private Double statsPowerScore;
+
+    @Column
+    private Boolean statsAvailable;
+
+    @Column
+    private LocalDateTime statsUpdatedAt;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

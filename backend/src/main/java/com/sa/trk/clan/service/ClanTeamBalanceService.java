@@ -1,16 +1,12 @@
 package com.sa.trk.clan.service;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,11 +17,6 @@ import com.sa.trk.clan.dto.ClanTeamBalanceRequest;
 import com.sa.trk.clan.dto.ClanTeamBalanceResponseDto;
 import com.sa.trk.clan.entity.ClanMember;
 import com.sa.trk.clan.repository.ClanMemberRepository;
-import com.sa.trk.match.dto.MatchSummaryItemDto;
-import com.sa.trk.match.dto.MatchSummaryResponseDto;
-import com.sa.trk.match.service.MatchService;
-import com.sa.trk.weapon.dto.WeaponStatsResponseDto;
-import com.sa.trk.weapon.service.WeaponService;
 
 @Service
 public class ClanTeamBalanceService {
@@ -35,23 +26,13 @@ public class ClanTeamBalanceService {
     private static final int MIN_TEAM_SIZE = 2;
     private static final int MAX_TEAM_SIZE = 5;
     private static final int MAX_VARIANTS = 5;
-    private static final int MAX_CACHE_ENTRIES = 500;
-    private static final Duration METRICS_CACHE_DURATION = Duration.ofMinutes(10);
     private static final List<String> COMBAT_ROLES = List.of("돌격", "저격", "특수", "균형");
     private static final List<String> TEAM_KEYS = List.of("ALPHA", "BRAVO", "CHARLIE", "DELTA", "ECHO");
 
     private final ClanMemberRepository clanMemberRepository;
-    private final MatchService matchService;
-    private final WeaponService weaponService;
-    private final Map<String, MetricsCacheEntry> metricsCache = new ConcurrentHashMap<>();
 
-    public ClanTeamBalanceService(
-            ClanMemberRepository clanMemberRepository,
-            MatchService matchService,
-            WeaponService weaponService) {
+    public ClanTeamBalanceService(ClanMemberRepository clanMemberRepository) {
         this.clanMemberRepository = clanMemberRepository;
-        this.matchService = matchService;
-        this.weaponService = weaponService;
     }
 
     @Transactional(readOnly = true)
@@ -140,83 +121,19 @@ public class ClanTeamBalanceService {
     }
 
     private PlayerMetrics loadMetrics(ClanMember member) {
-        String cacheKey = member.getUserName().trim().toLowerCase(Locale.ROOT);
-        MetricsCacheEntry cached = metricsCache.get(cacheKey);
-        if (cached != null && cached.expiresAt().isAfter(Instant.now())) {
-            return cached.metrics().withIdentity(member.getId(), member.getUserName());
-        }
-
-        MatchMetrics matchMetrics = loadMatchMetrics(member.getUserName());
-        WeaponMetrics weaponMetrics = loadWeaponMetrics(member.getUserName());
-        double powerScore = matchMetrics.available()
-                ? calculatePowerScore(matchMetrics.winRate(), matchMetrics.killDeathRatio(), matchMetrics.averageKill())
-                : 0.0;
-        PlayerMetrics metrics = new PlayerMetrics(
+        boolean available = Boolean.TRUE.equals(member.getStatsAvailable());
+        return new PlayerMetrics(
                 member.getId(),
                 member.getUserName(),
-                weaponMetrics.primaryClass(),
-                weaponMetrics.combatType(),
-                roundOne(powerScore),
-                matchMetrics.matchCount(),
-                roundOne(matchMetrics.winRate()),
-                roundOne(matchMetrics.killDeathRatio()),
-                roundOne(matchMetrics.averageKill()),
-                matchMetrics.available()
+                normalizeRole(member.getStatsPrimaryClass()),
+                isBlank(member.getStatsCombatType()) ? "분석 대기" : member.getStatsCombatType().trim(),
+                available ? roundOne(number(member.getStatsPowerScore())) : 0.0,
+                available ? value(member.getStatsMatchCount()) : 0,
+                available ? roundOne(number(member.getStatsWinRate())) : 0.0,
+                available ? roundOne(number(member.getStatsKillDeathRatio())) : 0.0,
+                available ? roundOne(number(member.getStatsAverageKill())) : 0.0,
+                available
         );
-        putCache(cacheKey, metrics);
-        return metrics;
-    }
-
-    private MatchMetrics loadMatchMetrics(String userName) {
-        try {
-            MatchSummaryResponseDto response = matchService.getMatchSummary(userName);
-            List<MatchSummaryItemDto> summaries = response == null || response.getSummaries() == null
-                    ? List.of()
-                    : response.getSummaries();
-            MatchSummaryItemDto summary = summaries.stream()
-                    .filter(item -> "CLAN".equals(item.getKey()) && value(item.getMatchCount()) > 0)
-                    .findFirst()
-                    .orElseGet(() -> summaries.stream()
-                            .filter(item -> "RECENT".equals(item.getKey()))
-                            .findFirst()
-                            .orElse(null));
-            if (summary == null) return MatchMetrics.unavailable();
-
-            double averageKill = number(summary.getAverageKill());
-            double averageDeath = number(summary.getAverageDeath());
-            double killDeathRatio = averageDeath > 0 ? averageKill / averageDeath : averageKill;
-            return new MatchMetrics(
-                    value(summary.getMatchCount()),
-                    number(summary.getWinRate()),
-                    killDeathRatio,
-                    averageKill,
-                    true
-            );
-        } catch (RuntimeException exception) {
-            return MatchMetrics.unavailable();
-        }
-    }
-
-    private WeaponMetrics loadWeaponMetrics(String userName) {
-        try {
-            WeaponStatsResponseDto stats = weaponService.getWeaponStats(userName);
-            if (stats == null) return WeaponMetrics.balanced();
-            double totalRate = number(stats.getAssaultRate())
-                    + number(stats.getSniperRate())
-                    + number(stats.getSpecialRate());
-            String primaryClass = totalRate <= 0 ? "균형" : normalizeRole(stats.getPrimaryClass());
-            String combatType = isBlank(stats.getCombatType()) ? "분석 대기" : stats.getCombatType().trim();
-            return new WeaponMetrics(primaryClass, combatType);
-        } catch (RuntimeException exception) {
-            return WeaponMetrics.balanced();
-        }
-    }
-
-    private double calculatePowerScore(double winRate, double killDeathRatio, double averageKill) {
-        double winScore = clamp(winRate, 0, 100);
-        double kdScore = clamp(killDeathRatio, 0, 3) / 3.0 * 100.0;
-        double killScore = clamp(averageKill, 0, 20) / 20.0 * 100.0;
-        return winScore * 0.45 + kdScore * 0.35 + killScore * 0.20;
     }
 
     private TeamCandidate selectCandidate(List<PlayerMetrics> players, int teamSize, int requestedVariant) {
@@ -357,18 +274,6 @@ public class ClanTeamBalanceService {
         return "균형";
     }
 
-    private void putCache(String key, PlayerMetrics metrics) {
-        Instant now = Instant.now();
-        metricsCache.entrySet().removeIf(entry -> entry.getValue().expiresAt().isBefore(now));
-        if (metricsCache.size() >= MAX_CACHE_ENTRIES) {
-            metricsCache.entrySet().stream()
-                    .min(Map.Entry.comparingByValue(Comparator.comparing(MetricsCacheEntry::cachedAt)))
-                    .map(Map.Entry::getKey)
-                    .ifPresent(metricsCache::remove);
-        }
-        metricsCache.put(key, new MetricsCacheEntry(metrics, now, now.plus(METRICS_CACHE_DURATION)));
-    }
-
     private int value(Integer value) {
         return value == null ? 0 : value;
     }
@@ -377,34 +282,12 @@ public class ClanTeamBalanceService {
         return value == null || !Double.isFinite(value) ? 0 : value;
     }
 
-    private double clamp(double value, double min, double max) {
-        return Math.max(min, Math.min(max, value));
-    }
-
     private double roundOne(double value) {
         return Math.round(value * 10.0) / 10.0;
     }
 
     private boolean isBlank(String value) {
         return value == null || value.isBlank();
-    }
-
-    private record MatchMetrics(
-            int matchCount,
-            double winRate,
-            double killDeathRatio,
-            double averageKill,
-            boolean available) {
-
-        static MatchMetrics unavailable() {
-            return new MatchMetrics(0, 0, 0, 0, false);
-        }
-    }
-
-    private record WeaponMetrics(String primaryClass, String combatType) {
-        static WeaponMetrics balanced() {
-            return new WeaponMetrics("균형", "분석 대기");
-        }
     }
 
     private record PlayerMetrics(
@@ -426,15 +309,6 @@ public class ClanTeamBalanceService {
             );
         }
 
-        PlayerMetrics withIdentity(Long nextId, String nextUserName) {
-            return new PlayerMetrics(
-                    nextId, nextUserName, primaryClass, combatType, powerScore,
-                    matchCount, winRate, killDeathRatio, averageKill, available
-            );
-        }
-    }
-
-    private record MetricsCacheEntry(PlayerMetrics metrics, Instant cachedAt, Instant expiresAt) {
     }
 
     private record TeamCandidate(

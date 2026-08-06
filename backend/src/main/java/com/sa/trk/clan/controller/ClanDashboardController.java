@@ -2,6 +2,7 @@ package com.sa.trk.clan.controller;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,6 +29,14 @@ public class ClanDashboardController {
             @RequestParam("clanName") String clanName) {
         AuthUserResponse owner = authService.currentUser(bearerToken(authorization));
         return clanDashboardService.getDashboard(owner.id(), clanName);
+    }
+
+    @PostMapping("/api/clan/dashboard/refresh")
+    public ClanDashboardResponseDto refreshDashboard(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @RequestParam("clanName") String clanName) {
+        AuthUserResponse owner = authService.currentUser(bearerToken(authorization));
+        return clanDashboardService.refreshDashboard(owner.id(), clanName);
     }
 
     private String bearerToken(String authorization) {

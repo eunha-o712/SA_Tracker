@@ -33,17 +33,26 @@ class ClanMemberServiceTests {
     @Mock
     private AuthUserRepository authUserRepository;
 
+    @Mock
+    private ClanMemberMetricsService clanMemberMetricsService;
+
     private ClanMemberService clanMemberService;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        clanMemberService = new ClanMemberService(clanMemberRepository, playerService, authUserRepository);
+        clanMemberService = new ClanMemberService(
+                clanMemberRepository,
+                playerService,
+                authUserRepository,
+                clanMemberMetricsService
+        );
     }
 
     @Test
     void validatesAndStoresAClanMember() {
         when(clanMemberRepository.findByOwnerIdAndUserNameIgnoreCase(7L, "원장")).thenReturn(Optional.empty());
+        when(authUserRepository.findById(7L)).thenReturn(Optional.empty());
         when(authUserRepository.getReferenceById(7L)).thenReturn(owner(7L));
         OuidResponseDto ouid = new OuidResponseDto();
         ouid.setOuid("ouid-1");
@@ -57,6 +66,8 @@ class ClanMemberServiceTests {
             member.setId(1L);
             return member;
         });
+        when(clanMemberMetricsService.refreshMember(any(ClanMember.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         var response = clanMemberService.addMember(7L, "  원장  ");
 
@@ -83,6 +94,7 @@ class ClanMemberServiceTests {
     @Test
     void rejectsPlayersWithoutAClan() {
         when(clanMemberRepository.findByOwnerIdAndUserNameIgnoreCase(7L, "무소속")).thenReturn(Optional.empty());
+        when(authUserRepository.findById(7L)).thenReturn(Optional.empty());
         OuidResponseDto ouid = new OuidResponseDto();
         ouid.setOuid("ouid-2");
         UserBasicDto basic = new UserBasicDto();
@@ -93,6 +105,33 @@ class ClanMemberServiceTests {
         assertThatThrownBy(() -> clanMemberService.addMember(7L, "무소속"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("소속 클랜이 없는 플레이어는 등록할 수 없습니다.");
+    }
+
+    @Test
+    void usesLinkedOuidWhenOwnerRegistersTheirOwnNickname() {
+        AuthUser linkedOwner = owner(7L);
+        linkedOwner.setSuddenNickname("힉");
+        linkedOwner.setOuid("ouid-hik");
+        when(clanMemberRepository.findByOwnerIdAndUserNameIgnoreCase(7L, "힉")).thenReturn(Optional.empty());
+        when(authUserRepository.findById(7L)).thenReturn(Optional.of(linkedOwner));
+        when(authUserRepository.getReferenceById(7L)).thenReturn(linkedOwner);
+        UserBasicDto basic = new UserBasicDto();
+        basic.setUser_name("힉");
+        basic.setClan_name("다봄");
+        when(playerService.getUserBasic("ouid-hik")).thenReturn(basic);
+        when(clanMemberRepository.save(any(ClanMember.class))).thenAnswer(invocation -> {
+            ClanMember member = invocation.getArgument(0);
+            member.setId(2L);
+            return member;
+        });
+        when(clanMemberMetricsService.refreshMember(any(ClanMember.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        var response = clanMemberService.addMember(7L, "힉");
+
+        assertThat(response.getUserName()).isEqualTo("힉");
+        assertThat(response.getClanName()).isEqualTo("다봄");
+        verify(playerService, never()).getOuid("힉");
     }
 
     @Test

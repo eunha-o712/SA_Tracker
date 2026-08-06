@@ -1,5 +1,6 @@
 package com.sa.trk.clan.dto;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,5 +15,6 @@ public class ClanDashboardResponseDto {
     private Integer totalMatchCount;
     private Double averageWinRate;
     private Double averageKillDeathRatio;
+    private LocalDateTime lastRefreshedAt;
     private List<ClanMemberStatsDto> members = new ArrayList<>();
 }

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sa.trk.auth.repository.AuthUserRepository;
+import com.sa.trk.auth.entity.AuthUser;
 import com.sa.trk.clan.dto.ClanMemberResponseDto;
 import com.sa.trk.clan.entity.ClanMember;
 import com.sa.trk.clan.repository.ClanMemberRepository;
@@ -19,14 +20,17 @@ public class ClanMemberService {
     private final ClanMemberRepository clanMemberRepository;
     private final PlayerService playerService;
     private final AuthUserRepository authUserRepository;
+    private final ClanMemberMetricsService clanMemberMetricsService;
 
     public ClanMemberService(
             ClanMemberRepository clanMemberRepository,
             PlayerService playerService,
-            AuthUserRepository authUserRepository) {
+            AuthUserRepository authUserRepository,
+            ClanMemberMetricsService clanMemberMetricsService) {
         this.clanMemberRepository = clanMemberRepository;
         this.playerService = playerService;
         this.authUserRepository = authUserRepository;
+        this.clanMemberMetricsService = clanMemberMetricsService;
     }
 
     @Transactional
@@ -56,12 +60,12 @@ public class ClanMemberService {
     }
 
     private ClanMemberResponseDto createMember(Long ownerId, String userName) {
-        OuidResponseDto ouidResponse = playerService.getOuid(userName);
-        if (ouidResponse == null || ouidResponse.getOuid() == null || ouidResponse.getOuid().isBlank()) {
+        String ouid = resolveOuid(ownerId, userName);
+        if (ouid.isBlank()) {
             throw new IllegalArgumentException("플레이어 정보를 찾을 수 없습니다.");
         }
 
-        UserBasicDto basic = playerService.getUserBasic(ouidResponse.getOuid());
+        UserBasicDto basic = playerService.getUserBasic(ouid);
         String clanName = basic == null ? "" : normalizeText(basic.getClan_name());
         if (clanName.isBlank()) {
             throw new IllegalArgumentException("소속 클랜이 없는 플레이어는 등록할 수 없습니다.");
@@ -73,8 +77,23 @@ public class ClanMemberService {
                 ? userName
                 : normalizeText(basic.getUser_name()));
         member.setClanName(clanName);
-        member.setOuid(ouidResponse.getOuid());
-        return toDto(clanMemberRepository.save(member));
+        member.setOuid(ouid);
+        ClanMember savedMember = clanMemberRepository.save(member);
+        return toDto(clanMemberMetricsService.refreshMember(savedMember));
+    }
+
+    private String resolveOuid(Long ownerId, String userName) {
+        String ownerOuid = authUserRepository.findById(ownerId)
+                .filter(owner -> sameText(owner.getSuddenNickname(), userName))
+                .map(AuthUser::getOuid)
+                .map(this::normalizeText)
+                .orElse("");
+        if (!ownerOuid.isBlank()) {
+            return ownerOuid;
+        }
+
+        OuidResponseDto ouidResponse = playerService.getOuid(userName);
+        return ouidResponse == null ? "" : normalizeText(ouidResponse.getOuid());
     }
 
     private void validateOwnerId(Long ownerId) {
@@ -106,5 +125,9 @@ public class ClanMemberService {
 
     private String normalizeText(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    private boolean sameText(String left, String right) {
+        return normalizeText(left).equalsIgnoreCase(normalizeText(right));
     }
 }
