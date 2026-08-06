@@ -4,7 +4,6 @@ import api, { getApiErrorMessage } from '../../api/api'
 import Footer from '../../components/Footer/Footer'
 import Header from '../../components/Header/Header'
 import NavBar from '../../components/NavBar/NavBar'
-import BoardPostImage from './BoardPostImage'
 import '../PlayerPage/PlayerPage.css'
 import './BoardPage.css'
 
@@ -95,7 +94,6 @@ function BoardPageContent({ type, board }) {
                 <div className="board-post-title">
                   <strong>
                     {post.notice && <em className="board-notice-badge">공지</em>}
-                    {post.privatePost && <em className="board-private-badge">비공개</em>}
                     {post.type === 'SUPPORT' && !post.notice && (
                       <em className={`board-support-status status-${String(post.supportStatus || 'OPEN').toLowerCase()}`}>
                         {post.supportCategory === 'OUID_DISPUTE' ? 'OUID 분쟁' : '문의'} · {supportStatusLabel(post.supportStatus)}
@@ -103,17 +101,6 @@ function BoardPageContent({ type, board }) {
                     )}
                     <Link className="board-post-link" to={`/board/post/${post.id}`}>{post.title}</Link>
                   </strong>
-                  <p>{post.content}</p>
-                  {Array.isArray(post.imageUrls) && post.imageUrls.length > 0 && <div className="board-post-images">
-                    {post.imageUrls.map((imageUrl, imageIndex) => (
-                      <BoardPostImage
-                        imageUrl={imageUrl}
-                        privatePost={post.privatePost}
-                        alt={`${post.title} 첨부 이미지 ${imageIndex + 1}`}
-                        key={imageUrl}
-                      />
-                    ))}
-                  </div>}
                 </div>
                 <span className="board-post-author">{post.authorName}</span>
                 <time dateTime={post.createdAt}>{formatBoardDate(post.createdAt)}</time>

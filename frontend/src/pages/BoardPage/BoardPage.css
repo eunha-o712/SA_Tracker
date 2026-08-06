@@ -113,8 +113,8 @@
 }
 
 .board-post-row {
-  min-height: 76px;
-  padding: 11px 26px;
+  min-height: 58px;
+  padding: 12px 26px;
   display: grid;
   grid-template-columns: 80px minmax(0, 1fr) 140px 120px 70px;
   align-items: center;
@@ -154,18 +154,6 @@
   vertical-align: 2px;
 }
 
-.board-private-badge {
-  margin-right: 9px;
-  padding: 2px 7px;
-  display: inline-block;
-  border: 1px solid #ff9d45;
-  color: #ffb067;
-  font-size: 9px;
-  font-style: normal;
-  line-height: 1.4;
-  vertical-align: 2px;
-}
-
 .board-post-link {
   color: inherit;
   text-decoration: none;
@@ -188,43 +176,6 @@
   font-size: 14px;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.board-post-title p {
-  margin-top: 2px;
-  overflow: hidden;
-  color: var(--text-dim);
-  font-size: 11px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.board-post-images {
-  margin-top: 9px;
-  display: flex;
-  gap: 6px;
-  overflow: hidden;
-}
-
-.board-post-images img {
-  width: 54px;
-  height: 54px;
-  flex: 0 0 auto;
-  border: 1px solid rgba(126, 217, 87, 0.25);
-  background: #050505;
-  object-fit: cover;
-}
-
-.board-post-images .board-private-image-state {
-  width: 110px;
-  height: 54px;
-  padding: 6px;
-  display: grid;
-  place-items: center;
-  border: 1px solid rgba(255, 157, 69, 0.28);
-  color: #ffb067;
-  font-size: 8px;
-  text-align: center;
 }
 
 .board-private-notice {
@@ -876,6 +827,11 @@
   font-style: normal;
   font-size: 8px;
   white-space: nowrap;
+}
+
+.board-post-title .board-support-status {
+  margin-right: 10px;
+  vertical-align: 2px;
 }
 
 .board-support-summary {
