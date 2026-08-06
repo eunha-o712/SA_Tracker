@@ -49,7 +49,7 @@ class WeaponServiceTests {
 
         when(playerService.getOuid("alpha")).thenReturn(ouid);
         when(playerService.getUserRecentInfo("ouid-1")).thenReturn(recent);
-        when(matchService.getHeadshotStats("alpha")).thenReturn(headshots);
+        when(matchService.getHeadshotStatsByOuid("alpha", "ouid-1")).thenReturn(headshots);
 
         var response = weaponService.getWeaponStats("alpha");
 

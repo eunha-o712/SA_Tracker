@@ -20,6 +20,9 @@ import com.sa.trk.auth.entity.AuthUser;
 import com.sa.trk.auth.repository.AuthSessionRepository;
 import com.sa.trk.favorite.entity.Favorite;
 import com.sa.trk.favorite.repository.FavoriteRepository;
+import com.sa.trk.nexon.dto.UserBasicDto;
+import com.sa.trk.player.dto.PlayerResponseDto;
+import com.sa.trk.player.service.PlayerService;
 
 class FavoriteServiceTests {
 
@@ -29,6 +32,9 @@ class FavoriteServiceTests {
     @Mock
     private AuthSessionRepository sessionRepository;
 
+    @Mock
+    private PlayerService playerService;
+
     private AuthUser owner;
     private FavoriteService favoriteService;
 
@@ -36,8 +42,11 @@ class FavoriteServiceTests {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         owner = owner();
-        favoriteService = new FavoriteService(favoriteRepository, sessionRepository);
+        favoriteService = new FavoriteService(favoriteRepository, sessionRepository, playerService);
         when(sessionRepository.findByTokenHash(any())).thenReturn(Optional.of(session(owner)));
+        when(playerService.getPlayer("agent")).thenReturn(player("agent", "ouid-agent"));
+        when(favoriteRepository.save(any(Favorite.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     @Test
@@ -53,6 +62,7 @@ class FavoriteServiceTests {
 
         assertThat(result.getId()).isEqualTo(7L);
         assertThat(result.getUserName()).isEqualTo("agent");
+        assertThat(result.getOuid()).isEqualTo("ouid-agent");
     }
 
     @Test
@@ -66,7 +76,8 @@ class FavoriteServiceTests {
         var result = favoriteService.addFavorite("session-token", "agent");
 
         assertThat(result.getId()).isEqualTo(3L);
-        verify(favoriteRepository, never()).save(any(Favorite.class));
+        assertThat(result.getOuid()).isEqualTo("ouid-agent");
+        verify(favoriteRepository).save(existing);
     }
 
     @Test
@@ -96,6 +107,16 @@ class FavoriteServiceTests {
         user.setPasswordHash("hash");
         user.setCreatedAt(Instant.now());
         return user;
+    }
+
+    private PlayerResponseDto player(String userName, String ouid) {
+        UserBasicDto basic = new UserBasicDto();
+        basic.setUser_name(userName);
+        PlayerResponseDto player = new PlayerResponseDto();
+        player.setUserName(userName);
+        player.setOuid(ouid);
+        player.setBasic(basic);
+        return player;
     }
 
     private AuthSession session(AuthUser user) {

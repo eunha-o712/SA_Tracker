@@ -28,4 +28,7 @@ public class Favorite {
 
     @Column(nullable = false, length = 30)
     private String userName;
+
+    @Column(length = 64)
+    private String ouid;
 }

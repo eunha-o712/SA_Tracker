@@ -17,7 +17,11 @@ public class WeaponController {
     }
 
     @GetMapping("/api/weapon")
-    public WeaponStatsResponseDto getWeaponStats(@RequestParam("userName") String userName) {
-        return weaponService.getWeaponStats(userName);
+    public WeaponStatsResponseDto getWeaponStats(
+            @RequestParam("userName") String userName,
+            @RequestParam(value = "ouid", required = false) String ouid) {
+        return ouid == null || ouid.isBlank()
+                ? weaponService.getWeaponStats(userName)
+                : weaponService.getWeaponStatsByOuid(userName, ouid);
     }
 }

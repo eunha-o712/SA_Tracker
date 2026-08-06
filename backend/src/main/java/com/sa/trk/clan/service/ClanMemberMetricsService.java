@@ -6,6 +6,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.sa.trk.clan.entity.ClanMember;
 import com.sa.trk.clan.repository.ClanMemberRepository;
@@ -14,6 +15,9 @@ import com.sa.trk.match.dto.MatchSummaryResponseDto;
 import com.sa.trk.match.service.MatchService;
 import com.sa.trk.weapon.dto.WeaponStatsResponseDto;
 import com.sa.trk.weapon.service.WeaponService;
+import com.sa.trk.nexon.dto.OuidResponseDto;
+import com.sa.trk.nexon.dto.UserBasicDto;
+import com.sa.trk.player.service.PlayerService;
 
 @Service
 public class ClanMemberMetricsService {
@@ -24,14 +28,25 @@ public class ClanMemberMetricsService {
     private final ClanMemberRepository clanMemberRepository;
     private final MatchService matchService;
     private final WeaponService weaponService;
+    private final PlayerService playerService;
 
+    @Autowired
     public ClanMemberMetricsService(
             ClanMemberRepository clanMemberRepository,
             MatchService matchService,
-            WeaponService weaponService) {
+            WeaponService weaponService,
+            PlayerService playerService) {
         this.clanMemberRepository = clanMemberRepository;
         this.matchService = matchService;
         this.weaponService = weaponService;
+        this.playerService = playerService;
+    }
+
+    ClanMemberMetricsService(
+            ClanMemberRepository clanMemberRepository,
+            MatchService matchService,
+            WeaponService weaponService) {
+        this(clanMemberRepository, matchService, weaponService, null);
     }
 
     public ClanMember refreshMember(ClanMember member) {
@@ -40,8 +55,11 @@ public class ClanMemberMetricsService {
         }
 
         try {
-            MatchMetrics matchMetrics = loadMatchMetrics(member.getUserName());
-            WeaponMetrics weaponMetrics = loadWeaponMetrics(member.getUserName());
+            if (playerService != null) {
+                synchronizeIdentity(member);
+            }
+            MatchMetrics matchMetrics = loadMatchMetrics(member.getUserName(), member.getOuid());
+            WeaponMetrics weaponMetrics = loadWeaponMetrics(member.getUserName(), member.getOuid());
             member.setStatsMatchCount(matchMetrics.matchCount());
             member.setStatsWinCount(matchMetrics.winCount());
             member.setStatsDrawCount(matchMetrics.drawCount());
@@ -68,8 +86,33 @@ public class ClanMemberMetricsService {
         return clanMemberRepository.save(member);
     }
 
-    private MatchMetrics loadMatchMetrics(String userName) {
-        MatchSummaryResponseDto response = matchService.getMatchSummary(userName);
+    private void synchronizeIdentity(ClanMember member) {
+        String ouid = member.getOuid();
+        if (ouid == null || ouid.isBlank()) {
+            OuidResponseDto response = playerService.getOuid(member.getUserName());
+            ouid = response == null ? "" : response.getOuid();
+            member.setOuid(ouid);
+        }
+        if (ouid == null || ouid.isBlank()) {
+            throw new IllegalStateException("Clan member OUID could not be found.");
+        }
+
+        UserBasicDto basic = playerService.getUserBasic(ouid);
+        if (basic == null) {
+            throw new IllegalStateException("Clan member basic information could not be found.");
+        }
+        if (basic.getUser_name() != null && !basic.getUser_name().isBlank()) {
+            member.setUserName(basic.getUser_name().trim());
+        }
+        if (basic.getClan_name() != null && !basic.getClan_name().isBlank()) {
+            member.setClanName(basic.getClan_name().trim());
+        }
+    }
+
+    private MatchMetrics loadMatchMetrics(String userName, String ouid) {
+        MatchSummaryResponseDto response = ouid == null || ouid.isBlank()
+                ? matchService.getMatchSummary(userName)
+                : matchService.getMatchSummaryByOuid(userName, ouid);
         List<MatchSummaryItemDto> summaries = response == null || response.getSummaries() == null
                 ? List.of()
                 : response.getSummaries();
@@ -98,9 +141,11 @@ public class ClanMemberMetricsService {
         );
     }
 
-    private WeaponMetrics loadWeaponMetrics(String userName) {
+    private WeaponMetrics loadWeaponMetrics(String userName, String ouid) {
         try {
-            WeaponStatsResponseDto stats = weaponService.getWeaponStats(userName);
+            WeaponStatsResponseDto stats = ouid == null || ouid.isBlank()
+                    ? weaponService.getWeaponStats(userName)
+                    : weaponService.getWeaponStatsByOuid(userName, ouid);
             if (stats == null) {
                 return WeaponMetrics.balanced();
             }

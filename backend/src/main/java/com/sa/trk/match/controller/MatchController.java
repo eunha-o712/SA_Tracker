@@ -21,12 +21,24 @@ public class MatchController {
     @GetMapping("/api/match")
     public MatchListResponseDto getMatches(
             @RequestParam("userName") String userName,
+            @RequestParam(value = "ouid", required = false) String ouid,
             @RequestParam(value = "page", defaultValue = "1") Integer page,
             @RequestParam(value = "scope", defaultValue = "RECENT") String scope,
             @RequestParam("matchType") String matchType,
             @RequestParam(value = "matchMode", defaultValue = "ALL") String matchMode,
             @RequestParam(value = "matchMap", defaultValue = "ALL") String matchMap) {
 
+        if (ouid != null && !ouid.isBlank()) {
+            return matchService.getMatchesByOuid(
+                    userName,
+                    ouid,
+                    page,
+                    scope,
+                    matchType,
+                    matchMode,
+                    matchMap
+            );
+        }
         return matchService.getMatches(
                 userName,
                 page,
@@ -46,8 +58,11 @@ public class MatchController {
 
     @GetMapping("/api/match/summary")
     public MatchSummaryResponseDto getMatchSummary(
-            @RequestParam("userName") String userName) {
+            @RequestParam("userName") String userName,
+            @RequestParam(value = "ouid", required = false) String ouid) {
 
-        return matchService.getMatchSummary(userName);
+        return ouid == null || ouid.isBlank()
+                ? matchService.getMatchSummary(userName)
+                : matchService.getMatchSummaryByOuid(userName, ouid);
     }
 }

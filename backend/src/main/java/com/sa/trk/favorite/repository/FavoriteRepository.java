@@ -11,6 +11,7 @@ import com.sa.trk.favorite.entity.Favorite;
 public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
 
     Optional<Favorite> findByOwnerAndUserNameIgnoreCase(AuthUser owner, String userName);
+    Optional<Favorite> findByOwnerAndOuid(AuthUser owner, String ouid);
     Optional<Favorite> findByIdAndOwner(Long id, AuthUser owner);
     List<Favorite> findByOwnerOrderByIdDesc(AuthUser owner);
 }

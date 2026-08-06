@@ -9,6 +9,7 @@ public class ClanMemberStatsDto {
 
     private Long id;
     private String userName;
+    private String ouid;
     private Integer matchCount;
     private Integer winCount;
     private Integer drawCount;

@@ -64,7 +64,9 @@ function PlayerPage() {
             const favoriteResponse = await cachedGet('/api/favorite')
             if (!active) return
             const favorite = (favoriteResponse.data ?? []).find((item) => (
-              item.userName?.toLowerCase() === currentName?.toLowerCase()
+              response.data?.ouid
+                ? item.ouid === response.data.ouid
+                : item.userName?.toLowerCase() === currentName?.toLowerCase()
             ))
             setFavoriteId(favorite?.id ?? null)
           } else {
@@ -106,7 +108,7 @@ function PlayerPage() {
       if (favoriteId) {
         await api.delete(`/api/favorite/${favoriteId}`)
         invalidateCachedGet('/api/favorite')
-        removeFavoriteSnapshot(readAuthSession(), userName)
+        removeFavoriteSnapshot(readAuthSession(), userName, playerData?.ouid)
         setFavoriteId(null)
         setFavoriteMessage('즐겨찾기에서 삭제했습니다.')
       } else {
@@ -208,6 +210,7 @@ async function cacheFavoriteSnapshot(session, favorite, playerData, fallbackName
   const isOwnAccount = normalizeFavoriteName(userName) === normalizeFavoriteName(accountName)
   const snapshot = {
     id: favorite.id,
+    ouid: favorite.ouid || playerData?.ouid || null,
     userName,
     titleName: cleanFavoriteText(playerData?.basic?.title_name) || 'NO TITLE',
     seasonGrade: playerData?.rank?.season_grade || 'SEASON GRADE',
@@ -226,16 +229,20 @@ async function cacheFavoriteSnapshot(session, favorite, playerData, fallbackName
 
   const cacheKey = getFavoriteSnapshotCacheKey(session)
   const cached = readFavoriteSnapshots(cacheKey)
-  const next = [snapshot, ...cached.items.filter((item) => normalizeFavoriteName(item.userName) !== normalizeFavoriteName(userName))]
+  const next = [snapshot, ...cached.items.filter((item) => snapshot.ouid
+    ? item.ouid !== snapshot.ouid
+    : normalizeFavoriteName(item.userName) !== normalizeFavoriteName(userName))]
   writeFavoriteSnapshots(cacheKey, next, cached.refreshedAt || Date.now())
 }
 
-function removeFavoriteSnapshot(session, userName) {
+function removeFavoriteSnapshot(session, userName, ouid) {
   if (!session) return
   const cacheKey = getFavoriteSnapshotCacheKey(session)
   const cached = readFavoriteSnapshots(cacheKey)
   const next = cached.items
-    .filter((item) => normalizeFavoriteName(item.userName) !== normalizeFavoriteName(userName))
+    .filter((item) => ouid
+      ? item.ouid !== ouid
+      : normalizeFavoriteName(item.userName) !== normalizeFavoriteName(userName))
   writeFavoriteSnapshots(cacheKey, next, cached.refreshedAt)
 }
 

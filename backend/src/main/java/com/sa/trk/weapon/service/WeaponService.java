@@ -25,7 +25,10 @@ public class WeaponService {
 
     public WeaponStatsResponseDto getWeaponStats(String userName) {
         OuidResponseDto ouidResponse = playerService.getOuid(userName);
-        String ouid = ouidResponse.getOuid();
+        return getWeaponStatsByOuid(userName, ouidResponse.getOuid());
+    }
+
+    public WeaponStatsResponseDto getWeaponStatsByOuid(String userName, String ouid) {
 
         UserRecentInfoDto recentInfo = playerService.getUserRecentInfo(ouid);
 
@@ -53,7 +56,7 @@ public class WeaponService {
         responseDto.setSpecializationIndex(roundOne(specializationIndex));
         responseDto.setCombatType(determineCombatType(primary.label(), primaryGap));
 
-        HeadshotStatsDto headshotStats = matchService.getHeadshotStats(userName);
+        HeadshotStatsDto headshotStats = matchService.getHeadshotStatsByOuid(userName, ouid);
         responseDto.setSampleMatchCount(headshotStats.getSampleMatchCount());
         responseDto.setTotalKills(headshotStats.getTotalKills());
         responseDto.setTotalHeadshots(headshotStats.getTotalHeadshots());

@@ -18,37 +18,58 @@ import com.sa.trk.auth.service.AuthException;
 import com.sa.trk.favorite.dto.FavoriteResponseDto;
 import com.sa.trk.favorite.entity.Favorite;
 import com.sa.trk.favorite.repository.FavoriteRepository;
+import com.sa.trk.player.dto.PlayerResponseDto;
+import com.sa.trk.player.service.PlayerService;
 
 @Service
 public class FavoriteService {
 
     private final FavoriteRepository favoriteRepository;
     private final AuthSessionRepository sessionRepository;
+    private final PlayerService playerService;
 
-    public FavoriteService(FavoriteRepository favoriteRepository, AuthSessionRepository sessionRepository) {
+    public FavoriteService(
+            FavoriteRepository favoriteRepository,
+            AuthSessionRepository sessionRepository,
+            PlayerService playerService) {
         this.favoriteRepository = favoriteRepository;
         this.sessionRepository = sessionRepository;
+        this.playerService = playerService;
     }
 
     @Transactional
     public FavoriteResponseDto addFavorite(String rawToken, String userName) {
         AuthUser owner = currentUser(rawToken);
         String normalizedUserName = normalizeUserName(userName);
-        Favorite favorite = favoriteRepository.findByOwnerAndUserNameIgnoreCase(owner, normalizedUserName)
+        PlayerResponseDto player = playerService.getPlayer(normalizedUserName);
+        String ouid = player == null ? "" : player.getOuid();
+        if (ouid == null || ouid.isBlank()) {
+            throw new IllegalArgumentException("Player OUID could not be found.");
+        }
+        String currentNickname = player.getBasic() == null
+                || player.getBasic().getUser_name() == null
+                || player.getBasic().getUser_name().isBlank()
+                ? normalizedUserName
+                : player.getBasic().getUser_name().trim();
+        Favorite favorite = favoriteRepository.findByOwnerAndOuid(owner, ouid)
+                .or(() -> favoriteRepository.findByOwnerAndUserNameIgnoreCase(owner, normalizedUserName))
                 .orElseGet(() -> {
                     Favorite newFavorite = new Favorite();
                     newFavorite.setOwner(owner);
-                    newFavorite.setUserName(normalizedUserName);
-                    return favoriteRepository.save(newFavorite);
+                    return newFavorite;
                 });
+        favorite.setUserName(currentNickname);
+        favorite.setOuid(ouid);
+        favorite = favoriteRepository.save(favorite);
 
         return toResponse(favorite);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<FavoriteResponseDto> getFavorites(String rawToken) {
         AuthUser owner = currentUser(rawToken);
         return favoriteRepository.findByOwnerOrderByIdDesc(owner).stream()
+                .map(this::synchronizeIdentity)
                 .map(this::toResponse)
                 .toList();
     }
@@ -83,7 +104,24 @@ public class FavoriteService {
         FavoriteResponseDto responseDto = new FavoriteResponseDto();
         responseDto.setId(favorite.getId());
         responseDto.setUserName(favorite.getUserName());
+        responseDto.setOuid(favorite.getOuid());
         return responseDto;
+    }
+
+    private Favorite synchronizeIdentity(Favorite favorite) {
+        if (favorite.getOuid() != null && !favorite.getOuid().isBlank()) {
+            return favorite;
+        }
+        PlayerResponseDto player = playerService.getPlayer(favorite.getUserName());
+        if (player != null && player.getOuid() != null && !player.getOuid().isBlank()) {
+            favorite.setOuid(player.getOuid());
+            if (player.getBasic() != null
+                    && player.getBasic().getUser_name() != null
+                    && !player.getBasic().getUser_name().isBlank()) {
+                favorite.setUserName(player.getBasic().getUser_name().trim());
+            }
+        }
+        return favoriteRepository.save(favorite);
     }
 
     private String normalizeUserName(String userName) {

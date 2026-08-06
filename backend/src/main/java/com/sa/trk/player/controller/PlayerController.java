@@ -25,7 +25,12 @@ public class PlayerController {
     }
 
     @GetMapping("/api/player")
-    public PlayerResponseDto getPlayer(@RequestParam("userName") String userName) {
+    public PlayerResponseDto getPlayer(
+            @RequestParam(value = "userName", required = false) String userName,
+            @RequestParam(value = "ouid", required = false) String ouid) {
+        if (ouid != null && !ouid.isBlank()) {
+            return playerService.getPlayerByOuid(ouid);
+        }
         return playerService.getPlayer(userName);
     }
 

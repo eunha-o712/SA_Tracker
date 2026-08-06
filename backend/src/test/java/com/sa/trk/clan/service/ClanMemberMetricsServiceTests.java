@@ -18,6 +18,8 @@ import com.sa.trk.match.dto.MatchSummaryResponseDto;
 import com.sa.trk.match.service.MatchService;
 import com.sa.trk.weapon.dto.WeaponStatsResponseDto;
 import com.sa.trk.weapon.service.WeaponService;
+import com.sa.trk.nexon.dto.UserBasicDto;
+import com.sa.trk.player.service.PlayerService;
 
 class ClanMemberMetricsServiceTests {
 
@@ -29,6 +31,9 @@ class ClanMemberMetricsServiceTests {
 
     @Mock
     private WeaponService weaponService;
+
+    @Mock
+    private PlayerService playerService;
 
     private ClanMemberMetricsService service;
 
@@ -73,6 +78,30 @@ class ClanMemberMetricsServiceTests {
         assertThat(refreshed.getStatsMatchCount()).isEqualTo(15);
         assertThat(refreshed.getStatsPowerScore()).isEqualTo(55.5);
         assertThat(refreshed.getStatsUpdatedAt()).isEqualTo(java.time.LocalDateTime.of(2026, 7, 30, 12, 0));
+    }
+
+    @Test
+    void refreshesRenamedMemberByStoredOuid() {
+        ClanMemberMetricsService ouidService = new ClanMemberMetricsService(
+                clanMemberRepository,
+                matchService,
+                weaponService,
+                playerService
+        );
+        ClanMember member = member("oldName");
+        member.setOuid("ouid-player");
+        UserBasicDto basic = new UserBasicDto();
+        basic.setUser_name("newName");
+        basic.setClan_name("testClan");
+        when(playerService.getUserBasic("ouid-player")).thenReturn(basic);
+        when(matchService.getMatchSummaryByOuid("newName", "ouid-player")).thenReturn(summary());
+        when(weaponService.getWeaponStatsByOuid("newName", "ouid-player")).thenReturn(weapon());
+
+        ClanMember refreshed = ouidService.refreshMember(member);
+
+        assertThat(refreshed.getUserName()).isEqualTo("newName");
+        assertThat(refreshed.getClanName()).isEqualTo("testClan");
+        assertThat(refreshed.getStatsAvailable()).isTrue();
     }
 
     private ClanMember member(String userName) {

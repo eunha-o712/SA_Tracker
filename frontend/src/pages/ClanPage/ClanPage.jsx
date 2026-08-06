@@ -79,10 +79,11 @@ function ClanPageContent({ name, accountName, isOwnAccount, clanNone }) {
 
         const playerData = playerResponse.data ?? null
         const resolvedName = playerData?.basic?.user_name || playerData?.userName || name || accountName
+        const resolvedOuid = playerData?.ouid || undefined
         const [summaryResponse, ...matchResponses] = await Promise.all([
-          api.get('/api/match/summary', { params: { userName: resolvedName } }),
+          api.get('/api/match/summary', { params: { userName: resolvedName, ouid: resolvedOuid } }),
           ...CLAN_TYPES.map((matchType) => api.get('/api/match', { params: {
-            userName: resolvedName, page: 1, scope: 'CLAN', matchType, matchMode: 'ALL', matchMap: 'ALL',
+            userName: resolvedName, ouid: resolvedOuid, page: 1, scope: 'CLAN', matchType, matchMode: 'ALL', matchMap: 'ALL',
           } })),
         ])
         if (!active) return
@@ -162,7 +163,7 @@ function ClanPageContent({ name, accountName, isOwnAccount, clanNone }) {
   const reportedClanName = String(player?.basic?.clan_name ?? '').trim()
   const resolvedPlayerName = String(player?.basic?.user_name || player?.userName || name || '').trim()
   const rosterMembership = roster.find((member) => (
-    sameText(member.userName, resolvedPlayerName)
+    (player?.ouid ? member.ouid === player.ouid : sameText(member.userName, resolvedPlayerName))
     && sameText(member.clanName, reportedClanName)
   ))
   const hasClanEvidence = isOwnAccount
@@ -172,7 +173,9 @@ function ClanPageContent({ name, accountName, isOwnAccount, clanNone }) {
   const clanDecisionPending = Boolean(isOwnAccount && player && rosterLoading)
   const teams = useMemo(() => splitTeams(detail?.matchDetail ?? []), [detail])
   const clanRoster = useMemo(() => roster.filter((member) => member.clanName === clanName), [roster, clanName])
-  const registeredMember = clanRoster.find((member) => member.userName === (player?.basic?.user_name || name))
+  const registeredMember = clanRoster.find((member) => (
+    player?.ouid ? member.ouid === player.ouid : member.userName === (player?.basic?.user_name || name)
+  ))
   const rosterKey = clanRoster.map((member) => member.id).join(',')
 
   useEffect(() => {

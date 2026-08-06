@@ -322,16 +322,32 @@ async function fetchFavoriteSnapshot(session) {
 }
 
 async function enrichFavorite(favorite) {
-  const [playerResult, summaryResult] = await Promise.allSettled([
-    api.get('/api/player', { params: { userName: favorite.userName } }),
-    api.get('/api/match/summary', { params: { userName: favorite.userName } }),
-  ])
-  const player = playerResult.status === 'fulfilled' ? playerResult.value.data : null
-  const summary = summaryResult.status === 'fulfilled' ? summaryResult.value.data : null
+  let player = null
+  let summary = null
+  try {
+    const playerResponse = await api.get('/api/player', {
+      params: favorite.ouid ? { ouid: favorite.ouid } : { userName: favorite.userName },
+    })
+    player = playerResponse.data
+  } catch {
+    // Keep the saved favorite visible when player data is temporarily unavailable.
+  }
+
+  const currentName = cleanText(player?.basic?.user_name) || favorite.userName
+  try {
+    const summaryResponse = await api.get('/api/match/summary', {
+      params: { userName: currentName, ouid: player?.ouid || favorite.ouid || undefined },
+    })
+    summary = summaryResponse.data
+  } catch {
+    // Match details are optional for the favorite card.
+  }
   const recent = summary?.summaries?.find((item) => item.key === 'RECENT')
 
   return {
     ...favorite,
+    ouid: player?.ouid || favorite.ouid || null,
+    userName: currentName,
     titleName: cleanText(player?.basic?.title_name) || 'NO TITLE',
     seasonGrade: player?.rank?.season_grade || 'SEASON GRADE',
     seasonGradeImage: player?.images?.seasonGradeImage || null,
@@ -403,17 +419,23 @@ function shouldShowInitialFavoriteLoader() {
 }
 
 function containsOwnFavorite(favorites, session) {
+  const accountOuid = session?.user?.ouid || ''
+  if (accountOuid && favorites.some((favorite) => favorite.ouid === accountOuid)) return true
   const accountName = session?.user?.suddenNickname || session?.user?.displayName || ''
   if (!accountName) return false
   return favorites.some((favorite) => normalizeFavoriteName(favorite.userName) === normalizeFavoriteName(accountName))
 }
 
 function applyOwnClanEvidence(favorites, session, roster) {
+  const accountOuid = session?.user?.ouid || ''
   const accountName = session?.user?.suddenNickname || session?.user?.displayName || ''
-  if (!accountName) return favorites
+  if (!accountOuid && !accountName) return favorites
 
   return favorites.map((favorite) => {
-    if (normalizeFavoriteName(favorite.userName) !== normalizeFavoriteName(accountName)) return favorite
+    const isOwnFavorite = accountOuid
+      ? favorite.ouid === accountOuid
+      : normalizeFavoriteName(favorite.userName) === normalizeFavoriteName(accountName)
+    if (!isOwnFavorite) return favorite
 
     if (!Array.isArray(roster)) {
       return favorite.clanVerified
@@ -423,7 +445,9 @@ function applyOwnClanEvidence(favorites, session, roster) {
 
     const reportedClanName = cleanText(favorite.clanName)
     const membership = roster.find((member) => (
-      normalizeFavoriteName(member.userName) === normalizeFavoriteName(accountName)
+      (accountOuid
+        ? member.ouid === accountOuid
+        : normalizeFavoriteName(member.userName) === normalizeFavoriteName(accountName))
       && normalizeFavoriteName(member.clanName) === normalizeFavoriteName(reportedClanName)
     ))
 

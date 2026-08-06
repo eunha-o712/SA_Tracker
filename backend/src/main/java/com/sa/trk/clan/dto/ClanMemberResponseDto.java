@@ -9,6 +9,7 @@ public class ClanMemberResponseDto {
 
     private Long id;
     private String userName;
+    private String ouid;
     private String clanName;
     private LocalDateTime createdAt;
 }

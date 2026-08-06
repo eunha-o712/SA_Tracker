@@ -71,7 +71,8 @@ public class ClanMemberService {
             throw new IllegalArgumentException("소속 클랜이 없는 플레이어는 등록할 수 없습니다.");
         }
 
-        ClanMember member = new ClanMember();
+        ClanMember member = clanMemberRepository.findByOwnerIdAndOuid(ownerId, ouid)
+                .orElseGet(ClanMember::new);
         member.setOwner(authUserRepository.getReferenceById(ownerId));
         member.setUserName(normalizeText(basic.getUser_name()).isBlank()
                 ? userName
@@ -110,6 +111,7 @@ public class ClanMemberService {
         ClanMemberResponseDto response = new ClanMemberResponseDto();
         response.setId(member.getId());
         response.setUserName(member.getUserName());
+        response.setOuid(member.getOuid());
         response.setClanName(member.getClanName());
         response.setCreatedAt(member.getCreatedAt());
         return response;

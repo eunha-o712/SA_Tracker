@@ -82,6 +82,7 @@ public class ClanDashboardService {
         ClanMemberStatsDto stats = new ClanMemberStatsDto();
         stats.setId(member.getId());
         stats.setUserName(member.getUserName());
+        stats.setOuid(member.getOuid());
         stats.setMatchCount(value(member.getStatsMatchCount()));
         stats.setWinCount(value(member.getStatsWinCount()));
         stats.setDrawCount(value(member.getStatsDrawCount()));

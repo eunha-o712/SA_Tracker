@@ -138,6 +138,18 @@ public class MatchService {
         return response;
     }
 
+    public MatchListResponseDto getMatchesByOuid(
+            String userName,
+            String ouid,
+            Integer page,
+            String scope,
+            String matchType,
+            String matchMode,
+            String matchMap) {
+        rememberOuid(userName, ouid);
+        return getMatches(userName, page, scope, matchType, matchMode, matchMap);
+    }
+
     public MatchSummaryResponseDto getMatchSummary(String userName) {
         String normalizedUserName = requireValue(userName, "닉네임");
 
@@ -174,6 +186,11 @@ public class MatchService {
                 createSummary("GENERAL", "일반전", generalMatches)
         ));
         return response;
+    }
+
+    public MatchSummaryResponseDto getMatchSummaryByOuid(String userName, String ouid) {
+        rememberOuid(userName, ouid);
+        return getMatchSummary(userName);
     }
 
     public List<MatchDto> getRecentMatchesWithMap(String userName) {
@@ -274,6 +291,25 @@ public class MatchService {
         stats.setHeadshotRate(totalKills == 0 ? 0.0 : roundOne(totalHeadshots * 100.0 / totalKills));
         stats.setAverageHeadshots(sampleMatchCount == 0 ? 0.0 : roundOne(totalHeadshots / (double) sampleMatchCount));
         return stats;
+    }
+
+    public HeadshotStatsDto getHeadshotStatsByOuid(String userName, String ouid) {
+        rememberOuid(userName, ouid);
+        return getHeadshotStats(userName);
+    }
+
+    private synchronized void rememberOuid(String userName, String ouid) {
+        String normalizedUserName = requireValue(userName, "nickname");
+        String normalizedOuid = requireValue(ouid, "OUID");
+        String cacheKey = normalizedUserName.toLowerCase(Locale.ROOT);
+        ouidCache.put(
+                cacheKey,
+                new OuidCacheEntry(
+                        normalizedOuid,
+                        Instant.now(),
+                        Instant.now().plus(OUID_CACHE_DURATION)
+                )
+        );
     }
 
     private List<MatchDto> sampleMatches(List<MatchDto> matches) {

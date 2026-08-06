@@ -11,6 +11,8 @@ public interface ClanMemberRepository extends JpaRepository<ClanMember, Long> {
 
     Optional<ClanMember> findByOwnerIdAndUserNameIgnoreCase(Long ownerId, String userName);
 
+    Optional<ClanMember> findByOwnerIdAndOuid(Long ownerId, String ouid);
+
     Optional<ClanMember> findByIdAndOwnerId(Long id, Long ownerId);
 
     List<ClanMember> findAllByOwnerIdOrderByUserNameAsc(Long ownerId);
