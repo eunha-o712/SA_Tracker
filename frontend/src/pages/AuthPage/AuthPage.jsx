@@ -147,7 +147,7 @@ function AuthPage() {
       const requestedPath = location.state?.from
         ? `${location.state.from.pathname}${location.state.from.search || ''}${location.state.from.hash || ''}`
         : ''
-      navigate(requestedPath || getAccountLandingPath(data.user), { replace: true })
+      navigate(requestedPath || '/', { replace: true })
     } catch (requestError) {
       if (requestError?.response?.data?.code === 'EMAIL_NOT_VERIFIED') {
         setVerificationEmail(form.email.trim())
@@ -275,11 +275,6 @@ function AuthPage() {
       <Footer />
     </div>
   )
-}
-
-function getAccountLandingPath(user, preferMyPage = false) {
-  if (preferMyPage || !user?.suddenNickname) return '/mypage'
-  return `/player/${encodeURIComponent(user.suddenNickname)}`
 }
 
 export default AuthPage
