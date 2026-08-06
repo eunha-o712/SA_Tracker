@@ -6,6 +6,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.Locale;
@@ -23,16 +24,22 @@ import com.sa.trk.auth.dto.AuthRegisterRequest;
 import com.sa.trk.auth.dto.AuthResponse;
 import com.sa.trk.auth.dto.AuthUserResponse;
 import com.sa.trk.auth.dto.ClanStatusUpdateRequest;
+import com.sa.trk.auth.dto.EmailVerificationConfirmRequest;
+import com.sa.trk.auth.dto.EmailVerificationRequest;
+import com.sa.trk.auth.dto.EmailVerificationResponse;
 import com.sa.trk.auth.dto.PasswordResetConfirmRequest;
+import com.sa.trk.auth.dto.PasswordResetConfirmResponse;
 import com.sa.trk.auth.dto.PasswordResetRequest;
 import com.sa.trk.auth.dto.PasswordResetRequestResponse;
 import com.sa.trk.auth.dto.SuddenAccountLinkRequest;
 import com.sa.trk.auth.entity.AuthSession;
 import com.sa.trk.auth.entity.AuthUser;
 import com.sa.trk.auth.entity.AccountStatus;
+import com.sa.trk.auth.entity.EmailVerificationToken;
 import com.sa.trk.auth.entity.PasswordResetToken;
 import com.sa.trk.auth.repository.AuthSessionRepository;
 import com.sa.trk.auth.repository.AuthUserRepository;
+import com.sa.trk.auth.repository.EmailVerificationTokenRepository;
 import com.sa.trk.auth.repository.PasswordResetTokenRepository;
 import com.sa.trk.nexon.client.NexonApiClient;
 import com.sa.trk.nexon.dto.OuidResponseDto;
@@ -43,12 +50,28 @@ public class AuthService {
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
     private static final Duration SESSION_DURATION = Duration.ofDays(30);
+    private static final Duration EMAIL_VERIFICATION_DURATION = Duration.ofHours(24);
+    private static final Duration EMAIL_VERIFICATION_REQUEST_COOLDOWN = Duration.ofSeconds(60);
     private static final Duration PASSWORD_RESET_DURATION = Duration.ofMinutes(15);
+    private static final Duration PASSWORD_RESET_REQUEST_COOLDOWN = Duration.ofSeconds(60);
+    private static final int PASSWORD_RESET_DAILY_LIMIT = 3;
+    private static final ZoneId PASSWORD_RESET_LIMIT_ZONE = ZoneId.of("Asia/Seoul");
+    private static final String PASSWORD_RESET_REQUEST_MESSAGE =
+            "입력한 이메일로 가입된 계정이 있다면 비밀번호 재설정 링크를 전송했습니다.";
+    private static final String PASSWORD_RESET_DAILY_LIMIT_MESSAGE =
+            "비밀번호 재설정 메일은 하루 최대 3회까지 요청할 수 있습니다. 내일 다시 시도해 주세요.";
+    private static final String EMAIL_VERIFICATION_REQUEST_MESSAGE =
+            "인증이 필요한 계정이라면 이메일 인증 링크를 전송했습니다.";
+    private static final String REGISTRATION_EMAIL_SENT_MESSAGE =
+            "입력한 이메일로 인증 링크를 전송했습니다. 이메일 인증 후 로그인해 주세요.";
+    private static final String MAIL_DAILY_LIMIT_MESSAGE =
+            "죄송합니다, 당일 상한 초과로 명일 이용 부탁드립니다.";
 
     private final AuthUserRepository userRepository;
     private final AuthSessionRepository sessionRepository;
+    private final EmailVerificationTokenRepository emailVerificationTokenRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
-    private final PasswordResetEmailService passwordResetEmailService;
+    private final AccountEmailService accountEmailService;
     private final PasswordHasher passwordHasher;
     private final NexonApiClient nexonApiClient;
     private final SecureRandom secureRandom = new SecureRandom();
@@ -56,20 +79,25 @@ public class AuthService {
     public AuthService(
             AuthUserRepository userRepository,
             AuthSessionRepository sessionRepository,
+            EmailVerificationTokenRepository emailVerificationTokenRepository,
             PasswordResetTokenRepository passwordResetTokenRepository,
-            PasswordResetEmailService passwordResetEmailService,
+            AccountEmailService accountEmailService,
             PasswordHasher passwordHasher,
             NexonApiClient nexonApiClient) {
         this.userRepository = userRepository;
         this.sessionRepository = sessionRepository;
+        this.emailVerificationTokenRepository = emailVerificationTokenRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
-        this.passwordResetEmailService = passwordResetEmailService;
+        this.accountEmailService = accountEmailService;
         this.passwordHasher = passwordHasher;
         this.nexonApiClient = nexonApiClient;
     }
 
     @Transactional
-    public AuthResponse register(AuthRegisterRequest request) {
+    public EmailVerificationResponse register(AuthRegisterRequest request) {
+        if (accountEmailService.isDailyLimitReached()) {
+            throw mailDailyLimitException();
+        }
         String email = normalizeEmail(request == null ? null : request.resolvedEmail());
         String password = request == null ? null : request.password();
         validatePassword(password);
@@ -90,6 +118,8 @@ public class AuthService {
         user.setClanNone(false);
         user.setNicknameVerified(false);
         user.setVerifiedAt(null);
+        user.setEmailVerificationPending(true);
+        user.setEmailVerifiedAt(null);
         user.setAdmin(false);
         user.setAccountStatus(AccountStatus.ACTIVE);
         user.setSanctionReason(null);
@@ -99,7 +129,8 @@ public class AuthService {
         user.setPasswordHash(passwordHasher.hash(password, salt));
         user.setCreatedAt(Instant.now());
 
-        return createSession(userRepository.save(user));
+        AuthUser savedUser = userRepository.save(user);
+        return createEmailVerificationToken(savedUser, REGISTRATION_EMAIL_SENT_MESSAGE, true);
     }
 
     @Transactional
@@ -113,6 +144,7 @@ public class AuthService {
             throw invalidCredentials();
         }
         requireActiveAccount(user);
+        requireEmailVerified(user);
         return createSession(user);
     }
 
@@ -199,30 +231,46 @@ public class AuthService {
 
     @Transactional
     public PasswordResetRequestResponse requestPasswordReset(PasswordResetRequest request) {
+        if (accountEmailService.isDailyLimitReached()) {
+            return new PasswordResetRequestResponse(MAIL_DAILY_LIMIT_MESSAGE);
+        }
         String email = normalizeEmail(request == null ? null : request.email());
-        return userRepository.findByEmailIgnoreCase(email)
+        return userRepository.findForUpdateByEmailIgnoreCase(email)
                 .map(user -> createPasswordResetToken(email, user))
-                .orElseGet(() -> new PasswordResetRequestResponse(
-                        "If the email exists, a password reset link has been sent.",
-                        null
-                ));
+                .orElseGet(this::passwordResetRequestResponse);
     }
 
     @Transactional
-    public AuthResponse confirmPasswordReset(PasswordResetConfirmRequest request) {
+    public PasswordResetConfirmResponse confirmPasswordReset(PasswordResetConfirmRequest request) {
         String rawToken = request == null ? null : request.token();
         String password = request == null ? null : request.password();
+        String passwordConfirm = request == null ? null : request.passwordConfirm();
         validatePassword(password);
-
-        if (rawToken == null || rawToken.isBlank()) {
-            throw new AuthException(HttpStatus.BAD_REQUEST, "INVALID_RESET_TOKEN", "Password reset token is invalid.");
+        if (!Objects.equals(password, passwordConfirm)) {
+            throw new AuthException(
+                    HttpStatus.BAD_REQUEST,
+                    "PASSWORD_CONFIRMATION_MISMATCH",
+                    "새 비밀번호와 비밀번호 확인이 일치하지 않습니다."
+            );
         }
 
-        PasswordResetToken resetToken = passwordResetTokenRepository.findByTokenHash(hashToken(rawToken.trim()))
-                .orElseThrow(() -> new AuthException(HttpStatus.BAD_REQUEST, "INVALID_RESET_TOKEN", "Password reset token is invalid."));
+        if (rawToken == null || rawToken.isBlank()) {
+            throw new AuthException(HttpStatus.BAD_REQUEST, "INVALID_RESET_TOKEN", "비밀번호 재설정 주소가 올바르지 않습니다.");
+        }
+
+        PasswordResetToken resetToken = passwordResetTokenRepository.findForUpdateByTokenHash(hashToken(rawToken.trim()))
+                .orElseThrow(() -> new AuthException(
+                        HttpStatus.BAD_REQUEST,
+                        "INVALID_RESET_TOKEN",
+                        "비밀번호 재설정 주소가 올바르지 않습니다."
+                ));
         Instant now = Instant.now();
         if (resetToken.getUsedAt() != null || !resetToken.getExpiresAt().isAfter(now)) {
-            throw new AuthException(HttpStatus.BAD_REQUEST, "RESET_TOKEN_EXPIRED", "Password reset token has expired.");
+            throw new AuthException(
+                    HttpStatus.BAD_REQUEST,
+                    "RESET_TOKEN_EXPIRED",
+                    "비밀번호 재설정 주소가 만료되었거나 이미 사용되었습니다."
+            );
         }
 
         AuthUser user = resetToken.getUser();
@@ -230,8 +278,59 @@ public class AuthService {
         user.setPasswordSalt(salt);
         user.setPasswordHash(passwordHasher.hash(password, salt));
         resetToken.setUsedAt(now);
+        passwordResetTokenRepository.saveAndFlush(resetToken);
+        passwordResetTokenRepository.invalidateUnusedByUser(user, now);
+        sessionRepository.deleteByUser(user);
+        accountEmailService.sendPasswordChangedNotice(user.getEmail());
 
-        return createSession(user);
+        return new PasswordResetConfirmResponse(
+                "비밀번호가 변경되었습니다. 새 비밀번호로 다시 로그인해 주세요."
+        );
+    }
+
+    @Transactional
+    public EmailVerificationResponse resendEmailVerification(EmailVerificationRequest request) {
+        if (accountEmailService.isDailyLimitReached()) {
+            return new EmailVerificationResponse(MAIL_DAILY_LIMIT_MESSAGE);
+        }
+        String email = normalizeEmail(request == null ? null : request.email());
+        return userRepository.findByEmailIgnoreCase(email)
+                .filter(user -> Boolean.TRUE.equals(user.getEmailVerificationPending()))
+                .map(user -> createEmailVerificationToken(
+                        user,
+                        EMAIL_VERIFICATION_REQUEST_MESSAGE,
+                        false
+                ))
+                .orElseGet(this::emailVerificationRequestResponse);
+    }
+
+    @Transactional
+    public EmailVerificationResponse confirmEmailVerification(EmailVerificationConfirmRequest request) {
+        String rawToken = request == null ? null : request.token();
+        if (rawToken == null || rawToken.isBlank()) {
+            throw invalidEmailVerificationToken();
+        }
+
+        EmailVerificationToken verificationToken = emailVerificationTokenRepository
+                .findForUpdateByTokenHash(hashToken(rawToken.trim()))
+                .orElseThrow(this::invalidEmailVerificationToken);
+        Instant now = Instant.now();
+        if (verificationToken.getUsedAt() != null || !verificationToken.getExpiresAt().isAfter(now)) {
+            throw invalidEmailVerificationToken();
+        }
+
+        AuthUser user = verificationToken.getUser();
+        if (!Boolean.TRUE.equals(user.getEmailVerificationPending())) {
+            throw invalidEmailVerificationToken();
+        }
+
+        user.setEmailVerificationPending(false);
+        user.setEmailVerifiedAt(now);
+        verificationToken.setUsedAt(now);
+        emailVerificationTokenRepository.saveAndFlush(verificationToken);
+        emailVerificationTokenRepository.deleteByUserAndUsedAtIsNull(user);
+
+        return new EmailVerificationResponse("이메일 인증이 완료되었습니다. 로그인해 주세요.");
     }
 
     @Transactional
@@ -318,11 +417,73 @@ public class AuthService {
         return new AuthResponse(token, expiresAt, toUserResponse(user));
     }
 
-    private PasswordResetRequestResponse createPasswordResetToken(String email, AuthUser user) {
-        passwordResetTokenRepository.deleteByUserAndUsedAtIsNull(user);
+    private EmailVerificationResponse createEmailVerificationToken(
+            AuthUser user,
+            String responseMessage,
+            boolean deliveryRequired) {
+        Instant now = Instant.now();
+        boolean coolingDown = emailVerificationTokenRepository.findTopByUserOrderByCreatedAtDesc(user)
+                .map(token -> token.getCreatedAt() != null
+                        && token.getCreatedAt().isAfter(now.minus(EMAIL_VERIFICATION_REQUEST_COOLDOWN)))
+                .orElse(false);
+        if (coolingDown) {
+            return new EmailVerificationResponse(responseMessage);
+        }
+
+        emailVerificationTokenRepository.deleteByUserAndUsedAtIsNull(user);
 
         String rawToken = newToken();
+        EmailVerificationToken verificationToken = new EmailVerificationToken();
+        verificationToken.setUser(user);
+        verificationToken.setTokenHash(hashToken(rawToken));
+        verificationToken.setCreatedAt(now);
+        verificationToken.setExpiresAt(now.plus(EMAIL_VERIFICATION_DURATION));
+        emailVerificationTokenRepository.save(verificationToken);
+
+        boolean sent = accountEmailService.sendEmailVerificationLink(user.getEmail(), rawToken);
+        if (!sent && accountEmailService.isDailyLimitReached()) {
+            if (deliveryRequired) {
+                throw mailDailyLimitException();
+            }
+            return new EmailVerificationResponse(MAIL_DAILY_LIMIT_MESSAGE);
+        }
+        if (!sent && deliveryRequired) {
+            throw new AuthException(
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    "EMAIL_DELIVERY_FAILED",
+                    "인증메일을 전송하지 못했습니다. 잠시 후 다시 시도해 주세요."
+            );
+        }
+        return new EmailVerificationResponse(responseMessage);
+    }
+
+    private EmailVerificationResponse emailVerificationRequestResponse() {
+        return new EmailVerificationResponse(EMAIL_VERIFICATION_REQUEST_MESSAGE);
+    }
+
+    private PasswordResetRequestResponse createPasswordResetToken(String email, AuthUser user) {
         Instant now = Instant.now();
+        Instant startOfToday = now.atZone(PASSWORD_RESET_LIMIT_ZONE)
+                .toLocalDate()
+                .atStartOfDay(PASSWORD_RESET_LIMIT_ZONE)
+                .toInstant();
+        long issuedToday = passwordResetTokenRepository
+                .countByUserAndCreatedAtGreaterThanEqual(user, startOfToday);
+        if (issuedToday >= PASSWORD_RESET_DAILY_LIMIT) {
+            throw passwordResetDailyLimitException();
+        }
+
+        boolean coolingDown = passwordResetTokenRepository.findTopByUserOrderByCreatedAtDesc(user)
+                .map(token -> token.getCreatedAt() != null
+                        && token.getCreatedAt().isAfter(now.minus(PASSWORD_RESET_REQUEST_COOLDOWN)))
+                .orElse(false);
+        if (coolingDown) {
+            return passwordResetRequestResponse();
+        }
+
+        passwordResetTokenRepository.invalidateUnusedByUser(user, now);
+
+        String rawToken = newToken();
 
         PasswordResetToken resetToken = new PasswordResetToken();
         resetToken.setUser(user);
@@ -331,11 +492,15 @@ public class AuthService {
         resetToken.setExpiresAt(now.plus(PASSWORD_RESET_DURATION));
         passwordResetTokenRepository.save(resetToken);
 
-        PasswordResetDelivery delivery = passwordResetEmailService.sendResetLink(email, rawToken);
-        return new PasswordResetRequestResponse(
-                "If the email exists, a password reset link has been sent.",
-                delivery.resetUrl()
-        );
+        boolean sent = accountEmailService.sendResetLink(email, rawToken);
+        if (!sent && accountEmailService.isDailyLimitReached()) {
+            return new PasswordResetRequestResponse(MAIL_DAILY_LIMIT_MESSAGE);
+        }
+        return passwordResetRequestResponse();
+    }
+
+    private PasswordResetRequestResponse passwordResetRequestResponse() {
+        return new PasswordResetRequestResponse(PASSWORD_RESET_REQUEST_MESSAGE);
     }
 
     private String newToken() {
@@ -354,6 +519,7 @@ public class AuthService {
             throw unauthorized();
         }
         requireActiveAccount(session.getUser());
+        requireEmailVerified(session.getUser());
         return session;
     }
 
@@ -371,6 +537,16 @@ public class AuthService {
                     HttpStatus.FORBIDDEN,
                     "ACCOUNT_BANNED",
                     "운영 정책에 따라 계정 이용이 제한되었습니다."
+            );
+        }
+    }
+
+    private void requireEmailVerified(AuthUser user) {
+        if (Boolean.TRUE.equals(user.getEmailVerificationPending())) {
+            throw new AuthException(
+                    HttpStatus.FORBIDDEN,
+                    "EMAIL_NOT_VERIFIED",
+                    "이메일 인증이 완료되지 않았습니다. 받은편지함을 확인해 주세요."
             );
         }
     }
@@ -415,14 +591,22 @@ public class AuthService {
         try {
             OuidResponseDto response = nexonApiClient.getOuid(suddenNickname);
             if (response == null || response.getOuid() == null || response.getOuid().isBlank()) {
-                throw new AuthException(HttpStatus.BAD_REQUEST, "SUDDEN_ACCOUNT_NOT_FOUND", "서든 닉네임을 찾을 수 없습니다.");
+                throw suddenAccountNotFound();
             }
             return response.getOuid().trim();
         } catch (AuthException exception) {
             throw exception;
         } catch (RuntimeException exception) {
-            throw new AuthException(HttpStatus.BAD_REQUEST, "SUDDEN_ACCOUNT_NOT_FOUND", "서든 닉네임을 찾을 수 없습니다.");
+            throw suddenAccountNotFound();
         }
+    }
+
+    private AuthException suddenAccountNotFound() {
+        return new AuthException(
+                HttpStatus.BAD_REQUEST,
+                "SUDDEN_ACCOUNT_NOT_FOUND",
+                "입력한 닉네임으로 서든 계정을 찾을 수 없습니다. 게임 내 현재 닉네임을 띄어쓰기와 특수문자까지 정확히 확인해 주세요."
+        );
     }
 
     private String resolveCanonicalNickname(String ouid, String fallbackNickname) {
@@ -477,6 +661,30 @@ public class AuthService {
 
     private AuthException invalidCredentials() {
         return new AuthException(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS", "이메일 또는 비밀번호가 올바르지 않습니다.");
+    }
+
+    private AuthException invalidEmailVerificationToken() {
+        return new AuthException(
+                HttpStatus.BAD_REQUEST,
+                "INVALID_EMAIL_VERIFICATION_TOKEN",
+                "이메일 인증 주소가 만료되었거나 이미 사용되었습니다."
+        );
+    }
+
+    private AuthException mailDailyLimitException() {
+        return new AuthException(
+                HttpStatus.TOO_MANY_REQUESTS,
+                "MAIL_DAILY_LIMIT_REACHED",
+                MAIL_DAILY_LIMIT_MESSAGE
+        );
+    }
+
+    private AuthException passwordResetDailyLimitException() {
+        return new AuthException(
+                HttpStatus.TOO_MANY_REQUESTS,
+                "PASSWORD_RESET_DAILY_LIMIT_REACHED",
+                PASSWORD_RESET_DAILY_LIMIT_MESSAGE
+        );
     }
 
     private AuthException unauthorized() {

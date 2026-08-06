@@ -71,9 +71,10 @@
 }
 
 .mypage-identity p {
-  max-width: 460px;
+  max-width: none;
   margin: 0;
   text-align: right;
+  white-space: nowrap;
 }
 
 .account-heart-badge {
@@ -88,6 +89,19 @@
 .account-heart-badge.verified {
   background-image: url('/sa-assets/sa-heart-gr.png');
   filter: drop-shadow(0 0 5px rgba(126, 217, 87, 0.42));
+}
+
+.account-heart-badge.admin {
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  background: rgba(126, 217, 87, 0.14);
+  color: var(--accent);
+  filter: drop-shadow(0 0 5px rgba(126, 217, 87, 0.42));
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1;
 }
 
 .mypage-outline-button,
@@ -190,6 +204,37 @@
 .mypage-link-card {
   align-items: stretch;
   flex-direction: column;
+}
+
+.mypage-link-title-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.mypage-help-button {
+  display: inline-grid;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid rgba(126, 217, 87, 0.65);
+  border-radius: 50%;
+  background: rgba(126, 217, 87, 0.08);
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+  transition: 0.15s ease;
+}
+
+.mypage-help-button:hover,
+.mypage-help-button:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+  background: rgba(126, 217, 87, 0.18);
+  box-shadow: 0 0 12px rgba(126, 217, 87, 0.2);
 }
 
 .mypage-clan-card {
@@ -320,6 +365,22 @@
   font-size: 11px;
 }
 
+.mypage-link-feedback {
+  padding: 12px 14px;
+  border: 1px solid rgba(126, 217, 87, 0.38);
+  background: rgba(126, 217, 87, 0.07);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.mypage-link-feedback.is-error {
+  border-color: rgba(255, 78, 64, 0.48);
+  background: rgba(255, 78, 64, 0.07);
+  color: var(--lose);
+}
+
 .mypage-link-card small a {
   color: #ffb067;
   font-weight: 900;
@@ -362,6 +423,164 @@
   white-space: nowrap;
 }
 
+.mypage-modal-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  padding: 24px;
+  place-items: center;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(4px);
+}
+
+.mypage-help-modal {
+  position: relative;
+  width: min(100%, 620px);
+  padding: 36px;
+  border: 1px solid rgba(126, 217, 87, 0.62);
+  background: #080a09;
+  box-shadow: 0 26px 90px rgba(0, 0, 0, 0.8);
+}
+
+.mypage-help-modal__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.mypage-help-modal__close:hover,
+.mypage-help-modal__close:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+  color: var(--accent);
+}
+
+.mypage-help-modal__eyebrow {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--accent);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 3px;
+}
+
+.mypage-help-modal h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -0.3px;
+}
+
+.mypage-help-modal .mypage-help-modal__lead {
+  margin-top: 12px;
+  color: #cfd6d0;
+  line-height: 1.7;
+}
+
+.mypage-help-steps {
+  display: grid;
+  gap: 10px;
+  margin: 24px 0;
+  padding: 0;
+  counter-reset: ouid-step;
+  list-style: none;
+}
+
+.mypage-help-steps li {
+  display: grid;
+  grid-template-columns: 30px 100px 1fr;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.025);
+  counter-increment: ouid-step;
+}
+
+.mypage-help-steps li::before {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  color: var(--accent);
+  content: counter(ouid-step);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.mypage-help-steps strong {
+  color: #fff;
+  font-size: 12px;
+}
+
+.mypage-help-steps span {
+  color: #aeb6b0;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.mypage-help-modal__info {
+  padding: 16px;
+  border-left: 2px solid var(--accent);
+  background: rgba(126, 217, 87, 0.07);
+}
+
+.mypage-help-modal__info strong {
+  color: var(--accent);
+  font-size: 12px;
+}
+
+.mypage-help-modal__info p,
+.mypage-help-modal .mypage-help-modal__security {
+  margin: 6px 0 0;
+  line-height: 1.65;
+}
+
+.mypage-help-modal__info p {
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.mypage-help-modal .mypage-help-modal__security {
+  color: #8f9791;
+  font-size: 11px;
+}
+
+.mypage-help-modal__confirm {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 24px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #071006;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+.mypage-help-modal__confirm:hover,
+.mypage-help-modal__confirm:focus-visible {
+  outline: none;
+  background: #92f16a;
+  box-shadow: 0 0 18px rgba(126, 217, 87, 0.25);
+}
+
 @media (max-width: 900px) {
   .mypage-panel__header,
   .mypage-identity,
@@ -373,6 +592,7 @@
 
   .mypage-identity p {
     text-align: left;
+    white-space: normal;
   }
 
   .mypage-grid {
@@ -396,6 +616,33 @@
 
   .mypage-identity strong {
     font-size: 28px;
+  }
+
+  .mypage-modal-backdrop {
+    padding: 12px;
+    place-items: start center;
+  }
+
+  .mypage-help-modal {
+    margin: 12px 0;
+    padding: 28px 20px 22px;
+  }
+
+  .mypage-help-modal h2 {
+    padding-right: 34px;
+    font-size: 22px;
+  }
+
+  .mypage-help-modal__info p {
+    white-space: normal;
+  }
+
+  .mypage-help-steps li {
+    grid-template-columns: 28px 1fr;
+  }
+
+  .mypage-help-steps span {
+    grid-column: 2;
   }
 
   .mypage-link-form {

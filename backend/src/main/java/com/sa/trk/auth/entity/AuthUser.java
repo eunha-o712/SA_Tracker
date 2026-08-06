@@ -46,6 +46,12 @@ public class AuthUser {
     @Column
     private Instant verifiedAt;
 
+    @Column
+    private Boolean emailVerificationPending;
+
+    @Column
+    private Instant emailVerifiedAt;
+
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
     private AccountStatus accountStatus;
@@ -88,6 +94,12 @@ public class AuthUser {
     public void setAdmin(boolean admin) { this.admin = admin; }
     public Instant getVerifiedAt() { return verifiedAt; }
     public void setVerifiedAt(Instant verifiedAt) { this.verifiedAt = verifiedAt; }
+    public Boolean getEmailVerificationPending() { return emailVerificationPending; }
+    public void setEmailVerificationPending(Boolean emailVerificationPending) {
+        this.emailVerificationPending = emailVerificationPending;
+    }
+    public Instant getEmailVerifiedAt() { return emailVerifiedAt; }
+    public void setEmailVerifiedAt(Instant emailVerifiedAt) { this.emailVerifiedAt = emailVerifiedAt; }
     public AccountStatus getAccountStatus() { return accountStatus; }
     public void setAccountStatus(AccountStatus accountStatus) { this.accountStatus = accountStatus; }
     public String getSanctionReason() { return sanctionReason; }

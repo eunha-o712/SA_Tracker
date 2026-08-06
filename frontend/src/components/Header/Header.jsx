@@ -52,6 +52,14 @@ function Header() {
 }
 
 function HeaderBadge({ user }) {
+  if (user?.admin) {
+    const label = 'SA-TRACKER 관리자'
+    return (
+      <span className="global-header__badge admin" aria-label={label} title={label}>
+        M
+      </span>
+    )
+  }
   if (!user?.ouid) return null
   const status = user.nicknameVerified ? 'verified' : 'linked'
   const label = status === 'verified' ? '운영자 수동 확인 완료' : 'OUID 연결'
