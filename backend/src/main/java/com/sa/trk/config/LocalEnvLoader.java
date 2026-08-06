@@ -88,6 +88,22 @@ public final class LocalEnvLoader {
             case "OPENAI_API_KEY" -> "openai.api.key";
             case "OPENAI_MODEL" -> "openai.api.model";
             case "OPENAI_BASE_URL" -> "openai.api.base-url";
+            case "MAIL_ENABLED" -> "satrk.mail.enabled";
+            case "MAIL_FROM" -> "satrk.mail.from";
+            case "MAIL_REPLY_TO" -> "satrk.mail.reply-to";
+            case "FRONTEND_BASE_URL" -> "satrk.mail.frontend-base-url";
+            case "MAIL_DAILY_LIMIT" -> "satrk.mail.daily-limit";
+            case "MAIL_TIME_ZONE" -> "satrk.mail.zone-id";
+            case "SMTP_HOST" -> "spring.mail.host";
+            case "SMTP_PORT" -> "spring.mail.port";
+            case "SMTP_USERNAME" -> "spring.mail.username";
+            case "SMTP_PASSWORD" -> "spring.mail.password";
+            case "SMTP_AUTH" -> "spring.mail.properties.mail.smtp.auth";
+            case "SMTP_STARTTLS" -> "spring.mail.properties.mail.smtp.starttls.enable";
+            case "SMTP_SSL" -> "spring.mail.properties.mail.smtp.ssl.enable";
+            case "CLAN_TEST_ENABLED" -> "satrk.clan-test.enabled";
+            case "CLAN_TEST_USER_NAME" -> "satrk.clan-test.user-name";
+            case "CLAN_TEST_CLAN_NAME" -> "satrk.clan-test.clan-name";
             default -> null;
         };
     }

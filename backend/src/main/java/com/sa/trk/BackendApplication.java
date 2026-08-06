@@ -2,15 +2,22 @@ package com.sa.trk;
 
 import java.util.Map;
 
+import com.sa.trk.config.ClanTestProperties;
 import com.sa.trk.config.NexonProperties;
 import com.sa.trk.config.OpenAiProperties;
 import com.sa.trk.config.LocalEnvLoader;
+import com.sa.trk.config.MailDeliveryProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 @SpringBootApplication
-@EnableConfigurationProperties({NexonProperties.class, OpenAiProperties.class})
+@EnableConfigurationProperties({
+        NexonProperties.class,
+        OpenAiProperties.class,
+        MailDeliveryProperties.class,
+        ClanTestProperties.class
+})
 public class BackendApplication {
 
     public static void main(String[] args) {
