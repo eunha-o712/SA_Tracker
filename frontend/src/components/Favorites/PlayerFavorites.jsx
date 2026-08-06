@@ -489,7 +489,7 @@ function getMatchStatus(value, now) {
   const days = Math.floor(elapsed / 86_400_000)
   if (minutes < 1) return { label: 'JUST NOW', recent: true }
   if (minutes < 60) return { label: `${minutes}M AGO`, recent: true }
-  if (hours < 24) return { label: `${hours}H AGO`, recent: true }
+  if (hours < 24) return { label: `${hours}H AGO`, recent: false }
   return { label: `${days}D AGO`, recent: false }
 }
 
