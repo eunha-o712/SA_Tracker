@@ -5,11 +5,11 @@ import { cachedGet } from '../../api/apiCache'
 import Footer from '../../components/Footer/Footer'
 import Header from '../../components/Header/Header'
 import NavBar from '../../components/NavBar/NavBar'
-import RankSummary from '../../components/PlayerProfile/RankSummary'
 import { addRecentSearch } from '../../utils/recentSearches'
 import ComparePanel from '../ComparePage/ComparePanel'
 import '../PlayerPage/PlayerPage.css'
 import './RankingPage.css'
+import RankingRoadmap from './RankingRoadmap'
 
 function RankingPage() {
   const { name } = useParams()
@@ -69,24 +69,6 @@ function RankingPageContent({ name }) {
     navigate(`/ranking/${encodeURIComponent(trimmed)}`)
   }
 
-  const rank = rankingData
-    ? {
-        grade: rankingData.grade,
-        grade_ranking: rankingData.gradeRanking,
-        season_grade: rankingData.seasonGrade,
-        season_grade_ranking: rankingData.seasonGradeRanking,
-      }
-    : null
-
-  const tier = rankingData
-    ? {
-        solo_rank_match_tier: rankingData.soloRankMatchTier,
-        solo_rank_match_score: rankingData.soloRankMatchScore,
-        party_rank_match_tier: rankingData.partyRankMatchTier,
-        party_rank_match_score: rankingData.partyRankMatchScore,
-      }
-    : null
-
   return (
     <div className="player-shell">
       <Header />
@@ -128,7 +110,7 @@ function RankingPageContent({ name }) {
             </section>
           )}
 
-          {!loading && rank && tier && (
+          {!loading && rankingData && (
             <>
               <section className="record-section ranking-player-strip">
                 <div>
@@ -138,7 +120,7 @@ function RankingPageContent({ name }) {
                 <p>등급, 시즌 랭킹과 솔로·파티 티어 정보를 함께 표시합니다.</p>
               </section>
 
-              <RankSummary rank={rank} tier={tier} images={rankingData.images ?? {}} />
+              <RankingRoadmap data={rankingData} />
             </>
           )}
 

@@ -95,4 +95,19 @@ public class NexonMetaCacheService {
 
         return logo.getLogo_image();
     }
+
+    public List<GradeDto> getGrades() {
+        refreshIfNeeded();
+        return List.copyOf(grades);
+    }
+
+    public List<SeasonGradeDto> getSeasonGrades() {
+        refreshIfNeeded();
+        return List.copyOf(seasonGrades);
+    }
+
+    public List<TierDto> getTiers() {
+        refreshIfNeeded();
+        return List.copyOf(tiers);
+    }
 }
