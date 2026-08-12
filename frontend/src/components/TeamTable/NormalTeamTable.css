@@ -27,6 +27,11 @@
   font-weight: 900;
 }
 
+.normal-team-table-head > span:not(:first-child),
+.normal-team-table-row > strong {
+  text-align: center;
+}
+
 .normal-team-table-row {
   min-height: 46px;
   padding: 10px 22px;

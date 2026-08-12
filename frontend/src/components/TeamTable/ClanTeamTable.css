@@ -41,6 +41,11 @@
   font-weight: 900;
 }
 
+.clan-team-table-head > span:nth-child(n + 3),
+.clan-team-table-row > strong {
+  text-align: center;
+}
+
 .clan-team-table-row {
   min-height: 46px;
   padding: 10px 22px;

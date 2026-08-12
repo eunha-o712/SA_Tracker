@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import { Link } from 'react-router-dom'
 import PrivacyModal from '../PrivacyModal/PrivacyModal'
 import './Footer.css'
 
@@ -32,7 +33,7 @@ function Footer() {
           <div className="footer-links">
             <button type="button" onClick={() => setPrivacyOpen(true)}>개인정보처리방침</button>
             <span>•</span>
-            <a href="mailto:contact@satracker.com">문의하기</a>
+            <Link to="/board/support">문의하기</Link>
           </div>
 
           <p className="footer-copy">

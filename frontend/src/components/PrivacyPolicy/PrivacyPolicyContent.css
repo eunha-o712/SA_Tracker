@@ -49,10 +49,19 @@
 }
 
 .privacy-sections p {
-  margin-top: 10px;
+  display: grid;
+  gap: 6px;
+  margin-top: 14px;
   color: var(--text-secondary);
   font-size: 14px;
-  line-height: 1.85;
+  line-height: 1.9;
+  letter-spacing: 0.01em;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.privacy-sections p span {
+  display: block;
 }
 
 @media (max-width: 640px) {

@@ -19,7 +19,7 @@ const POLICY_SECTIONS = [
   },
   {
     title: '5. 이용자의 권리와 문의',
-    content: '이용자는 본인의 정보 열람·수정·삭제를 요청할 수 있습니다. 개인정보 관련 문의는 contact@satracker.com으로 보내주세요.',
+    content: '이용자는 본인의 정보 열람·수정·삭제를 요청할 수 있습니다. 개인정보 관련 문의는 s.a.trk.manager@gmail.com으로 보내주세요.',
   },
 ]
 
@@ -37,7 +37,11 @@ function PrivacyPolicyContent({ titleId = 'privacy-title' }) {
         {POLICY_SECTIONS.map((section) => (
           <article key={section.title}>
             <h2>{section.title}</h2>
-            <p>{section.content}</p>
+            <p>
+              {section.content.split(/(?<=\.)\s+/).map((sentence, index) => (
+                <span key={`${section.title}-${index}`}>{sentence}</span>
+              ))}
+            </p>
           </article>
         ))}
       </div>
