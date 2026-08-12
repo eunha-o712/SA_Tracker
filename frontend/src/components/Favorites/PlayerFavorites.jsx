@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import api, { getApiErrorMessage } from '../../api/api'
 import { invalidateCachedGet } from '../../api/apiCache'
+import { resolveApiAssetUrl } from '../../utils/apiAssetUrl'
 import { readAuthSession, subscribeToAuthSession } from '../../utils/authSession'
 import './PlayerFavorites.css'
 
@@ -118,9 +119,6 @@ function PlayerFavorites() {
       setRefreshing(true)
       setError('')
       invalidateCachedGet('/api/favorite')
-      invalidateCachedGet('/api/player')
-      invalidateCachedGet('/api/match/summary')
-      invalidateCachedGet('/api/clan/members')
       const snapshot = await fetchFavoriteSnapshot(session)
       if (!isSameSession(session.token)) return
 
@@ -242,7 +240,17 @@ function PlayerFavorites() {
                 </div>
                 <div className="favorite-divider" />
                 <div className="favorite-clan">
-                  <div className="favorite-clan-mark"><img src="/sa-assets/sa-clan-basic.png" alt="" /></div>
+                  <div className="favorite-clan-mark">
+                    <img
+                      src={resolveApiAssetUrl(favorite.profileImageUrl, '/sa-assets/sa-clan-basic.png')}
+                      alt={`${favorite.userName} 프로필`}
+                      onError={(event) => {
+                        if (!event.currentTarget.src.endsWith('/sa-assets/sa-clan-basic.png')) {
+                          event.currentTarget.src = '/sa-assets/sa-clan-basic.png'
+                        }
+                      }}
+                    />
+                  </div>
                   <strong>{favorite.clanName}</strong>
                 </div>
                 <div className="favorite-divider" />
@@ -325,7 +333,7 @@ async function enrichFavorite(favorite) {
   let player = null
   let summary = null
   try {
-    const playerResponse = await api.get('/api/player', {
+    const playerResponse = await api.get(favorite.ouid ? '/api/player/favorite-card' : '/api/player', {
       params: favorite.ouid ? { ouid: favorite.ouid } : { userName: favorite.userName },
     })
     player = playerResponse.data
@@ -335,9 +343,7 @@ async function enrichFavorite(favorite) {
 
   const currentName = cleanText(player?.basic?.user_name) || favorite.userName
   try {
-    const summaryResponse = await api.get('/api/match/summary', {
-      params: { userName: currentName, ouid: player?.ouid || favorite.ouid || undefined },
-    })
+    const summaryResponse = await api.get(`/api/favorite/${favorite.id}/match-summary`)
     summary = summaryResponse.data
   } catch {
     // Match details are optional for the favorite card.
@@ -348,6 +354,7 @@ async function enrichFavorite(favorite) {
     ...favorite,
     ouid: player?.ouid || favorite.ouid || null,
     userName: currentName,
+    profileImageUrl: player?.profileImageUrl || null,
     titleName: cleanText(player?.basic?.title_name) || 'NO TITLE',
     seasonGrade: player?.rank?.season_grade || 'SEASON GRADE',
     seasonGradeImage: player?.images?.seasonGradeImage || null,

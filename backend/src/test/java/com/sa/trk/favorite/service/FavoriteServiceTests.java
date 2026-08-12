@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -20,6 +21,8 @@ import com.sa.trk.auth.entity.AuthUser;
 import com.sa.trk.auth.repository.AuthSessionRepository;
 import com.sa.trk.favorite.entity.Favorite;
 import com.sa.trk.favorite.repository.FavoriteRepository;
+import com.sa.trk.match.dto.MatchSummaryResponseDto;
+import com.sa.trk.match.service.MatchService;
 import com.sa.trk.nexon.dto.UserBasicDto;
 import com.sa.trk.player.dto.PlayerResponseDto;
 import com.sa.trk.player.service.PlayerService;
@@ -35,6 +38,9 @@ class FavoriteServiceTests {
     @Mock
     private PlayerService playerService;
 
+    @Mock
+    private MatchService matchService;
+
     private AuthUser owner;
     private FavoriteService favoriteService;
 
@@ -42,7 +48,12 @@ class FavoriteServiceTests {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         owner = owner();
-        favoriteService = new FavoriteService(favoriteRepository, sessionRepository, playerService);
+        favoriteService = new FavoriteService(
+                favoriteRepository,
+                sessionRepository,
+                playerService,
+                matchService
+        );
         when(sessionRepository.findByTokenHash(any())).thenReturn(Optional.of(session(owner)));
         when(playerService.getPlayer("agent")).thenReturn(player("agent", "ouid-agent"));
         when(favoriteRepository.save(any(Favorite.class)))
@@ -95,6 +106,35 @@ class FavoriteServiceTests {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Favorite was not found.");
         verify(favoriteRepository, never()).delete(any(Favorite.class));
+    }
+
+    @Test
+    void reusesActiveMatchQueriesUntilDailyDiscoveryIsDue() {
+        Favorite favorite = new Favorite();
+        favorite.setId(8L);
+        favorite.setOwner(owner);
+        favorite.setUserName("agent");
+        favorite.setOuid("ouid-agent");
+        favorite.setActiveMatchQueryIndexes("0,3,7");
+        favorite.setMatchQueryProfiledAt(Instant.now());
+        MatchSummaryResponseDto summary = new MatchSummaryResponseDto();
+        when(favoriteRepository.findByIdAndOwner(8L, owner)).thenReturn(Optional.of(favorite));
+        when(matchService.getFavoriteMatchSummaryByOuid(
+                "agent",
+                "ouid-agent",
+                List.of(0, 3, 7),
+                false
+        )).thenReturn(new MatchService.FavoriteMatchSummaryRefresh(
+                summary,
+                List.of(0, 7),
+                false
+        ));
+
+        var result = favoriteService.refreshMatchSummary("session-token", 8L);
+
+        assertThat(result).isSameAs(summary);
+        assertThat(favorite.getActiveMatchQueryIndexes()).isEqualTo("0,7");
+        verify(favoriteRepository).save(favorite);
     }
 
     private AuthUser owner() {

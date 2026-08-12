@@ -230,7 +230,8 @@ class BoardPostServiceTests {
                 "ouid-" + id,
                 false,
                 admin,
-                false
+                false,
+                null
         );
     }
 }

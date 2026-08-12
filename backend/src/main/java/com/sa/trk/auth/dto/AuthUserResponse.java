@@ -9,4 +9,5 @@ public record AuthUserResponse(
         String ouid,
         boolean nicknameVerified,
         boolean admin,
-        boolean clanNone) {}
+        boolean clanNone,
+        String profileImageUrl) {}

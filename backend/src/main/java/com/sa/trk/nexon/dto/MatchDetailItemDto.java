@@ -9,6 +9,9 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MatchDetailItemDto {
 
+    @JsonProperty(value = "ouid", access = JsonProperty.Access.WRITE_ONLY)
+    private String ouid;
+
     @JsonProperty("team_id")
     private String team_id;
 

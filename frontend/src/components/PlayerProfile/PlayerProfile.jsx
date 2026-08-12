@@ -1,3 +1,4 @@
+import { resolveApiAssetUrl } from '../../utils/apiAssetUrl'
 import './PlayerProfile.css'
 
 const fmt = (value, suffix = '') => {
@@ -5,7 +6,23 @@ const fmt = (value, suffix = '') => {
   return `${Number(value).toFixed(1)}${suffix}`
 }
 
-function PlayerProfile({ basic, recent, name, clanName: resolvedClanName, favoriteId, favoritePending, favoriteMessage, onFavoriteToggle, onCompare }) {
+function PlayerProfile({
+  basic,
+  recent,
+  name,
+  clanName: resolvedClanName,
+  profileImageUrl,
+  canEditProfileImage,
+  profileImagePending,
+  profileImageMessage,
+  favoriteId,
+  favoritePending,
+  favoriteMessage,
+  onProfileImageChange,
+  onProfileImageReset,
+  onFavoriteToggle,
+  onCompare,
+}) {
   const titleName = cleanProfileText(basic.title_name)
   const clanName = cleanProfileText(resolvedClanName)
   const mannerGrade = cleanProfileText(basic.manner_grade)
@@ -13,8 +30,54 @@ function PlayerProfile({ basic, recent, name, clanName: resolvedClanName, favori
   return (
     <section className="record-section">
       <div className="player-profile">
-        <div className="player-profile-avatar">
-          <img src="/sa-assets/sa-profile-basic.png" alt="profile" />
+        <div className="player-profile-avatar-column">
+          <div className={canEditProfileImage ? 'player-profile-avatar editable' : 'player-profile-avatar'}>
+            <img
+              src={resolveApiAssetUrl(profileImageUrl, '/sa-assets/sa-profile-basic.png')}
+              alt={`${basic.user_name || name} 프로필`}
+              onError={(event) => {
+                if (!event.currentTarget.src.endsWith('/sa-assets/sa-profile-basic.png')) {
+                  event.currentTarget.src = '/sa-assets/sa-profile-basic.png'
+                }
+              }}
+            />
+            {canEditProfileImage && (
+              <label className="player-profile-image-picker">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  disabled={profileImagePending}
+                  onChange={(event) => {
+                    const file = event.target.files?.[0]
+                    event.target.value = ''
+                    if (file) onProfileImageChange(file)
+                  }}
+                />
+                <span>{profileImagePending ? '변경 중...' : '이미지 변경'}</span>
+              </label>
+            )}
+          </div>
+          {canEditProfileImage && profileImageUrl && (
+            <button
+              type="button"
+              className="player-profile-image-reset"
+              disabled={profileImagePending}
+              onClick={onProfileImageReset}
+            >
+              기본 이미지
+            </button>
+          )}
+          {canEditProfileImage && (
+            <span
+              key={profileImageMessage}
+              className={profileImageMessage.endsWith('변경되었습니다.')
+                ? 'player-profile-image-message success'
+                : 'player-profile-image-message'}
+              aria-live="polite"
+            >
+              {profileImageMessage}
+            </span>
+          )}
         </div>
 
         <div className="player-profile-main">

@@ -5,8 +5,6 @@ import LoadingIntro from '../../components/LoadingIntro/LoadingIntro'
 import NavBar from '../../components/NavBar/NavBar'
 import SearchBar from '../../components/SearchBar/SearchBar'
 import PlayerFavorites from '../../components/Favorites/PlayerFavorites'
-import { preloadSessionData } from '../../api/apiCache'
-import { readAuthSession } from '../../utils/authSession'
 import './HomePage.css'
 
 function HomePage() {
@@ -31,29 +29,17 @@ function HomePage() {
     if (!showIntro) return undefined
 
     let active = true
-    const session = readAuthSession()
-    const userName = session?.user?.suddenNickname || session?.user?.displayName || ''
+    introReady.current.data = true
     const minimumTimer = window.setTimeout(() => {
       if (!active) return
       introReady.current.minimum = true
       setCanSkipIntro(true)
       completeIntro()
     }, 2_500)
-    let maximumTimer
-    const maxWait = new Promise((resolve) => {
-      maximumTimer = window.setTimeout(resolve, 7_000)
-    })
-
-    Promise.race([preloadSessionData(userName), maxWait]).finally(() => {
-      if (!active) return
-      introReady.current.data = true
-      completeIntro()
-    })
 
     return () => {
       active = false
       window.clearTimeout(minimumTimer)
-      window.clearTimeout(maximumTimer)
     }
   }, [completeIntro, showIntro])
 

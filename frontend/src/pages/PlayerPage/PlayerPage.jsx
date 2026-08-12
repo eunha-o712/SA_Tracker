@@ -12,7 +12,7 @@ import MatchSummary from '../../components/PlayerProfile/MatchSummary'
 import CombatSummary from '../../components/PlayerProfile/CombatSummary'
 import api, { getApiErrorMessage } from '../../api/api'
 import { cachedGet, invalidateCachedGet } from '../../api/apiCache'
-import { readAuthSession } from '../../utils/authSession'
+import { readAuthSession, saveAuthSession } from '../../utils/authSession'
 import PlayerPageSkeleton from './PlayerPageSkeleton'
 import './PlayerPage.css'
 
@@ -26,6 +26,18 @@ function PlayerPage() {
   const [favoritePending, setFavoritePending] = useState(false)
   const [favoriteMessage, setFavoriteMessage] = useState('')
   const [profileClanName, setProfileClanName] = useState('')
+  const [profileImagePending, setProfileImagePending] = useState(false)
+  const [profileImageMessage, setProfileImageMessage] = useState('')
+
+  useEffect(() => {
+    if (![
+      '프로필 이미지가 변경되었습니다.',
+      '기본 이미지로 변경되었습니다.',
+    ].includes(profileImageMessage)) return undefined
+
+    const timerId = window.setTimeout(() => setProfileImageMessage(''), 2_800)
+    return () => window.clearTimeout(timerId)
+  }, [profileImageMessage])
 
   useEffect(() => {
     let active = true
@@ -38,6 +50,7 @@ function PlayerPage() {
         setFavoriteId(null)
         setFavoriteMessage('')
         setProfileClanName('')
+        setProfileImageMessage('')
 
         const response = await cachedGet('/api/player', {
           params: { userName: name },
@@ -95,6 +108,66 @@ function PlayerPage() {
   const recent = playerData?.recent ?? {}
   const images = playerData?.images ?? {}
   const userName = basic.user_name || name
+  const session = readAuthSession()
+  const canEditProfileImage = Boolean(
+    session?.user?.ouid
+    && playerData?.ouid
+    && session.user.ouid === playerData.ouid,
+  )
+
+  const applyProfileImageUpdate = (nextUser) => {
+    const currentSession = readAuthSession()
+    if (!currentSession || !nextUser) return
+    saveAuthSession({ ...currentSession, user: nextUser })
+    setPlayerData((current) => current ? {
+      ...current,
+      profileImageUrl: nextUser.profileImageUrl || null,
+    } : current)
+    updateFavoriteProfileImageCache(
+      currentSession,
+      playerData?.ouid,
+      nextUser.profileImageUrl || null,
+    )
+    invalidateCachedGet('/api/player')
+    invalidateCachedGet('/api/player/favorite-card')
+  }
+
+  const handleProfileImageChange = async (file) => {
+    if (!canEditProfileImage || profileImagePending) return
+    if (file.size > 3 * 1024 * 1024) {
+      setProfileImageMessage('3MB 이하 이미지를 선택해 주세요.')
+      return
+    }
+
+    try {
+      setProfileImagePending(true)
+      setProfileImageMessage('')
+      const formData = new FormData()
+      formData.append('image', file)
+      const { data } = await api.post('/api/auth/profile-image', formData)
+      applyProfileImageUpdate(data)
+      setProfileImageMessage('프로필 이미지가 변경되었습니다.')
+    } catch (requestError) {
+      setProfileImageMessage(getApiErrorMessage(requestError, '프로필 이미지를 변경하지 못했습니다.'))
+    } finally {
+      setProfileImagePending(false)
+    }
+  }
+
+  const handleProfileImageReset = async () => {
+    if (!canEditProfileImage || profileImagePending) return
+    try {
+      setProfileImagePending(true)
+      setProfileImageMessage('')
+      const { data } = await api.delete('/api/auth/profile-image')
+      applyProfileImageUpdate(data)
+      setProfileImageMessage('기본 이미지로 변경되었습니다.')
+    } catch (requestError) {
+      setProfileImageMessage(getApiErrorMessage(requestError, '기본 이미지로 변경하지 못했습니다.'))
+    } finally {
+      setProfileImagePending(false)
+    }
+  }
 
   const handleFavoriteToggle = async () => {
     if (!readAuthSession()) {
@@ -161,9 +234,15 @@ function PlayerPage() {
                   recent={recent}
                   name={name}
                   clanName={profileClanName}
+                  profileImageUrl={playerData?.profileImageUrl}
+                  canEditProfileImage={canEditProfileImage}
+                  profileImagePending={profileImagePending}
+                  profileImageMessage={profileImageMessage}
                   favoriteId={favoriteId}
                   favoritePending={favoritePending}
                   favoriteMessage={favoriteMessage}
+                  onProfileImageChange={handleProfileImageChange}
+                  onProfileImageReset={handleProfileImageReset}
                   onFavoriteToggle={handleFavoriteToggle}
                   onCompare={() => navigate(`/compare?left=${encodeURIComponent(userName)}`)}
                 />
@@ -178,7 +257,11 @@ function PlayerPage() {
                 <MapPerformance userName={basic.user_name || name} />
               </div>
               <div id="profile-matches" className="profile-section-anchor">
-                <MatchSummary userName={basic.user_name || name} recent={recent} />
+                <MatchSummary
+                  userName={basic.user_name || name}
+                  ouid={playerData?.ouid}
+                  recent={recent}
+                />
               </div>
               <div id="profile-ai" className="profile-section-anchor">
                 <CombatSummary userName={basic.user_name || name} />
@@ -199,7 +282,7 @@ async function cacheFavoriteSnapshot(session, favorite, playerData, fallbackName
   const userName = favorite.userName || playerData?.basic?.user_name || fallbackName
   let summary = null
   try {
-    const response = await cachedGet('/api/match/summary', { params: { userName } })
+    const response = await api.get(`/api/favorite/${favorite.id}/match-summary`)
     summary = response.data
   } catch {
     // The card can still use the profile data that is already on screen.
@@ -219,6 +302,7 @@ async function cacheFavoriteSnapshot(session, favorite, playerData, fallbackName
       ? 'NO CLAN'
       : cleanFavoriteText(playerData?.basic?.clan_name) || 'NO CLAN',
     clanVerified: !isOwnAccount,
+    profileImageUrl: playerData?.profileImageUrl || null,
     latestMatchDate: recent?.latestMatchDate || null,
     kda: {
       kill: recent?.averageKill,
@@ -274,6 +358,16 @@ function writeFavoriteSnapshots(cacheKey, items, refreshedAt) {
   } catch {
     // Local cache is optional.
   }
+}
+
+function updateFavoriteProfileImageCache(session, ouid, profileImageUrl) {
+  if (!session || !ouid) return
+  const cacheKey = getFavoriteSnapshotCacheKey(session)
+  const cached = readFavoriteSnapshots(cacheKey)
+  const items = cached.items.map((item) => item.ouid === ouid
+    ? { ...item, profileImageUrl }
+    : item)
+  writeFavoriteSnapshots(cacheKey, items, cached.refreshedAt)
 }
 
 function normalizeFavoriteName(value) {

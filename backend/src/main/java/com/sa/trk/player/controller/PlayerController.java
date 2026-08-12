@@ -44,6 +44,12 @@ public class PlayerController {
         return playerService.getPlayerByOuid(user.ouid());
     }
 
+    @GetMapping("/api/player/favorite-card")
+    public PlayerResponseDto getFavoritePlayer(
+            @RequestParam("ouid") String ouid) {
+        return playerService.getFavoritePlayerByOuid(ouid);
+    }
+
     private String bearerToken(String authorization) {
         if (authorization == null || !authorization.regionMatches(true, 0, "Bearer ", 0, 7)) {
             return null;

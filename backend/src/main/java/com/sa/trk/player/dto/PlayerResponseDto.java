@@ -13,6 +13,7 @@ public class PlayerResponseDto {
 
     private String userName;
     private String ouid;
+    private String profileImageUrl;
     private UserBasicDto basic;
     private UserRankDto rank;
     private UserTierDto tier;

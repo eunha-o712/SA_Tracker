@@ -104,6 +104,7 @@ public final class LocalEnvLoader {
             case "CLAN_TEST_ENABLED" -> "satrk.clan-test.enabled";
             case "CLAN_TEST_USER_NAME" -> "satrk.clan-test.user-name";
             case "CLAN_TEST_CLAN_NAME" -> "satrk.clan-test.clan-name";
+            case "NEXON_MIN_REQUEST_INTERVAL_MS" -> "nexon.api.min-request-interval-ms";
             default -> null;
         };
     }

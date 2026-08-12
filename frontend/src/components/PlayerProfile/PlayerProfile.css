@@ -8,7 +8,16 @@
 
 /* 프로필 이미지 */
 
+.player-profile-avatar-column {
+  width: 132px;
+  display: flex;
+  align-items: stretch;
+  flex-direction: column;
+  gap: 7px;
+}
+
 .player-profile-avatar {
+  position: relative;
   width: 132px;
   height: 132px;
   border: 2px solid var(--accent);
@@ -22,6 +31,79 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.player-profile-image-picker {
+  position: absolute;
+  inset: auto 0 0;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.82);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.player-profile-avatar.editable:hover .player-profile-image-picker,
+.player-profile-avatar.editable:focus-within .player-profile-image-picker {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.player-profile-image-picker input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.player-profile-image-reset {
+  min-height: 25px;
+  border: 1px solid rgba(126, 217, 87, 0.36);
+  background: rgba(126, 217, 87, 0.06);
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.player-profile-image-reset:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.player-profile-image-reset:disabled,
+.player-profile-image-picker:has(input:disabled) {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.player-profile-image-message {
+  min-height: 14px;
+  width: max-content;
+  align-self: center;
+  color: var(--text-secondary);
+  font-size: 10px;
+  line-height: 1.4;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.player-profile-image-message.success:not(:empty) {
+  animation: profile-image-message-dismiss 2.8s ease forwards;
+}
+
+@keyframes profile-image-message-dismiss {
+  0%, 68% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-3px); }
 }
 
 /* 프로필 본문 */
@@ -194,7 +276,9 @@
     align-items: start;
   }
 
+  .player-profile-avatar-column { width: 96px; }
   .player-profile-avatar { width: 96px; height: 96px; }
+  .player-profile-image-picker { opacity: 1; transform: none; }
   .player-profile-top { align-items: flex-start; flex-direction: column; gap: 14px; }
   .player-profile-name { font-size: 34px; }
   .player-profile-metrics {
@@ -220,7 +304,9 @@
     grid-template-columns: 72px minmax(0, 1fr);
     gap: 16px;
   }
+  .player-profile-avatar-column { width: 72px; }
   .player-profile-avatar { width: 72px; height: 72px; }
+  .player-profile-image-picker { height: 26px; font-size: 9px; }
   .player-profile-name { font-size: 30px; }
   .player-profile-metrics { grid-template-columns: 1fr; }
 }

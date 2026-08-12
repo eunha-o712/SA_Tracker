@@ -27,12 +27,14 @@
 .match-summary-values {
   margin-top: 28px;
   display: flex;
+  align-items: baseline;
   gap: 8px;
 }
 
 .match-summary-values strong {
   font-size: 30px;
   font-weight: 900;
+  line-height: 1;
 }
 
 .match-summary-values .death {
@@ -45,7 +47,10 @@
 
 .match-summary-values em {
   color: var(--text-dim);
+  font-size: 26px;
+  font-weight: 700;
   font-style: normal;
+  line-height: 1;
 }
 
 .play-style-grid {

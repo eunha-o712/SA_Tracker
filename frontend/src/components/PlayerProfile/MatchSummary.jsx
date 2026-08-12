@@ -11,7 +11,7 @@ const SUMMARY_CARDS = [
   { key: 'GENERAL', label: '일반전' },
 ]
 
-function MatchSummary({ userName, recent = {} }) {
+function MatchSummary({ userName, ouid, recent = {} }) {
   const [summaries, setSummaries] = useState([])
   const [analysis, setAnalysis] = useState({
     primaryMode: '-',
@@ -36,7 +36,7 @@ function MatchSummary({ userName, recent = {} }) {
         setError('')
 
         const response = await cachedGet('/api/match/summary', {
-          params: { userName },
+          params: { userName, ouid },
         })
 
         if (active) {
@@ -75,7 +75,7 @@ function MatchSummary({ userName, recent = {} }) {
     return () => {
       active = false
     }
-  }, [userName])
+  }, [ouid, userName])
 
   const summaryByKey = new Map(
     summaries.map((summary) => [summary.key, summary])

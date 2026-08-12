@@ -39,7 +39,6 @@ import com.sa.trk.nexon.dto.UserTierDto;
 public class NexonApiClient {
 
     private static final Logger log = LoggerFactory.getLogger(NexonApiClient.class);
-    private static final long MIN_REQUEST_INTERVAL_MS = 350L;
     private static final int MAX_RETRY_COUNT = 3;
     private static final Duration OUID_CACHE_DURATION = Duration.ofHours(6);
 
@@ -298,7 +297,7 @@ public class NexonApiClient {
     }
 
     private void waitForRequestSlot() {
-        long waitMs = MIN_REQUEST_INTERVAL_MS
+        long waitMs = Math.max(0L, nexonProperties.getMinRequestIntervalMs())
                 - (System.currentTimeMillis() - lastRequestAtMs);
         if (waitMs > 0) {
             sleep(waitMs);

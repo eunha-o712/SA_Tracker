@@ -27,21 +27,6 @@ export function invalidateCachedGet(url) {
   }
 }
 
-export async function preloadSessionData(userName) {
-  const normalizedName = String(userName || '').trim()
-  if (!normalizedName) return
-
-  await Promise.allSettled([
-    cachedGet('/api/player', { params: { userName: normalizedName } }),
-    cachedGet('/api/ranking', { params: { userName: normalizedName } }),
-    cachedGet('/api/weapon', { params: { userName: normalizedName } }),
-    cachedGet('/api/match/summary', { params: { userName: normalizedName } }),
-    cachedGet('/api/map/stats', { params: { userName: normalizedName } }),
-    cachedGet('/api/ai/record-room', { params: { userName: normalizedName } }),
-    cachedGet('/api/favorite'),
-  ])
-}
-
 function createCacheKey(url, params = {}) {
   const session = readAuthSession()
   const owner = session?.user?.id || session?.user?.email || session?.token || 'guest'

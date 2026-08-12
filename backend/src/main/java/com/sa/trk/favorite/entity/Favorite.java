@@ -1,5 +1,7 @@
 package com.sa.trk.favorite.entity;
 
+import java.time.Instant;
+
 import com.sa.trk.auth.entity.AuthUser;
 
 import jakarta.persistence.Column;
@@ -31,4 +33,9 @@ public class Favorite {
 
     @Column(length = 64)
     private String ouid;
+
+    @Column(length = 64)
+    private String activeMatchQueryIndexes;
+
+    private Instant matchQueryProfiledAt;
 }

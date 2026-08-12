@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import api, { getApiErrorMessage } from '../../api/api'
-import { preloadSessionData } from '../../api/apiCache'
 import Footer from '../../components/Footer/Footer'
 import Header from '../../components/Header/Header'
 import NavBar from '../../components/NavBar/NavBar'
@@ -140,9 +139,6 @@ function AuthPage() {
         password: form.password,
       })
       saveAuthSession(data)
-
-      const linkedName = data?.user?.suddenNickname || ''
-      void preloadSessionData(linkedName)
 
       const requestedPath = location.state?.from
         ? `${location.state.from.pathname}${location.state.from.search || ''}${location.state.from.hash || ''}`

@@ -153,6 +153,28 @@ public class AuthService {
         return toUserResponse(findValidSession(rawToken).getUser());
     }
 
+    @Transactional
+    public AuthUserResponse updateProfileImage(String rawToken, String profileImageUrl) {
+        String normalizedUrl = profileImageUrl == null ? "" : profileImageUrl.trim();
+        if (!normalizedUrl.matches("/api/profile-images/[0-9a-f-]{36}\\.(jpg|png|webp)")) {
+            throw new AuthException(
+                    HttpStatus.BAD_REQUEST,
+                    "INVALID_PROFILE_IMAGE",
+                    "올바르지 않은 프로필 이미지입니다."
+            );
+        }
+        AuthUser user = findValidSession(rawToken).getUser();
+        user.setProfileImageUrl(normalizedUrl);
+        return toUserResponse(user);
+    }
+
+    @Transactional
+    public AuthUserResponse clearProfileImage(String rawToken) {
+        AuthUser user = findValidSession(rawToken).getUser();
+        user.setProfileImageUrl(null);
+        return toUserResponse(user);
+    }
+
     @Transactional(readOnly = true)
     public AuthUserResponse requireAdmin(String rawToken) {
         AuthUserResponse user = currentUser(rawToken);
@@ -643,7 +665,8 @@ public class AuthService {
                 user.getOuid(),
                 Boolean.TRUE.equals(user.getNicknameVerified()),
                 user.isAdmin(),
-                Boolean.TRUE.equals(user.getClanNone())
+                Boolean.TRUE.equals(user.getClanNone()),
+                user.getProfileImageUrl()
         );
     }
 

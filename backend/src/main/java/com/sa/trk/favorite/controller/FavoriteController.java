@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.sa.trk.favorite.dto.FavoriteResponseDto;
 import com.sa.trk.favorite.service.FavoriteService;
+import com.sa.trk.match.dto.MatchSummaryResponseDto;
 
 @RestController
 public class FavoriteController {
@@ -41,6 +42,13 @@ public class FavoriteController {
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @PathVariable("id") Long id) {
         favoriteService.deleteFavorite(bearerToken(authorization), id);
+    }
+
+    @GetMapping("/api/favorite/{id}/match-summary")
+    public MatchSummaryResponseDto refreshMatchSummary(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @PathVariable("id") Long id) {
+        return favoriteService.refreshMatchSummary(bearerToken(authorization), id);
     }
 
     private String bearerToken(String authorization) {

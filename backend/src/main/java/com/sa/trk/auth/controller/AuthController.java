@@ -3,15 +3,19 @@ package com.sa.trk.auth.controller;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.CacheControl;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.sa.trk.auth.dto.AuthLoginRequest;
 import com.sa.trk.auth.dto.AuthRegisterRequest;
@@ -27,14 +31,19 @@ import com.sa.trk.auth.dto.PasswordResetRequest;
 import com.sa.trk.auth.dto.PasswordResetRequestResponse;
 import com.sa.trk.auth.dto.SuddenAccountLinkRequest;
 import com.sa.trk.auth.service.AuthService;
+import com.sa.trk.auth.service.ProfileImageStorageService;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
     private final AuthService authService;
+    private final ProfileImageStorageService profileImageStorageService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(
+            AuthService authService,
+            ProfileImageStorageService profileImageStorageService) {
         this.authService = authService;
+        this.profileImageStorageService = profileImageStorageService;
     }
 
     @PostMapping("/register")
@@ -52,6 +61,33 @@ public class AuthController {
     public AuthUserResponse currentUser(
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         return authService.currentUser(bearerToken(authorization));
+    }
+
+    @PostMapping(value = "/profile-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public AuthUserResponse updateProfileImage(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @RequestPart("image") MultipartFile image) {
+        String token = bearerToken(authorization);
+        AuthUserResponse currentUser = authService.currentUser(token);
+        String storedUrl = profileImageStorageService.store(image);
+        try {
+            AuthUserResponse updatedUser = authService.updateProfileImage(token, storedUrl);
+            profileImageStorageService.delete(currentUser.profileImageUrl());
+            return updatedUser;
+        } catch (RuntimeException exception) {
+            profileImageStorageService.delete(storedUrl);
+            throw exception;
+        }
+    }
+
+    @DeleteMapping("/profile-image")
+    public AuthUserResponse clearProfileImage(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+        String token = bearerToken(authorization);
+        AuthUserResponse currentUser = authService.currentUser(token);
+        AuthUserResponse updatedUser = authService.clearProfileImage(token);
+        profileImageStorageService.delete(currentUser.profileImageUrl());
+        return updatedUser;
     }
 
     @PostMapping("/password-reset/request")

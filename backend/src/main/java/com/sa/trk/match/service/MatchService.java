@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.IntStream;
 import java.util.logging.Logger;
 
 import org.springframework.stereotype.Service;
@@ -44,8 +45,6 @@ public class MatchService {
     private static final int MAX_LIST_CACHE_ENTRIES = 100;
     private static final int MAX_DETAIL_CACHE_ENTRIES = 1_000;
     private static final int MAX_CLAN_CACHE_ENTRIES = 1_000;
-    private static final long LIST_REQUEST_INTERVAL_MS = 250L;
-    private static final long DETAIL_REQUEST_INTERVAL_MS = 200L;
     private static final Duration LIST_CACHE_DURATION = Duration.ofMinutes(10);
     private static final Duration DETAIL_CACHE_DURATION = Duration.ofMinutes(30);
     private static final Duration CLAN_CACHE_DURATION = Duration.ofMinutes(30);
@@ -65,6 +64,19 @@ public class MatchService {
     );
 
     private static final List<SummaryQuery> RANKED_SUMMARY_QUERIES = List.of(
+            new SummaryQuery("폭파미션", "랭크전 솔로"),
+            new SummaryQuery("폭파미션", "랭크전 파티"),
+            new SummaryQuery("폭파미션", "클랜 랭크전")
+    );
+
+    private static final List<SummaryQuery> FAVORITE_SUMMARY_QUERIES = List.of(
+            new SummaryQuery("폭파미션", "일반전"),
+            new SummaryQuery("데스매치", "일반전"),
+            new SummaryQuery("개인전", "일반전"),
+            new SummaryQuery("폭파미션", "클랜전"),
+            new SummaryQuery("데스매치", "클랜전"),
+            new SummaryQuery("폭파미션", "퀵매치 클랜전"),
+            new SummaryQuery("데스매치", "퀵매치 클랜전"),
             new SummaryQuery("폭파미션", "랭크전 솔로"),
             new SummaryQuery("폭파미션", "랭크전 파티"),
             new SummaryQuery("폭파미션", "클랜 랭크전")
@@ -152,17 +164,24 @@ public class MatchService {
 
     public MatchSummaryResponseDto getMatchSummary(String userName) {
         String normalizedUserName = requireValue(userName, "닉네임");
+        return getMatchSummary(normalizedUserName, resolveOuid(normalizedUserName));
+    }
+
+    private MatchSummaryResponseDto getMatchSummary(String normalizedUserName, String ouid) {
 
         List<MatchDto> generalMatches = loadSummaryMatches(
                 normalizedUserName,
+                ouid,
                 GENERAL_SUMMARY_QUERIES
         );
         List<MatchDto> clanMatches = loadSummaryMatches(
                 normalizedUserName,
+                ouid,
                 CLAN_SUMMARY_QUERIES
         );
         List<MatchDto> rankedMatches = loadSummaryMatches(
                 normalizedUserName,
+                ouid,
                 RANKED_SUMMARY_QUERIES
         );
 
@@ -190,7 +209,65 @@ public class MatchService {
 
     public MatchSummaryResponseDto getMatchSummaryByOuid(String userName, String ouid) {
         rememberOuid(userName, ouid);
-        return getMatchSummary(userName);
+        return getMatchSummary(requireValue(userName, "닉네임"), requireValue(ouid, "OUID"));
+    }
+
+    public FavoriteMatchSummaryRefresh getFavoriteMatchSummaryByOuid(
+            String userName,
+            String ouid,
+            List<Integer> preferredQueryIndexes,
+            boolean discoverAllQueries) {
+        String normalizedUserName = requireValue(userName, "닉네임");
+        rememberOuid(normalizedUserName, ouid);
+
+        List<Integer> queryIndexes = discoverAllQueries
+                ? allFavoriteQueryIndexes()
+                : normalizeFavoriteQueryIndexes(preferredQueryIndexes);
+        if (queryIndexes.isEmpty()) {
+            queryIndexes = allFavoriteQueryIndexes();
+            discoverAllQueries = true;
+        }
+
+        Map<String, MatchDto> uniqueMatches = new LinkedHashMap<>();
+        List<Integer> activeQueryIndexes = new ArrayList<>();
+        for (Integer queryIndex : queryIndexes) {
+            SummaryQuery query = FAVORITE_SUMMARY_QUERIES.get(queryIndex);
+            try {
+                List<MatchDto> matches = loadMatchesByOuid(
+                        normalizedUserName,
+                        ouid,
+                        query.matchMode(),
+                        query.matchType()
+                );
+                if (!matches.isEmpty()) {
+                    activeQueryIndexes.add(queryIndex);
+                }
+                for (MatchDto match : matches) {
+                    if (match != null && !isBlank(match.getMatch_id())) {
+                        uniqueMatches.putIfAbsent(match.getMatch_id(), match);
+                    }
+                }
+            } catch (HttpClientErrorException.TooManyRequests exception) {
+                throw exception;
+            } catch (RuntimeException exception) {
+                log.warning("즐겨찾기 전적 범위 조회 실패 ["
+                        + query.matchMode() + "/" + query.matchType() + "]: "
+                        + exception.getMessage());
+            }
+        }
+
+        List<MatchDto> recentMatches = new ArrayList<>(uniqueMatches.values());
+        recentMatches.sort(matchDateComparator());
+        MatchSummaryResponseDto response = new MatchSummaryResponseDto();
+        response.setUserName(normalizedUserName);
+        response.setSummaries(List.of(
+                createSummary("RECENT", "최근 매치", recentMatches)
+        ));
+        return new FavoriteMatchSummaryRefresh(
+                response,
+                List.copyOf(activeQueryIndexes),
+                discoverAllQueries
+        );
     }
 
     public List<MatchDto> getRecentMatchesWithMap(String userName) {
@@ -255,10 +332,14 @@ public class MatchService {
 
     public HeadshotStatsDto getHeadshotStats(String userName) {
         String normalizedUserName = requireValue(userName, "닉네임");
+        return getHeadshotStats(normalizedUserName, resolveOuid(normalizedUserName));
+    }
+
+    private HeadshotStatsDto getHeadshotStats(String normalizedUserName, String ouid) {
         List<MatchDto> recentMatches = sampleMatches(mergeMatches(
-                loadSummaryMatches(normalizedUserName, GENERAL_SUMMARY_QUERIES),
-                loadSummaryMatches(normalizedUserName, CLAN_SUMMARY_QUERIES),
-                loadSummaryMatches(normalizedUserName, RANKED_SUMMARY_QUERIES)
+                loadSummaryMatches(normalizedUserName, ouid, GENERAL_SUMMARY_QUERIES),
+                loadSummaryMatches(normalizedUserName, ouid, CLAN_SUMMARY_QUERIES),
+                loadSummaryMatches(normalizedUserName, ouid, RANKED_SUMMARY_QUERIES)
         ));
 
         int sampleMatchCount = 0;
@@ -271,10 +352,12 @@ public class MatchService {
                 continue;
             }
 
-            MatchDetailItemDto player = detail.getMatch_detail().stream()
-                    .filter(item -> sameText(item.getUser_name(), normalizedUserName))
-                    .findFirst()
-                    .orElse(null);
+            MatchDetailItemDto player = findTargetPlayer(
+                    match,
+                    detail.getMatch_detail(),
+                    normalizedUserName,
+                    ouid
+            );
             if (player == null) {
                 continue;
             }
@@ -294,8 +377,48 @@ public class MatchService {
     }
 
     public HeadshotStatsDto getHeadshotStatsByOuid(String userName, String ouid) {
-        rememberOuid(userName, ouid);
-        return getHeadshotStats(userName);
+        String normalizedUserName = requireValue(userName, "닉네임");
+        String normalizedOuid = requireValue(ouid, "OUID");
+        rememberOuid(normalizedUserName, normalizedOuid);
+        return getHeadshotStats(normalizedUserName, normalizedOuid);
+    }
+
+    private MatchDetailItemDto findTargetPlayer(
+            MatchDto match,
+            List<MatchDetailItemDto> players,
+            String userName,
+            String ouid) {
+        if (players == null || players.isEmpty()) {
+            return null;
+        }
+
+        MatchDetailItemDto ouidMatch = players.stream()
+                .filter(player -> sameText(player.getOuid(), ouid))
+                .findFirst()
+                .orElse(null);
+        if (ouidMatch != null) {
+            return ouidMatch;
+        }
+
+        MatchDetailItemDto nameMatch = players.stream()
+                .filter(player -> sameText(player.getUser_name(), userName))
+                .findFirst()
+                .orElse(null);
+        if (nameMatch != null) {
+            return nameMatch;
+        }
+
+        List<MatchDetailItemDto> statMatches = players.stream()
+                .filter(player -> sameMatchRecord(match, player))
+                .toList();
+        return statMatches.size() == 1 ? statMatches.get(0) : null;
+    }
+
+    private boolean sameMatchRecord(MatchDto match, MatchDetailItemDto player) {
+        return numberOrZero(match.getKill()) == numberOrZero(player.getKill())
+                && numberOrZero(match.getDeath()) == numberOrZero(player.getDeath())
+                && numberOrZero(match.getAssist()) == numberOrZero(player.getAssist())
+                && sameText(match.getMatch_result(), player.getMatch_result());
     }
 
     private synchronized void rememberOuid(String userName, String ouid) {
@@ -316,6 +439,25 @@ public class MatchService {
         return matches.size() <= SUMMARY_SIZE
                 ? new ArrayList<>(matches)
                 : new ArrayList<>(matches.subList(0, SUMMARY_SIZE));
+    }
+
+    private List<Integer> allFavoriteQueryIndexes() {
+        return IntStream.range(0, FAVORITE_SUMMARY_QUERIES.size())
+                .boxed()
+                .toList();
+    }
+
+    private List<Integer> normalizeFavoriteQueryIndexes(List<Integer> queryIndexes) {
+        if (queryIndexes == null) {
+            return List.of();
+        }
+        return queryIndexes.stream()
+                .filter(index -> index != null
+                        && index >= 0
+                        && index < FAVORITE_SUMMARY_QUERIES.size())
+                .distinct()
+                .sorted()
+                .toList();
     }
 
     private String findPrimaryValue(List<MatchDto> matches, boolean mode) {
@@ -387,13 +529,21 @@ public class MatchService {
     private List<MatchDto> loadSummaryMatches(
             String userName,
             List<SummaryQuery> queries) {
+        return loadSummaryMatches(userName, resolveOuid(userName), queries);
+    }
+
+    private List<MatchDto> loadSummaryMatches(
+            String userName,
+            String ouid,
+            List<SummaryQuery> queries) {
 
         Map<String, MatchDto> uniqueMatches = new LinkedHashMap<>();
 
         for (SummaryQuery query : queries) {
             try {
-                List<MatchDto> matches = loadMatches(
+                List<MatchDto> matches = loadMatchesByOuid(
                         userName,
+                        ouid,
                         query.matchMode(),
                         query.matchType()
                 );
@@ -403,6 +553,8 @@ public class MatchService {
                         uniqueMatches.putIfAbsent(match.getMatch_id(), match);
                     }
                 }
+            } catch (HttpClientErrorException.TooManyRequests exception) {
+                throw exception;
             } catch (Exception exception) {
                 log.warning("매치 요약 쿼리 실패 [" + query.matchMode() + "/" + query.matchType() + "]: " + exception.getMessage());
             }
@@ -528,8 +680,16 @@ public class MatchService {
         };
     }
 
-    private synchronized List<MatchDto> loadMatches(
+    private List<MatchDto> loadMatches(
             String userName,
+            String matchMode,
+            String matchType) {
+        return loadMatchesByOuid(userName, resolveOuid(userName), matchMode, matchType);
+    }
+
+    private synchronized List<MatchDto> loadMatchesByOuid(
+            String userName,
+            String ouid,
             String matchMode,
             String matchType) {
 
@@ -546,9 +706,7 @@ public class MatchService {
             return new ArrayList<>(cachedEntry.matches());
         }
 
-        String ouid = resolveOuid(userName);
-
-        List<MatchDto> matches = new ArrayList<>(requestMatchesWithRetry(
+        List<MatchDto> matches = new ArrayList<>(requestMatches(
                 ouid,
                 matchMode,
                 matchType
@@ -568,24 +726,12 @@ public class MatchService {
         return new ArrayList<>(newEntry.matches());
     }
 
-    private List<MatchDto> requestMatchesWithRetry(
+    private List<MatchDto> requestMatches(
             String ouid,
             String matchMode,
             String matchType) {
-
-        for (int attempt = 1; attempt <= 3; attempt++) {
-            try {
-                List<MatchDto> matches = nexonApiClient.getMatches(ouid, matchMode, matchType);
-                sleep(LIST_REQUEST_INTERVAL_MS);
-                return matches == null ? List.of() : matches;
-            } catch (HttpClientErrorException.TooManyRequests exception) {
-                if (attempt == 3) {
-                    throw exception;
-                }
-                sleep(1_500L * attempt);
-            }
-        }
-        return List.of();
+        List<MatchDto> matches = nexonApiClient.getMatches(ouid, matchMode, matchType);
+        return matches == null ? List.of() : matches;
     }
 
     private synchronized String resolveOuid(String userName) {
@@ -741,28 +887,19 @@ public class MatchService {
     }
 
     private String requestClanName(String userName) {
-        for (int attempt = 1; attempt <= 2; attempt++) {
-            try {
-                OuidResponseDto ouidResponse = nexonApiClient.getOuid(userName);
-                if (ouidResponse == null || isBlank(ouidResponse.getOuid())) {
-                    return "";
-                }
-
-                UserBasicDto basic = nexonApiClient.getUserBasic(ouidResponse.getOuid());
-                sleep(DETAIL_REQUEST_INTERVAL_MS);
-                return basic == null || isBlank(basic.getClan_name())
-                        ? ""
-                        : basic.getClan_name().trim();
-            } catch (HttpClientErrorException.TooManyRequests exception) {
-                if (attempt == 2) {
-                    return "";
-                }
-                sleep(1_500L);
-            } catch (RuntimeException exception) {
+        try {
+            OuidResponseDto ouidResponse = nexonApiClient.getOuid(userName);
+            if (ouidResponse == null || isBlank(ouidResponse.getOuid())) {
                 return "";
             }
+
+            UserBasicDto basic = nexonApiClient.getUserBasic(ouidResponse.getOuid());
+            return basic == null || isBlank(basic.getClan_name())
+                    ? ""
+                    : basic.getClan_name().trim();
+        } catch (RuntimeException exception) {
+            return "";
         }
-        return "";
     }
 
     private boolean isClanMatchType(String matchType) {
@@ -788,7 +925,7 @@ public class MatchService {
             return cachedEntry.detail();
         }
 
-        MatchDetailDto detail = requestDetailWithRetry(matchId);
+        MatchDetailDto detail = requestDetail(matchId);
         if (detail == null) {
             return null;
         }
@@ -808,20 +945,8 @@ public class MatchService {
         return detail;
     }
 
-    private MatchDetailDto requestDetailWithRetry(String matchId) {
-        for (int attempt = 1; attempt <= 2; attempt++) {
-            try {
-                MatchDetailDto detail = nexonApiClient.getMatchDetail(matchId);
-                sleep(DETAIL_REQUEST_INTERVAL_MS);
-                return detail;
-            } catch (HttpClientErrorException.TooManyRequests exception) {
-                if (attempt == 2) {
-                    throw exception;
-                }
-                sleep(1_500L);
-            }
-        }
-        return null;
+    private MatchDetailDto requestDetail(String matchId) {
+        return nexonApiClient.getMatchDetail(matchId);
     }
 
     private Comparator<MatchDto> matchDateComparator() {
@@ -881,15 +1006,6 @@ public class MatchService {
                 ))
                 .map(Map.Entry::getKey)
                 .ifPresent(ouidCache::remove);
-    }
-
-    private void sleep(long milliseconds) {
-        try {
-            Thread.sleep(milliseconds);
-        } catch (InterruptedException exception) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("매치 상세 조회가 중단되었습니다.", exception);
-        }
     }
 
     private boolean sameText(String source, String target) {
@@ -968,5 +1084,11 @@ public class MatchService {
         private boolean isExpired() {
             return Instant.now().isAfter(expiresAt);
         }
+    }
+
+    public record FavoriteMatchSummaryRefresh(
+            MatchSummaryResponseDto summary,
+            List<Integer> activeQueryIndexes,
+            boolean fullDiscovery) {
     }
 }

@@ -34,6 +34,9 @@ public class AuthUser {
     @Column(unique = true, length = 80)
     private String ouid;
 
+    @Column(length = 300)
+    private String profileImageUrl;
+
     @Column
     private Boolean clanNone;
 
@@ -86,6 +89,8 @@ public class AuthUser {
     public void setSuddenNickname(String suddenNickname) { this.suddenNickname = suddenNickname; }
     public String getOuid() { return ouid; }
     public void setOuid(String ouid) { this.ouid = ouid; }
+    public String getProfileImageUrl() { return profileImageUrl; }
+    public void setProfileImageUrl(String profileImageUrl) { this.profileImageUrl = profileImageUrl; }
     public Boolean getClanNone() { return clanNone; }
     public void setClanNone(Boolean clanNone) { this.clanNone = clanNone; }
     public Boolean getNicknameVerified() { return nicknameVerified; }

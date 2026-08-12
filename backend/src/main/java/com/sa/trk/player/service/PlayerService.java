@@ -4,6 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import com.sa.trk.auth.entity.AuthUser;
+import com.sa.trk.auth.repository.AuthUserRepository;
 import com.sa.trk.common.dto.ImagesDto;
 import com.sa.trk.config.ClanTestProperties;
 import com.sa.trk.nexon.client.NexonApiClient;
@@ -23,15 +25,18 @@ public class PlayerService {
     private final NexonApiClient nexonApiClient;
     private final NexonMetaCacheService nexonMetaCacheService;
     private final ClanTestProperties clanTestProperties;
+    private final AuthUserRepository authUserRepository;
 
     public PlayerService(
             NexonApiClient nexonApiClient,
             NexonMetaCacheService nexonMetaCacheService,
-            ClanTestProperties clanTestProperties
+            ClanTestProperties clanTestProperties,
+            AuthUserRepository authUserRepository
     ) {
         this.nexonApiClient = nexonApiClient;
         this.nexonMetaCacheService = nexonMetaCacheService;
         this.clanTestProperties = clanTestProperties;
+        this.authUserRepository = authUserRepository;
         if (clanTestProperties.isEnabled()) {
             log.warn(
                     "Local clan test override is enabled: {} -> {}",
@@ -53,13 +58,8 @@ public class PlayerService {
         UserTierDto tier = nexonApiClient.getUserTier(ouid);
         UserRecentInfoDto recent = nexonApiClient.getUserRecentInfo(ouid);
 
-        ImagesDto images = new ImagesDto();
-        images.setGradeImage(
-                nexonMetaCacheService.findGradeImage(rank.getGrade())
-        );
-        images.setSeasonGradeImage(
-                nexonMetaCacheService.findSeasonGradeImage(rank.getSeason_grade())
-        );
+        PlayerResponseDto response = createProfileResponse(ouid, basic, rank);
+        ImagesDto images = response.getImages();
         images.setSoloTierImage(
                 nexonMetaCacheService.findTierImage(tier.getSolo_rank_match_tier())
         );
@@ -70,16 +70,15 @@ public class PlayerService {
                 nexonMetaCacheService.getLogoImage()
         );
 
-        PlayerResponseDto response = new PlayerResponseDto();
-        response.setUserName(basic.getUser_name());
-        response.setOuid(ouid);
-        response.setBasic(basic);
-        response.setRank(rank);
         response.setTier(tier);
         response.setRecent(recent);
-        response.setImages(images);
-
         return response;
+    }
+
+    public PlayerResponseDto getFavoritePlayerByOuid(String ouid) {
+        UserBasicDto basic = getUserBasic(ouid);
+        UserRankDto rank = nexonApiClient.getUserRank(ouid);
+        return createProfileResponse(ouid, basic, rank);
     }
 
     public OuidResponseDto getOuid(String userName) {
@@ -104,6 +103,31 @@ public class PlayerService {
 
     public UserRecentInfoDto getUserRecentInfo(String ouid) {
         return nexonApiClient.getUserRecentInfo(ouid);
+    }
+
+    private PlayerResponseDto createProfileResponse(
+            String ouid,
+            UserBasicDto basic,
+            UserRankDto rank) {
+        ImagesDto images = new ImagesDto();
+        images.setGradeImage(
+                nexonMetaCacheService.findGradeImage(rank.getGrade())
+        );
+        images.setSeasonGradeImage(
+                nexonMetaCacheService.findSeasonGradeImage(rank.getSeason_grade())
+        );
+
+        PlayerResponseDto response = new PlayerResponseDto();
+        response.setUserName(basic.getUser_name());
+        response.setOuid(ouid);
+        response.setProfileImageUrl(authUserRepository.findByOuid(ouid)
+                .map(AuthUser::getProfileImageUrl)
+                .filter(value -> !value.isBlank())
+                .orElse(null));
+        response.setBasic(basic);
+        response.setRank(rank);
+        response.setImages(images);
+        return response;
     }
 
     private boolean shouldOverrideClan(UserBasicDto basic) {

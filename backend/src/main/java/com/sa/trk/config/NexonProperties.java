@@ -7,6 +7,7 @@ public class NexonProperties {
 
     private String key;
     private String baseUrl;
+    private long minRequestIntervalMs = 350L;
 
     public String getKey() {
         return key;
@@ -22,5 +23,13 @@ public class NexonProperties {
 
     public void setBaseUrl(String baseUrl) {
         this.baseUrl = baseUrl;
+    }
+
+    public long getMinRequestIntervalMs() {
+        return minRequestIntervalMs;
+    }
+
+    public void setMinRequestIntervalMs(long minRequestIntervalMs) {
+        this.minRequestIntervalMs = minRequestIntervalMs;
     }
 }
