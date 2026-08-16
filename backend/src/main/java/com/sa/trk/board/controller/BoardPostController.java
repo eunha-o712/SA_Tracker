@@ -44,9 +44,7 @@ public class BoardPostController {
     public List<BoardPostResponseDto> getPosts(
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @RequestParam("type") String type) {
-        AuthUserResponse viewer = "SUPPORT".equalsIgnoreCase(type == null ? "" : type.trim())
-                ? authService.currentUser(bearerToken(authorization))
-                : null;
+        AuthUserResponse viewer = authService.currentUser(bearerToken(authorization));
         return boardPostService.getPosts(type, viewer);
     }
 
@@ -54,8 +52,7 @@ public class BoardPostController {
     public BoardPostResponseDto getPost(
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @PathVariable("id") Long id) {
-        String token = bearerToken(authorization);
-        AuthUserResponse viewer = token == null ? null : authService.currentUser(token);
+        AuthUserResponse viewer = authService.currentUser(bearerToken(authorization));
         return boardPostService.getPost(id, viewer);
     }
 

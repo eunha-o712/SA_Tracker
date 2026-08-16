@@ -116,6 +116,32 @@ class BoardPostServiceTests {
     }
 
     @Test
+    void guestCannotLoadFreeBoardPosts() {
+        assertThatThrownBy(() -> boardPostService.getPosts("FREE", null))
+                .isInstanceOf(AuthException.class)
+                .hasMessageContaining("로그인이 필요합니다");
+    }
+
+    @Test
+    void guestCannotReadFreeBoardPost() {
+        BoardPost freePost = post(11L, BoardType.FREE, 7L, false);
+        when(boardPostRepository.findById(11L)).thenReturn(Optional.of(freePost));
+
+        assertThatThrownBy(() -> boardPostService.getPost(11L, null))
+                .isInstanceOf(AuthException.class)
+                .hasMessageContaining("로그인이 필요합니다");
+    }
+
+    @Test
+    void guestCannotLoadFreeBoardImage() {
+        var access = new BoardPostService.BoardImageAccess(false, 7L);
+
+        assertThatThrownBy(() -> boardPostService.requireImageAccess(access, null))
+                .isInstanceOf(AuthException.class)
+                .hasMessageContaining("로그인이 필요합니다");
+    }
+
+    @Test
     void createsPrivateOuidDisputeOnlyForAlreadyLinkedOuid() {
         AuthUser currentOwner = linkedUser(99L, false);
         OuidResponseDto ouidResponse = new OuidResponseDto();

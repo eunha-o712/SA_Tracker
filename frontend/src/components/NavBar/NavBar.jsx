@@ -24,6 +24,7 @@ function NavBar() {
     ? (accountName ? `/player/${encodeURIComponent(accountName)}` : '/mypage')
     : '/player'
   const clanTo = isLoggedIn ? '/clan' : '/login'
+  const boardTo = isLoggedIn ? '/board/free' : '/login'
 
   const menus = [
     { label: 'PROFILE', to: profileTo },
@@ -33,10 +34,19 @@ function NavBar() {
     { label: 'CLAN', to: clanTo, state: isLoggedIn ? undefined : { from: { pathname: '/clan' } } },
     {
       label: 'BOARD',
-      to: '/board/free',
+      to: boardTo,
+      state: isLoggedIn ? undefined : { from: { pathname: '/board/free' } },
       children: [
-        { label: '자유게시판', to: '/board/free' },
-        { label: '문의사항', to: '/board/support' },
+        {
+          label: '자유게시판',
+          to: isLoggedIn ? '/board/free' : '/login',
+          state: isLoggedIn ? undefined : { from: { pathname: '/board/free' } },
+        },
+        {
+          label: '문의사항',
+          to: isLoggedIn ? '/board/support' : '/login',
+          state: isLoggedIn ? undefined : { from: { pathname: '/board/support' } },
+        },
         ...(session?.user?.admin ? [{ label: '게시판 관리', to: '/board/admin' }] : []),
       ],
     },
@@ -88,8 +98,9 @@ function NavBar() {
               <div className="sa-nav-submenu" role="menu" aria-label="게시판 메뉴">
                 {children.map((child) => (
                   <Link
-                    key={child.to}
+                    key={child.label}
                     to={child.to}
+                    state={child.state}
                     role="menuitem"
                     className={pathname === child.to ? 'is-active' : undefined}
                   >

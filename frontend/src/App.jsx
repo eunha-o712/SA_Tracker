@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Routes, Route, useLocation, useParams } from 'react-router-dom'
+import { BrowserRouter, Navigate, Routes, Route, useLocation } from 'react-router-dom'
 import HomePage from './pages/HomePage/HomePage'
 import PlayerPage from './pages/PlayerPage/PlayerPage'
 import MatchDetailPage from './pages/MatchDetailPage/MatchDetailPage'
@@ -27,12 +27,6 @@ function RequireAuth({ children }) {
   return children
 }
 
-function BoardPageRoute() {
-  const { type } = useParams()
-  const page = <BoardPage />
-  return type === 'support' ? <RequireAuth>{page}</RequireAuth> : page
-}
-
 function App() {
   return (
     <BrowserRouter>
@@ -55,8 +49,8 @@ function App() {
         <Route path="/board" element={<Navigate to="/board/free" replace />} />
         <Route path="/board/write" element={<RequireAuth><BoardWritePage /></RequireAuth>} />
         <Route path="/board/admin" element={<RequireAuth><BoardAdminPage /></RequireAuth>} />
-        <Route path="/board/post/:id" element={<BoardDetailPage />} />
-        <Route path="/board/:type" element={<BoardPageRoute />} />
+        <Route path="/board/post/:id" element={<RequireAuth><BoardDetailPage /></RequireAuth>} />
+        <Route path="/board/:type" element={<RequireAuth><BoardPage /></RequireAuth>} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>

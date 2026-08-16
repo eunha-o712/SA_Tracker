@@ -63,6 +63,7 @@ public class BoardPostService {
 
     @Transactional(readOnly = true)
     public List<BoardPostResponseDto> getPosts(String rawType, AuthUserResponse viewer) {
+        requireLoggedIn(viewer);
         BoardType type = parseType(rawType);
         List<BoardPost> posts;
         if (type == BoardType.SUPPORT) {
@@ -81,6 +82,7 @@ public class BoardPostService {
 
     @Transactional
     public BoardPostResponseDto getPost(Long id, AuthUserResponse viewer) {
+        requireLoggedIn(viewer);
         BoardPost post = findPost(id);
         requireReadAccess(post, viewer);
         post.setViewCount(post.getViewCount() + 1);
@@ -365,6 +367,7 @@ public class BoardPostService {
     }
 
     public void requireImageAccess(BoardImageAccess access, AuthUserResponse viewer) {
+        requireLoggedIn(viewer);
         if (access.privatePost()) {
             requireOwnerOrAdmin(access.authorId(), viewer);
         }
