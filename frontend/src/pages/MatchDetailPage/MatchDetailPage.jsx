@@ -75,8 +75,14 @@ function MatchDetailPage() {
     if (!nextUserName) return
 
     addRecentSearch(nextUserName)
-    const filters = { scope: 'RECENT', matchType, matchMode: 'ALL', matchMap: 'ALL' }
+    const filters = {
+      scope: DEFAULT_FILTERS.scope,
+      matchType: DEFAULT_FILTERS.matchType,
+      matchMode: 'ALL',
+      matchMap: DEFAULT_FILTERS.matchMap,
+    }
     setScope('RECENT')
+    setMatchType(DEFAULT_FILTERS.matchType)
     setMatchMode(DEFAULT_FILTERS.matchMode)
     setMatchMap('ALL')
     setAppliedFilters(filters)
@@ -86,7 +92,7 @@ function MatchDetailPage() {
 
   const handleScopeChange = (nextScope) => {
     const nextMatchMode = getScopeMatchMode(nextScope)
-    const nextMatchType = nextScope === 'CLAN' ? '퀵매치 클랜전' : matchType
+    const nextMatchType = getScopeMatchType(nextScope)
     setScope(nextScope)
     setMatchType(nextMatchType)
     setMatchMode(nextMatchMode === 'ALL' ? DEFAULT_FILTERS.matchMode : nextMatchMode)
@@ -264,7 +270,7 @@ function MatchDetailPage() {
               </div>
             )}
 
-            {userName && !loading && (
+            {userName && !loading && !error && matches.length > 0 && (
               <div className="match-pagination">
                 <button
                   type="button"
@@ -423,6 +429,10 @@ function getScopeMatchMode(scope) {
   if (scope === 'SOLO') return '개인전'
   if (scope === 'CLAN') return '폭파미션'
   return 'ALL'
+}
+
+function getScopeMatchType(scope) {
+  return scope === 'CLAN' ? '퀵매치 클랜전' : DEFAULT_FILTERS.matchType
 }
 
 function getMatchModeScope(matchMode) {
