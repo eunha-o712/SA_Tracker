@@ -139,10 +139,17 @@ function RankingPageContent({ name }) {
 
 function RankingEmptyState() {
   return (
-    <section className="ranking-page-state">
-      <span>랭킹 검색</span>
-      <strong>플레이어 닉네임을 검색해 랭킹 정보를 확인하세요.</strong>
-      <p>검색 후 비교 영역에서 두 플레이어의 기록을 비교할 수 있습니다.</p>
+    <section className="record-section ranking-roadmap-section ranking-roadmap-empty">
+      <div className="record-section-header">
+        <h2 className="record-section-title">RANKING ROAD</h2>
+        <span className="record-section-sub">현재 위치와 다음 단계</span>
+      </div>
+
+      <div className="ranking-page-state">
+        <span>랭킹 검색</span>
+        <strong>플레이어 닉네임을 검색해 랭킹 정보를 확인하세요.</strong>
+        <p>검색하면 통합 계급, 시즌 계급과 랭크전 티어의 현재 위치가 표시됩니다.</p>
+      </div>
     </section>
   )
 }

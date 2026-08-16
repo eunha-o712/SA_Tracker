@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api, { getApiErrorMessage } from '../../api/api'
+import { formatRankDisplayName } from '../../utils/rankDisplayName'
 import { addRecentSearch } from '../../utils/recentSearches'
 import './ComparePage.css'
 
@@ -29,7 +30,7 @@ function ComparePanel({
         if (active) setPlayers({ left, right })
       })
       .catch((requestError) => {
-        if (active) setError(getApiErrorMessage(requestError, 'Failed to load comparison data.'))
+        if (active) setError(getApiErrorMessage(requestError, '비교 정보를 불러오지 못했습니다.'))
       })
       .finally(() => {
         if (active) setLoading(false)
@@ -46,12 +47,12 @@ function ComparePanel({
     const right = rightName.trim()
 
     if (!left || !right) {
-      setError('Enter both player nicknames to compare.')
+      setError('비교할 두 플레이어의 닉네임을 모두 입력해 주세요.')
       return
     }
 
     if (left.toLowerCase() === right.toLowerCase()) {
-      setError('Enter two different nicknames.')
+      setError('서로 다른 두 플레이어의 닉네임을 입력해 주세요.')
       return
     }
 
@@ -77,29 +78,29 @@ function ComparePanel({
       <section className="record-section compare-search-section">
         <div className="record-section-header">
           <h1 className="record-section-title">PLAYER COMPARISON</h1>
-          <span className="record-section-sub">HEAD TO HEAD</span>
+          <span className="record-section-sub">플레이어 전적 비교</span>
         </div>
         <form className="compare-search-form" onSubmit={handleSubmit}>
           <label>
-            <span>PLAYER A</span>
+            <span>플레이어 A</span>
             <input
               value={leftName}
               onChange={(event) => setLeftName(event.target.value)}
-              placeholder="First nickname"
+              placeholder="첫 번째 닉네임"
               autoComplete="off"
             />
           </label>
           <div className="compare-versus" aria-hidden="true">VS</div>
           <label>
-            <span>PLAYER B</span>
+            <span>플레이어 B</span>
             <input
               value={rightName}
               onChange={(event) => setRightName(event.target.value)}
-              placeholder="Second nickname"
+              placeholder="두 번째 닉네임"
               autoComplete="off"
             />
           </label>
-          <button type="submit" disabled={loading}>COMPARE</button>
+          <button type="submit" disabled={loading}>비교하기</button>
         </form>
       </section>
 
@@ -111,7 +112,7 @@ function ComparePanel({
           <section className="record-section compare-board">
             <CompetitorCard competitor={players.left} side="left" />
             <div className="compare-score">
-              <span>HEAD TO HEAD</span>
+              <span>전적 비교</span>
               <strong>{verdict.left} : {verdict.right}</strong>
               <em>{verdict.label}</em>
             </div>
@@ -120,7 +121,7 @@ function ComparePanel({
           <section className="record-section compare-metrics-section">
             <div className="record-section-header">
               <h2 className="record-section-title">BATTLE METRICS</h2>
-              <span className="record-section-sub">RECENT RECORD BASED</span>
+              <span className="record-section-sub">최근 전적 기준</span>
             </div>
             <div className="compare-metrics">
               {rows.map((row) => (
@@ -158,12 +159,12 @@ function CompetitorCard({ competitor, side }) {
       <div className="competitor-image">
         <img src={player.images?.seasonGradeImage || '/sa-assets/sa-profile-basic.png'} alt="" />
       </div>
-      <span>{side === 'left' ? 'PLAYER A' : 'PLAYER B'}</span>
+      <span>{side === 'left' ? '플레이어 A' : '플레이어 B'}</span>
       <h2>{competitor.userName}</h2>
-      <p>{cleanText(player.basic?.clan_name) || 'NO CLAN'}</p>
+      <p>{cleanText(player.basic?.clan_name) || '클랜 없음'}</p>
       <div className="competitor-rank">
-        <strong>{player.rank?.season_grade || player.rank?.grade || '-'}</strong>
-        <em>{player.tier?.solo_rank_match_tier || 'UNRANK'}</em>
+        <strong>{formatRankDisplayName(player.rank?.season_grade || player.rank?.grade) || '-'}</strong>
+        <em>{player.tier?.solo_rank_match_tier || '랭크 없음'}</em>
       </div>
     </article>
   )
@@ -187,34 +188,34 @@ function createRows(left, right) {
   }
 
   return [
-    metric('RECENT WIN RATE', left.recent.winRate, right.recent.winRate, percent),
-    metric('AVERAGE K/D', kd(left), kd(right), decimal),
-    metric('AVERAGE KILL', left.recent.averageKill, right.recent.averageKill, decimal),
-    metric('SEASON RANKING', left.player.rank?.season_grade_ranking, right.player.rank?.season_grade_ranking, ranking, true),
-    metric('SOLO SCORE', left.player.tier?.solo_rank_match_score, right.player.tier?.solo_rank_match_score, integer),
-    metric('CLAN WIN RATE', left.clan.winRate, right.clan.winRate, percent),
+    metric('최근 승률', left.recent.winRate, right.recent.winRate, percent),
+    metric('평균 K/D', kd(left), kd(right), decimal),
+    metric('평균 킬', left.recent.averageKill, right.recent.averageKill, decimal),
+    metric('시즌 계급 랭킹', left.player.rank?.season_grade_ranking, right.player.rank?.season_grade_ranking, ranking, true),
+    metric('솔로 랭크 점수', left.player.tier?.solo_rank_match_score, right.player.tier?.solo_rank_match_score, integer),
+    metric('클랜전 승률', left.clan.winRate, right.clan.winRate, percent),
   ]
 }
 
 function getVerdict(rows) {
   const left = rows.filter((row) => row.winner === 'left').length
   const right = rows.filter((row) => row.winner === 'right').length
-  return { left, right, label: left === right ? 'EVEN MATCH' : left > right ? 'PLAYER A LEADS' : 'PLAYER B LEADS' }
+  return { left, right, label: left === right ? '동률' : left > right ? '플레이어 A 우세' : '플레이어 B 우세' }
 }
 
 function CompareEmpty() {
   return (
     <section className="compare-state">
-      <span>HEAD TO HEAD</span>
-      <strong>Compare two players from the same ranking context.</strong>
-      <p>Use grade, tier and recent match metrics to read the matchup quickly.</p>
+      <span>전적 비교</span>
+      <strong>두 플레이어의 전적을 한눈에 비교해 보세요.</strong>
+      <p>계급, 티어와 최근 매치 지표를 기준으로 비교합니다.</p>
     </section>
   )
 }
 
 function CompareLoading() {
   return (
-    <section className="record-section compare-loading" aria-busy="true" aria-label="Loading comparison data.">
+    <section className="record-section compare-loading" aria-busy="true" aria-label="비교 정보를 불러오는 중입니다.">
       <div className="compare-loading-card compare-shimmer" />
       <div className="compare-loading-score compare-shimmer" />
       <div className="compare-loading-card compare-shimmer" />
@@ -247,7 +248,7 @@ function integer(value) {
 
 function ranking(value) {
   const number = Number(value)
-  return Number.isFinite(number) && number > 0 ? `${number.toLocaleString()}th` : '-'
+  return Number.isFinite(number) && number > 0 ? `${number.toLocaleString()}위` : '-'
 }
 
 export default ComparePanel

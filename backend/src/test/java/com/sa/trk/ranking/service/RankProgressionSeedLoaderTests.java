@@ -28,6 +28,7 @@ class RankProgressionSeedLoaderTests {
 
         assertThat(seasonGrades).hasSize(56);
         assertThat(seasonGrades.getFirst().getRankName()).isEqualTo("특등이병");
+        assertThat(seasonGrades.get(12).getRankName()).isEqualTo("특정중사 4호봉");
         assertThat(seasonGrades.getLast().getRankName()).isEqualTo("총사령관");
         assertThat(seasonGrades.get(52).getMinimumExperience()).isEqualTo(19_556_052L);
         assertThat(seasonGrades.get(55).getWorstRanking()).isEqualTo(10);

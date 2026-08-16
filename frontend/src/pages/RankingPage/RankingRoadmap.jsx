@@ -1,3 +1,4 @@
+import { formatRankDisplayName } from '../../utils/rankDisplayName'
 import './RankingRoadmap.css'
 
 const FALLBACK_IMAGE = '/sa-assets/sa-grade-sample.png'
@@ -75,8 +76,8 @@ function RoadmapCard({ eyebrow, title, description, className = '', children }) 
 function ProgressionLane({ progression, currentMeta, currentExperience, laneLabel }) {
   const hasCurrent = Number(progression?.currentIndex) >= 0
   const position = getPosition(progression)
-  const currentName = progression?.currentName || '정보 없음'
-  const nextName = progression?.nextName || (hasCurrent ? '최고 단계' : '정보 없음')
+  const currentName = formatRankDisplayName(progression?.currentName) || '정보 없음'
+  const nextName = formatRankDisplayName(progression?.nextName) || (hasCurrent ? '최고 단계' : '정보 없음')
   const experienceDetail = getExperienceDetail(progression, currentExperience)
   const nextRequirement = getNextRequirement(progression, currentExperience)
 
@@ -151,7 +152,7 @@ function ProgressionLane({ progression, currentMeta, currentExperience, laneLabe
 
 function Endpoint({ progression, side }) {
   const isMinimum = side === 'minimum'
-  const name = isMinimum ? progression?.minimumName : progression?.maximumName
+  const name = formatRankDisplayName(isMinimum ? progression?.minimumName : progression?.maximumName)
   const image = isMinimum ? progression?.minimumImage : progression?.maximumImage
 
   return (

@@ -1,3 +1,4 @@
+import { formatRankDisplayName } from '../../utils/rankDisplayName'
 import './RankSummary.css'
 
 function RankSummary({ rank, tier, images }) {
@@ -45,7 +46,7 @@ function RankSummary({ rank, tier, images }) {
 
           <div className="rank-summary-info">
             <strong className="rank-summary-value">
-              {rank.season_grade || '-'}
+              {formatRankDisplayName(rank.season_grade) || '-'}
             </strong>
 
             <span className="rank-summary-sub">

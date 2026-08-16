@@ -96,6 +96,15 @@
   text-align: center;
 }
 
+.ranking-roadmap-empty {
+  margin-bottom: 30px;
+}
+
+.ranking-roadmap-empty .ranking-page-state {
+  margin-bottom: 0;
+  border: 0;
+}
+
 .ranking-page-state span,
 .ranking-player-strip span {
   color: var(--accent);
