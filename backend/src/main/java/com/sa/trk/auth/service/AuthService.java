@@ -49,6 +49,12 @@ import com.sa.trk.nexon.dto.UserBasicDto;
 public class AuthService {
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
+    private static final Pattern PROFILE_IMAGE_URL_PATTERN = Pattern.compile(
+            "^(?:/api/profile-images/[0-9a-f-]{36}\\.(?:jpg|png|webp)|"
+                    + "https://res\\.cloudinary\\.com/[A-Za-z0-9_-]+/image/upload/"
+                    + "(?:v\\d+/)?satrk/profile/[0-9a-f-]{36}\\.(?:jpe?g|png|webp))$",
+            Pattern.CASE_INSENSITIVE
+    );
     private static final Duration SESSION_DURATION = Duration.ofDays(30);
     private static final Duration EMAIL_VERIFICATION_DURATION = Duration.ofHours(24);
     private static final Duration EMAIL_VERIFICATION_REQUEST_COOLDOWN = Duration.ofSeconds(60);
@@ -156,7 +162,7 @@ public class AuthService {
     @Transactional
     public AuthUserResponse updateProfileImage(String rawToken, String profileImageUrl) {
         String normalizedUrl = profileImageUrl == null ? "" : profileImageUrl.trim();
-        if (!normalizedUrl.matches("/api/profile-images/[0-9a-f-]{36}\\.(jpg|png|webp)")) {
+        if (!PROFILE_IMAGE_URL_PATTERN.matcher(normalizedUrl).matches()) {
             throw new AuthException(
                     HttpStatus.BAD_REQUEST,
                     "INVALID_PROFILE_IMAGE",

@@ -3,6 +3,7 @@ package com.sa.trk;
 import java.util.Map;
 
 import com.sa.trk.config.ClanTestProperties;
+import com.sa.trk.config.CloudinaryProperties;
 import com.sa.trk.config.NexonProperties;
 import com.sa.trk.config.OpenAiProperties;
 import com.sa.trk.config.LocalEnvLoader;
@@ -16,7 +17,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
         NexonProperties.class,
         OpenAiProperties.class,
         MailDeliveryProperties.class,
-        ClanTestProperties.class
+        ClanTestProperties.class,
+        CloudinaryProperties.class
 })
 public class BackendApplication {
 

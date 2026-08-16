@@ -101,6 +101,9 @@ public final class LocalEnvLoader {
             case "SMTP_AUTH" -> "spring.mail.properties.mail.smtp.auth";
             case "SMTP_STARTTLS" -> "spring.mail.properties.mail.smtp.starttls.enable";
             case "SMTP_SSL" -> "spring.mail.properties.mail.smtp.ssl.enable";
+            case "CLOUDINARY_CLOUD_NAME" -> "cloudinary.cloud-name";
+            case "CLOUDINARY_API_KEY" -> "cloudinary.api-key";
+            case "CLOUDINARY_API_SECRET" -> "cloudinary.api-secret";
             case "CLAN_TEST_ENABLED" -> "satrk.clan-test.enabled";
             case "CLAN_TEST_USER_NAME" -> "satrk.clan-test.user-name";
             case "CLAN_TEST_CLAN_NAME" -> "satrk.clan-test.clan-name";
