@@ -64,4 +64,5 @@ SATrk/
 
 ## 운영 준비 문서
 
+- [운영 배포 및 DB 마이그레이션](production-deployment.md)
 - [운영 메일 연결](production-email.md)

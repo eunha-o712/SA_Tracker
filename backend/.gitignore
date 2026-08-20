@@ -49,12 +49,15 @@ out/
 
 src/main/resources/application.properties
 src/main/resources/application-*.properties
+!src/main/resources/application.properties
+!src/main/resources/application-prod.properties
 
 .env
 .env.*
 *.env
 !.env.example
 !.env.local.example
+!.env.production.example
 
 # 로그
 

@@ -85,6 +85,13 @@ public final class LocalEnvLoader {
 
     private static String toSpringPropertyName(String name) {
         return switch (name) {
+            case "SPRING_PROFILES_ACTIVE" -> "spring.profiles.active";
+            case "PORT" -> "server.port";
+            case "DB_URL" -> "spring.datasource.url";
+            case "DB_USERNAME" -> "spring.datasource.username";
+            case "DB_PASSWORD" -> "spring.datasource.password";
+            case "NEXON_API_KEY" -> "nexon.api.key";
+            case "NEXON_API_BASE_URL" -> "nexon.api.base-url";
             case "OPENAI_API_KEY" -> "openai.api.key";
             case "OPENAI_MODEL" -> "openai.api.model";
             case "OPENAI_BASE_URL" -> "openai.api.base-url";
@@ -104,6 +111,7 @@ public final class LocalEnvLoader {
             case "CLOUDINARY_CLOUD_NAME" -> "cloudinary.cloud-name";
             case "CLOUDINARY_API_KEY" -> "cloudinary.api-key";
             case "CLOUDINARY_API_SECRET" -> "cloudinary.api-secret";
+            case "CORS_ALLOWED_ORIGIN_PATTERNS" -> "satrk.cors.allowed-origin-patterns";
             case "CLAN_TEST_ENABLED" -> "satrk.clan-test.enabled";
             case "CLAN_TEST_USER_NAME" -> "satrk.clan-test.user-name";
             case "CLAN_TEST_CLAN_NAME" -> "satrk.clan-test.clan-name";

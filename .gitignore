@@ -13,10 +13,13 @@ backend/*.iml
 
 backend/src/main/resources/application.properties
 backend/src/main/resources/application-*.properties
+!backend/src/main/resources/application.properties
+!backend/src/main/resources/application-prod.properties
 backend/.env
 backend/.env.*
 !backend/.env.example
 !backend/.env.local.example
+!backend/.env.production.example
 
 frontend/node_modules/
 frontend/dist/
@@ -24,6 +27,7 @@ frontend/.idea/
 frontend/.vscode/
 frontend/.env
 frontend/.env.*
+!frontend/.env.production.example
 
 uploads/
 

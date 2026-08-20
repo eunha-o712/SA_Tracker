@@ -8,6 +8,8 @@ import com.sa.trk.config.NexonProperties;
 import com.sa.trk.config.OpenAiProperties;
 import com.sa.trk.config.LocalEnvLoader;
 import com.sa.trk.config.MailDeliveryProperties;
+import com.sa.trk.config.SecurityRateLimitProperties;
+import com.sa.trk.config.WebCorsProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -18,7 +20,9 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
         OpenAiProperties.class,
         MailDeliveryProperties.class,
         ClanTestProperties.class,
-        CloudinaryProperties.class
+        CloudinaryProperties.class,
+        WebCorsProperties.class,
+        SecurityRateLimitProperties.class
 })
 public class BackendApplication {
 
