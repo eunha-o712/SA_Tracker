@@ -7,7 +7,9 @@ import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.http.MockHttpInputMessage;
 import org.springframework.web.client.HttpClientErrorException;
 
 class GlobalExceptionHandlerTests {
@@ -62,6 +64,24 @@ class GlobalExceptionHandlerTests {
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().code()).isEqualTo("INTERNAL_SERVER_ERROR");
         assertThat(response.getBody().message()).doesNotContain("sensitive internal detail");
+    }
+
+    @Test
+    void returnsBadRequestForMalformedJsonWithoutLeakingParserDetails() {
+        MockHttpServletRequest request = request("/api/auth/login");
+
+        var response = handler.handleInvalidParameter(
+                new HttpMessageNotReadableException(
+                        "sensitive parser detail",
+                        new MockHttpInputMessage(new byte[0])
+                ),
+                request
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().code()).isEqualTo("INVALID_PARAMETER");
+        assertThat(response.getBody().message()).doesNotContain("sensitive parser detail");
     }
 
     private MockHttpServletRequest request(String path) {

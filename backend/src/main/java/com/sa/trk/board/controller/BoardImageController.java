@@ -40,9 +40,7 @@ public class BoardImageController {
             @PathVariable("fileName") String fileName) {
         String imageUrl = "/api/board/images/" + fileName;
         BoardImageAccess access = boardPostService.getImageAccess(imageUrl);
-        AuthUserResponse viewer = access.privatePost()
-                ? authService.currentUser(bearerToken(authorization))
-                : null;
+        AuthUserResponse viewer = authService.currentUser(bearerToken(authorization));
         boardPostService.requireImageAccess(access, viewer);
         StoredImage storedImage = boardImageStorageService.load(fileName);
         return ResponseEntity.ok()
