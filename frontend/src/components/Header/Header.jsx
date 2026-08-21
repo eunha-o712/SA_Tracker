@@ -56,7 +56,7 @@ function HeaderBadge({ user }) {
     const label = 'SA-TRACKER 관리자'
     return (
       <span className="global-header__badge admin" aria-label={label} title={label}>
-        M
+        <span aria-hidden="true">M</span>
       </span>
     )
   }

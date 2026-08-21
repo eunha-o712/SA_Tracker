@@ -18,8 +18,8 @@
 .clan-identity-copy { min-width: 0; }
 .clan-identity span, .clan-metric span { color: var(--accent); font-size: 10px; font-weight: 900; letter-spacing: 1.6px; }
 .clan-identity h2 { margin: 3px 0 5px; color: var(--text-primary); font-size: 30px; }
-.clan-identity p { overflow: hidden; color: var(--text-secondary); font-size: 12px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
-.clan-identity-roster-button { min-width: 128px; height: 42px; padding: 0 16px; background: transparent; border: 1px solid var(--accent); color: var(--accent); font-size: 10px; font-weight: 950; letter-spacing: .6px; white-space: nowrap; cursor: pointer; }
+.clan-identity p { overflow: hidden; color: var(--text-secondary); font-size: 14px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.clan-identity-roster-button { min-width: 128px; height: 42px; padding: 0 16px; background: transparent; border: 1px solid var(--accent); color: var(--accent); font-size: 12px; font-weight: 950; letter-spacing: .6px; white-space: nowrap; cursor: pointer; }
 .clan-identity-roster-button:hover:not(:disabled) { background: rgba(126, 217, 87, .1); }
 .clan-identity-roster-button.registered { background: rgba(126, 217, 87, .08); }
 .clan-identity-roster-button:disabled { opacity: .62; cursor: default; }
@@ -29,69 +29,82 @@
 .clan-metric:nth-child(2) strong { color: var(--accent); }
 .clan-match-list { padding: 28px 30px 34px; display: flex; flex-direction: column; gap: 14px; }
 .clan-detail-state { min-height: 90px; display: grid; place-items: center; color: var(--text-secondary); font-weight: 700; }
-.clan-roster-message { margin: 16px 30px 0; padding: 12px 16px; border: 1px solid rgba(126, 217, 87, .3); background: rgba(126, 217, 87, .06); color: var(--accent); font-size: 12px; font-weight: 800; }
+.clan-roster-message { margin: 16px 30px 0; padding: 12px 16px; border: 1px solid rgba(126, 217, 87, .3); background: rgba(126, 217, 87, .06); color: var(--accent); font-size: 14px; font-weight: 800; }
 .clan-roster-message.error { border-color: rgba(255, 82, 82, .36); background: rgba(255, 82, 82, .06); color: var(--lose); }
-.clan-roster-grid, .clan-roster-loading { padding: 24px 30px 30px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-.clan-roster-card { min-width: 0; padding: 20px; display: grid; grid-template-columns: 62px minmax(0, 1fr); align-items: center; gap: 6px 16px; background: #1d2124; border: 1px solid rgba(126, 217, 87, .28); }
-.clan-roster-card > img { grid-row: 1 / 3; width: 62px; height: 62px; object-fit: cover; border: 1px solid rgba(126, 217, 87, .45); }
+.clan-roster-grid, .clan-roster-loading { padding: 18px 30px 22px; display: grid; grid-template-columns: repeat(5, minmax(220px, 300px)); justify-content: center; gap: 10px; }
+.clan-roster-card { min-width: 0; padding: 10px 14px; display: grid; grid-template-columns: 48px minmax(0, 1fr); align-items: center; gap: 2px 12px; background: #1d2124; border: 1px solid rgba(126, 217, 87, .28); }
+.clan-roster-card > img { width: 48px; height: 48px; object-fit: cover; border: 1px solid rgba(126, 217, 87, .45); }
 .clan-roster-card > div:nth-child(2) { min-width: 0; }
-.clan-roster-card span { color: var(--accent); font-size: 9px; font-weight: 900; letter-spacing: 1.2px; }
-.clan-roster-card h3 { overflow: hidden; margin: 2px 0; color: var(--text-primary); font-size: 20px; text-overflow: ellipsis; white-space: nowrap; }
-.clan-roster-card p, .clan-roster-card time { color: var(--text-secondary); font-size: 11px; font-weight: 700; }
-.clan-roster-card time { grid-column: 1 / -1; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, .07); }
-.clan-roster-actions { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
-.clan-roster-actions button { height: 36px; background: transparent; border: 1px solid rgba(126, 217, 87, .5); color: var(--accent); font-size: 9px; font-weight: 900; letter-spacing: .7px; cursor: pointer; }
+.clan-roster-card span { color: var(--accent); font-size: 12px; font-weight: 900; letter-spacing: 1.2px; }
+.clan-roster-card h3 { overflow: hidden; margin: 1px 0; color: var(--text-primary); font-size: 18px; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+.clan-roster-heading { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.clan-roster-heading time { flex: 0 0 auto; color: var(--text-secondary); font-size: 10px; font-weight: 750; line-height: 1.2; text-align: right; white-space: nowrap; }
+.clan-roster-card > div:nth-child(2) > p { overflow: hidden; color: var(--text-secondary); font-size: 14px; font-weight: 750; line-height: 1.4; text-overflow: ellipsis; white-space: nowrap; }
+.clan-roster-actions { width: min(100%, 200px); grid-column: 1 / -1; justify-self: center; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 7px; }
+.clan-roster-actions button { height: 32px; padding: 0 8px 2px; display: grid; place-items: center; background: transparent; border: 1px solid rgba(126, 217, 87, .5); color: var(--accent); font-size: 12px; font-weight: 900; line-height: 1; letter-spacing: .3px; cursor: pointer; }
 .clan-roster-actions button.remove { border-color: rgba(255, 255, 255, .2); color: var(--text-secondary); }
 .clan-roster-actions button:hover:not(:disabled) { background: rgba(126, 217, 87, .1); }
 .clan-roster-actions button:disabled { opacity: .5; cursor: wait; }
-.clan-roster-empty { min-height: 120px; display: grid; place-items: center; color: var(--text-secondary); font-size: 13px; font-weight: 700; }
+.clan-pagination { padding: 0 30px 22px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+.clan-pagination button { width: 72px; height: 34px; display: grid; place-items: center; border: 1px solid rgba(126, 217, 87, .42); background: transparent; color: var(--accent); font-size: 12px; font-weight: 900; cursor: pointer; }
+.clan-pagination button:hover:not(:disabled) { background: rgba(126, 217, 87, .09); }
+.clan-pagination button:disabled { border-color: rgba(255, 255, 255, .12); color: var(--text-secondary); opacity: .38; cursor: default; }
+.clan-pagination span { min-width: 58px; color: var(--text-secondary); font-size: 12px; font-weight: 800; text-align: center; }
+.clan-pagination strong { color: var(--accent); }
+.clan-roster-empty { min-height: 120px; display: grid; place-items: center; color: var(--text-secondary); font-size: 14px; font-weight: 700; }
 .clan-roster-skeleton { min-height: 190px; }
+.clan-power-refresh-meta { margin: -18px 28px 7px 0; color: var(--text-secondary); font-size: 10px; font-weight: 750; line-height: 1.2; text-align: right; white-space: nowrap; }
 .clan-power-header > div:first-child { min-width: 0; display: flex; align-items: center; gap: 16px; }
-.clan-power-refresh-actions { display: flex; align-items: center; gap: 14px; }
-.clan-power-refresh-actions > span { color: var(--text-secondary); font-size: 9px; font-weight: 750; white-space: nowrap; }
-.clan-power-refresh-actions button { min-width: 150px; min-height: 38px; padding: 0 16px; border: 1px solid var(--accent); background: transparent; color: var(--accent); font-size: 9px; font-weight: 950; letter-spacing: .5px; cursor: pointer; }
+.clan-power-refresh-actions { display: flex; align-items: flex-end; }
+.clan-power-refresh-actions button { min-width: 150px; min-height: 38px; padding: 0 16px; border: 1px solid var(--accent); background: transparent; color: var(--accent); font-size: 12px; font-weight: 950; letter-spacing: .5px; cursor: pointer; }
 .clan-power-refresh-actions button:hover:not(:disabled) { background: rgba(126, 217, 87, .1); }
 .clan-power-refresh-actions button:disabled { opacity: .45; cursor: wait; }
 .clan-power-refresh-loading { min-height: 112px; margin: 24px 30px 0; padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; border: 1px solid rgba(126, 217, 87, .45); background: rgba(126, 217, 87, .055); box-shadow: inset 0 0 24px rgba(126, 217, 87, .04); text-align: center; }
 .clan-power-refresh-loading strong { color: var(--text-primary); font-size: 15px; font-weight: 900; }
-.clan-power-refresh-loading small { color: var(--text-secondary); font-size: 10px; font-weight: 700; }
+.clan-power-refresh-loading small { color: var(--text-secondary); font-size: 14px; font-weight: 700; }
 .clan-refresh-dots { width: 1.7em; display: inline-block; color: var(--accent); text-align: left; }
 .clan-power-summary { padding: 24px 30px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 .clan-power-metric { min-height: 120px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; background: #22262b; border: 1px solid rgba(126, 217, 87, .25); }
 .clan-power-metric > span { color: var(--accent); font-size: 9px; font-weight: 900; letter-spacing: 1.4px; }
 .clan-power-metric > strong { color: var(--text-primary); font-size: 28px; font-weight: 950; }
-.clan-power-metric > em { color: var(--text-secondary); font-size: 10px; font-style: normal; font-weight: 700; }
+.clan-power-metric > em { color: var(--text-secondary); font-size: 12px; font-style: normal; font-weight: 700; }
 .clan-power-metric.accent { background: var(--bg-primary); border-color: rgba(126, 217, 87, .5); }
 .clan-power-metric.accent > strong { color: var(--accent); }
+.clan-power-basis { margin: -8px 30px 8px; color: var(--text-secondary); font-size: 10px; font-weight: 750; line-height: 1.2; text-align: right; }
 .clan-power-table { margin: 0 30px 30px; border: 1px solid rgba(126, 217, 87, .25); }
-.clan-power-head, .clan-power-row { min-width: 760px; display: grid; grid-template-columns: 70px minmax(160px, 1.4fr) 90px 110px 90px 120px 90px; align-items: center; }
-.clan-power-head { min-height: 42px; padding: 0 18px; background: #151819; color: var(--text-secondary); font-size: 9px; font-weight: 900; letter-spacing: .8px; }
+.clan-power-table.paginated { margin-bottom: 12px; }
+.clan-power-section > .clan-pagination { padding-bottom: 30px; }
+.clan-power-head, .clan-power-row { min-width: 720px; display: grid; grid-template-columns: 70px minmax(180px, 1fr) 110px 90px 130px 90px; align-items: center; column-gap: 10px; }
+.clan-power-head { min-height: 42px; padding: 0 18px; background: #151819; color: var(--text-secondary); font-size: 12px; font-weight: 900; letter-spacing: .8px; }
+.clan-power-head > span:nth-child(n + 3) { text-align: center; }
 .clan-power-row { min-height: 70px; padding: 0 18px; background: #202427; border-top: 1px solid rgba(255, 255, 255, .06); color: var(--text-primary); }
 .clan-power-row:hover { background: #252a2d; }
 .clan-power-row > strong { color: var(--accent); font-size: 20px; }
 .clan-power-row > div { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .clan-power-row b { overflow: hidden; font-size: 15px; text-overflow: ellipsis; white-space: nowrap; }
-.clan-power-row em { color: var(--text-secondary); font-size: 8px; font-style: normal; font-weight: 900; letter-spacing: .7px; }
-.clan-power-row > span { font-size: 13px; font-weight: 800; }
+.clan-power-row em { color: var(--text-secondary); font-size: 12px; font-style: normal; font-weight: 900; letter-spacing: .7px; }
+.clan-power-row > span { font-size: 13px; font-weight: 800; text-align: center; }
 .clan-power-row .win-rate { color: var(--accent); }
-.clan-power-row button { height: 34px; background: transparent; border: 1px solid rgba(126, 217, 87, .45); color: var(--accent); font-size: 9px; font-weight: 900; cursor: pointer; }
+.clan-power-row button { width: 90px; height: 34px; justify-self: center; background: transparent; border: 1px solid rgba(126, 217, 87, .45); color: var(--accent); font-size: 12px; font-weight: 900; cursor: pointer; }
 .clan-power-row button:hover { background: rgba(126, 217, 87, .1); }
 .clan-power-row.unavailable { opacity: .62; }
 .clan-team-builder-section > .record-section-header > div { min-width: 0; }
-.clan-team-builder-copy { margin-top: 4px; color: var(--text-secondary); font-size: 11px; font-weight: 700; }
 .clan-team-builder-controls { padding: 24px 30px 30px; }
-.clan-team-size-picker { padding: 16px 18px; display: flex; align-items: center; justify-content: space-between; gap: 20px; border: 1px solid rgba(126, 217, 87, .26); background: #111413; }
-.clan-team-size-picker > div:first-child { min-width: 0; }
-.clan-team-size-picker > div:first-child span { color: var(--accent); font-size: 9px; font-weight: 950; letter-spacing: 1.5px; }
-.clan-team-size-picker > div:first-child p { margin-top: 4px; color: var(--text-secondary); font-size: 10px; font-weight: 700; }
-.clan-team-size-options { display: grid; grid-template-columns: repeat(4, minmax(82px, 1fr)); gap: 7px; }
-.clan-team-size-options button { min-height: 38px; padding: 0 13px; border: 1px solid rgba(126, 217, 87, .32); background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 9px; font-weight: 950; letter-spacing: .7px; white-space: nowrap; }
+.clan-team-size-picker { min-height: 116px; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; gap: 28px; border: 1px solid rgba(126, 217, 87, .26); background: #111413; }
+.clan-team-size-copy { min-width: 0; display: flex; flex: 1 1 auto; flex-direction: column; }
+.clan-team-size-title { display: flex; align-items: baseline; gap: 12px; }
+.clan-team-size-title span { color: var(--accent); font-size: 10px; font-weight: 950; letter-spacing: 1.5px; }
+.clan-team-size-title strong { color: var(--text-primary); font-size: 15px; font-weight: 900; }
+.clan-team-size-copy p { margin-top: 8px; color: var(--text-secondary); font-size: 14px; font-weight: 700; line-height: 1.45; }
+.clan-team-size-copy small { margin-top: 3px; color: var(--text-secondary); font-size: 12px; font-weight: 700; line-height: 1.4; opacity: .78; }
+.clan-team-size-options { width: min(100%, 350px); flex: 0 0 auto; display: grid; grid-template-columns: repeat(4, minmax(78px, 1fr)); gap: 8px; }
+.clan-team-size-options button { min-height: 42px; padding: 0 12px; border: 1px solid rgba(126, 217, 87, .32); background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 12px; font-weight: 950; letter-spacing: .7px; white-space: nowrap; }
 .clan-team-size-options button:hover, .clan-team-size-options button.active { border-color: var(--accent); background: rgba(126, 217, 87, .11); color: var(--accent); box-shadow: inset 0 -2px 0 var(--accent); }
 .clan-team-select-actions { margin-top: 16px; display: flex; align-items: center; gap: 8px; }
-.clan-team-select-actions button { min-height: 36px; padding: 0 14px; border: 1px solid rgba(126, 217, 87, .45); background: transparent; color: var(--accent); font-size: 9px; font-weight: 900; cursor: pointer; }
+.clan-team-select-actions button { min-height: 36px; padding: 0 14px; border: 1px solid rgba(126, 217, 87, .45); background: transparent; color: var(--accent); font-size: 12px; font-weight: 900; cursor: pointer; }
 .clan-team-select-actions button:hover:not(:disabled) { background: rgba(126, 217, 87, .09); }
 .clan-team-select-actions button:disabled { opacity: .4; cursor: not-allowed; }
-.clan-team-select-actions span { margin-left: auto; color: var(--text-secondary); font-size: 10px; font-weight: 800; }
+.clan-team-select-actions span { margin-left: auto; color: var(--text-secondary); font-size: 12px; font-weight: 800; }
 .clan-team-member-selector { margin-top: 16px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
 .clan-team-select-card { min-width: 0; min-height: 92px; padding: 15px; position: relative; display: flex; flex-direction: column; justify-content: center; border: 1px solid rgba(126, 217, 87, .2); background: #1c2023; cursor: pointer; transition: border-color .15s ease, background .15s ease, box-shadow .15s ease; }
 .clan-team-select-card:hover { border-color: rgba(126, 217, 87, .5); }
@@ -99,24 +112,24 @@
 .clan-team-select-card input { position: absolute; top: 10px; right: 10px; accent-color: var(--accent); }
 .clan-team-select-card span { color: var(--accent); font-size: 8px; font-weight: 950; letter-spacing: 1.2px; }
 .clan-team-select-card strong { margin-top: 4px; overflow: hidden; color: var(--text-primary); font-size: 15px; text-overflow: ellipsis; white-space: nowrap; }
-.clan-team-select-card small { margin-top: 2px; overflow: hidden; color: var(--text-secondary); font-size: 9px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.clan-team-select-card small { margin-top: 2px; overflow: hidden; color: var(--text-secondary); font-size: 12px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .clan-team-select-card:has(input:disabled) { opacity: .45; cursor: not-allowed; }
 .clan-team-empty { min-height: 130px; margin-top: 16px; display: grid; place-items: center; border: 1px dashed rgba(126, 217, 87, .25); color: var(--text-secondary); font-size: 12px; font-weight: 700; text-align: center; }
-.clan-team-error { margin-top: 14px; padding: 12px 14px; border: 1px solid rgba(255, 82, 82, .38); background: rgba(255, 82, 82, .06); color: var(--lose); font-size: 11px; font-weight: 850; }
+.clan-team-error { margin-top: 14px; padding: 12px 14px; border: 1px solid rgba(255, 82, 82, .38); background: rgba(255, 82, 82, .06); color: var(--lose); font-size: 14px; font-weight: 850; }
 .clan-team-submit-row { margin-top: 18px; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
-.clan-team-submit-row p { color: var(--text-secondary); font-size: 10px; font-weight: 700; }
-.clan-team-submit-row button { min-width: 180px; min-height: 44px; padding: 0 20px; border: 1px solid var(--accent); background: var(--accent); color: #071006; font-size: 10px; font-weight: 1000; letter-spacing: 1px; cursor: pointer; }
+.clan-team-submit-row p { color: var(--text-secondary); font-size: 14px; font-weight: 700; }
+.clan-team-submit-row button { min-width: 180px; min-height: 44px; padding: 0 20px; border: 1px solid var(--accent); background: var(--accent); color: #071006; font-size: 12px; font-weight: 1000; letter-spacing: 1px; cursor: pointer; }
 .clan-team-submit-row button:disabled { opacity: .42; cursor: not-allowed; }
 .clan-team-loading { padding: 0 30px 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
 .clan-team-loading > div { min-height: 320px; }
 .clan-team-result { padding: 0 30px 30px; }
 .clan-team-result-summary { min-height: 94px; padding: 16px 20px; display: grid; grid-template-columns: repeat(4, minmax(90px, 130px)) minmax(200px, 1fr) auto; align-items: center; gap: 18px; border: 1px solid rgba(126, 217, 87, .3); background: #111413; }
 .clan-team-result-summary > div { display: flex; flex-direction: column; gap: 4px; }
-.clan-team-result-summary span { color: var(--text-secondary); font-size: 8px; font-weight: 900; letter-spacing: 1px; }
+.clan-team-result-summary span { color: var(--text-secondary); font-size: 12px; font-weight: 900; letter-spacing: 1px; }
 .clan-team-result-summary strong { color: var(--accent); font-size: 24px; font-weight: 1000; }
-.clan-team-result-summary strong small { color: var(--text-secondary); font-size: 10px; }
-.clan-team-result-summary p { color: var(--text-secondary); font-size: 9px; font-weight: 750; line-height: 1.55; }
-.clan-team-result-summary button { min-width: 100px; min-height: 36px; border: 1px solid var(--accent); background: transparent; color: var(--accent); font-size: 9px; font-weight: 950; cursor: pointer; }
+.clan-team-result-summary strong small { color: var(--text-secondary); font-size: 12px; }
+.clan-team-result-summary p { color: var(--text-secondary); font-size: 14px; font-weight: 750; line-height: 1.55; }
+.clan-team-result-summary button { min-width: 100px; min-height: 36px; border: 1px solid var(--accent); background: transparent; color: var(--accent); font-size: 12px; font-weight: 950; cursor: pointer; }
 .clan-team-result-summary button:hover { background: rgba(126, 217, 87, .1); }
 .clan-balanced-teams { margin-top: 14px; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }
 .clan-balanced-team { min-width: 0; border: 1px solid rgba(126, 217, 87, .3); background: #191d1f; }
@@ -136,27 +149,27 @@
 .clan-balanced-team.delta > header span { color: #d897ff; }
 .clan-balanced-team.echo > header span { color: #ffd166; }
 .clan-balanced-team > header h3 { margin: 3px 0; color: var(--text-primary); font-size: 20px; }
-.clan-balanced-team > header p { overflow: hidden; color: var(--text-secondary); font-size: 9px; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
+.clan-balanced-team > header p { overflow: hidden; color: var(--text-secondary); font-size: 12px; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
 .clan-balanced-team > header > strong { flex: 0 0 auto; color: var(--accent); font-size: 27px; }
 .clan-balanced-team.bravo > header > strong { color: #ffb067; }
 .clan-balanced-team.charlie > header > strong { color: #6ec8ff; }
 .clan-balanced-team.delta > header > strong { color: #d897ff; }
 .clan-balanced-team.echo > header > strong { color: #ffd166; }
-.clan-balanced-team > header > strong small { color: var(--text-secondary); font-size: 8px; }
+.clan-balanced-team > header > strong small { color: var(--text-secondary); font-size: 10px; }
 .clan-balanced-team-metrics { padding: 12px 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; border-bottom: 1px solid rgba(255, 255, 255, .06); }
-.clan-balanced-team-metrics span { color: var(--text-secondary); font-size: 9px; font-weight: 750; }
+.clan-balanced-team-metrics span { color: var(--text-secondary); font-size: 12px; font-weight: 750; }
 .clan-balanced-team-metrics b { margin-left: 3px; color: var(--text-primary); }
 .clan-balanced-member-list { padding: 10px; display: flex; flex-direction: column; gap: 6px; }
 .clan-balanced-member { min-height: 58px; padding: 8px 12px; display: grid; grid-template-columns: 36px minmax(0, 1fr) 72px 48px; align-items: center; gap: 10px; border: 1px solid rgba(255, 255, 255, .07); background: #22272a; }
-.clan-balanced-member > em { color: var(--text-secondary); font-size: 10px; font-style: normal; font-weight: 900; }
+.clan-balanced-member > em { color: var(--text-secondary); font-size: 12px; font-style: normal; font-weight: 900; }
 .clan-balanced-member > div { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .clan-balanced-member > div strong { overflow: hidden; color: var(--text-primary); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
-.clan-balanced-member > div small { color: var(--accent); font-size: 8px; font-weight: 850; }
+.clan-balanced-member > div small { color: var(--accent); font-size: 10px; font-weight: 850; }
 .clan-balanced-team.bravo .clan-balanced-member > div small { color: #ffb067; }
 .clan-balanced-team.charlie .clan-balanced-member > div small { color: #6ec8ff; }
 .clan-balanced-team.delta .clan-balanced-member > div small { color: #d897ff; }
 .clan-balanced-team.echo .clan-balanced-member > div small { color: #ffd166; }
-.clan-balanced-member > span { color: var(--text-secondary); font-size: 9px; font-weight: 800; text-align: right; }
+.clan-balanced-member > span { color: var(--text-secondary); font-size: 12px; font-weight: 800; text-align: right; }
 .clan-balanced-member > b { color: var(--text-primary); font-size: 13px; text-align: right; }
 .clan-balanced-member.unavailable { opacity: .6; }
 .clan-power-loading { padding: 30px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
@@ -170,7 +183,9 @@
 .clan-shimmer::after { content: ''; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, rgba(126, 217, 87, .14), transparent); animation: clan-sweep 1.4s ease-in-out infinite; }
 @keyframes clan-sweep { to { transform: translateX(100%); } }
 @media (max-width: 1180px) { .clan-overview, .clan-loading { grid-template-columns: 1fr; } }
-@media (max-width: 1000px) { .clan-roster-grid, .clan-roster-loading { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 1260px) { .clan-roster-grid, .clan-roster-loading { grid-template-columns: repeat(4, minmax(220px, 300px)); } }
+@media (max-width: 1000px) { .clan-roster-grid, .clan-roster-loading { grid-template-columns: repeat(3, minmax(220px, 300px)); } }
+@media (max-width: 820px) { .clan-roster-grid, .clan-roster-loading { grid-template-columns: repeat(2, minmax(220px, 300px)); } }
 @media (max-width: 900px) {
   .clan-power-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .clan-power-table { overflow-x: auto; }
@@ -196,7 +211,10 @@
   .clan-identity-roster-button { grid-column: 1 / -1; width: 100%; }
   .clan-roster-message { margin: 14px 16px 0; }
   .clan-roster-grid, .clan-roster-loading { padding: 16px; grid-template-columns: 1fr; }
+  .clan-pagination { padding-right: 16px; padding-left: 16px; }
+  .clan-power-refresh-meta { margin: -10px 16px 7px 0; }
   .clan-power-summary { padding: 16px; gap: 10px; }
+  .clan-power-basis { margin: -4px 16px 8px; }
   .clan-power-header > div:first-child { align-items: flex-start; flex-direction: column; gap: 4px; }
   .clan-power-refresh-actions { width: 100%; align-items: stretch; flex-direction: column; gap: 7px; }
   .clan-power-refresh-actions button { width: 100%; }

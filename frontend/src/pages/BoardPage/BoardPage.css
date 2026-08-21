@@ -15,10 +15,16 @@
   line-height: 1.1;
 }
 
+@media (min-width: 761px) {
+  .board-list-title .record-section-title::before {
+    top: 0;
+  }
+}
+
 .board-list-title p {
   margin: 0;
   color: var(--text-secondary);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 700;
   line-height: 1.45;
 }
@@ -32,12 +38,15 @@
 .board-write-button {
   min-width: 104px;
   min-height: 38px;
-  padding: 0 20px;
+  padding: 0 20px 2px;
+  display: grid;
+  place-items: center;
   border: 1px solid var(--accent);
   background: var(--accent);
   color: #050505;
   font-size: 12px;
   font-weight: 1000;
+  line-height: 1;
   cursor: pointer;
   transition: background 160ms ease, color 160ms ease, box-shadow 160ms ease;
 }
@@ -56,7 +65,7 @@
   align-items: center;
   border-bottom: 1px solid rgba(126, 217, 87, 0.18);
   color: var(--text-dim);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 900;
   text-align: center;
 }
@@ -148,7 +157,7 @@
   display: inline-block;
   border: 1px solid var(--accent);
   color: var(--accent);
-  font-size: 9px;
+  font-size: 12px;
   font-style: normal;
   line-height: 1.4;
   vertical-align: 2px;
@@ -183,7 +192,7 @@
   border: 1px solid rgba(255, 157, 69, 0.35);
   background: rgba(255, 157, 69, 0.06);
   color: #ffb067;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 900;
   line-height: 1.6;
 }
@@ -209,7 +218,7 @@
   margin-bottom: 9px;
   display: block;
   color: var(--accent);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 1000;
   letter-spacing: 1.4px;
 }
@@ -254,7 +263,7 @@
 .board-type-option small {
   margin-top: 4px;
   color: var(--text-secondary);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -312,7 +321,7 @@
 .board-notice-toggle small {
   margin-top: 2px;
   color: var(--text-secondary);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -395,7 +404,7 @@
 
 .board-image-field-header span {
   color: var(--accent);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 1000;
   letter-spacing: 1.4px;
 }
@@ -403,7 +412,7 @@
 .board-image-field-header small {
   margin-top: 2px;
   color: var(--text-dim);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -416,7 +425,7 @@
   justify-content: center;
   border: 1px solid var(--accent);
   color: var(--accent);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 1000;
   cursor: pointer;
 }
@@ -448,7 +457,7 @@
   display: grid;
   place-items: center;
   color: var(--text-dim);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 700;
 }
 
@@ -477,7 +486,7 @@
   padding: 7px 9px;
   overflow: hidden;
   color: var(--text-secondary);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -539,7 +548,7 @@
   min-height: 48px;
   border-bottom: 1px solid rgba(126, 217, 87, 0.18);
   color: var(--text-dim);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 1000;
 }
 
@@ -551,7 +560,7 @@
   min-height: 76px;
   border-bottom: 1px solid rgba(126, 217, 87, 0.12);
   color: var(--text-secondary);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
 }
 
@@ -589,7 +598,7 @@
 .board-admin-title small,
 .board-admin-author small {
   color: var(--accent);
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .board-admin-author small {
@@ -637,7 +646,7 @@
   border: 1px solid rgba(126, 217, 87, 0.45);
   background: transparent;
   color: var(--accent);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 1000;
   text-decoration: none;
   cursor: pointer;
@@ -683,7 +692,7 @@
 
 .board-detail-header > div > span {
   color: var(--accent);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 1000;
   letter-spacing: 2px;
 }
@@ -709,14 +718,14 @@
 
 .board-detail-header dt {
   color: var(--text-dim);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 900;
 }
 
 .board-detail-header dd {
   margin: 0;
   color: var(--text-secondary);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 800;
 }
 
@@ -769,7 +778,7 @@
   justify-content: center;
   border: 1px solid var(--accent);
   color: var(--accent);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 1000;
   text-decoration: none;
 }
@@ -793,13 +802,13 @@
   display: block;
   margin-bottom: 7px;
   color: #ffb067;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .board-evidence-guide p {
   margin: 3px 0;
   color: var(--text-secondary);
-  font-size: 11px;
+  font-size: 14px;
   line-height: 1.6;
 }
 
@@ -823,15 +832,18 @@
 
 .board-support-status {
   padding: 2px 6px;
+  display: inline-flex;
+  align-items: center;
   border: 1px solid currentColor;
   font-style: normal;
-  font-size: 8px;
+  font-size: 12px;
+  line-height: 1.2;
   white-space: nowrap;
 }
 
 .board-post-title .board-support-status {
   margin-right: 10px;
-  vertical-align: 2px;
+  vertical-align: middle;
 }
 
 .board-support-summary {
@@ -852,7 +864,7 @@
 
 .board-support-summary span {
   color: var(--text-dim);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 900;
 }
 
@@ -873,7 +885,7 @@
 .board-admin-response > span,
 .board-support-admin-heading > span {
   color: var(--accent);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 1000;
   letter-spacing: 1.6px;
 }
@@ -916,20 +928,20 @@
 
 .board-support-history li > span {
   color: var(--accent);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 900;
 }
 
 .board-support-history p {
   margin: 6px 0;
   color: var(--text-secondary);
-  font-size: 11px;
+  font-size: 14px;
   line-height: 1.6;
 }
 
 .board-support-history small {
   color: var(--text-dim);
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .board-support-admin-panel {
@@ -950,7 +962,7 @@
 .board-dispute-owner span,
 .board-dispute-owner small {
   color: var(--text-dim);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .board-dispute-owner strong {
@@ -970,7 +982,7 @@
 .board-closed-dispute p {
   margin: 0;
   color: var(--text-secondary);
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .board-admin-form {
@@ -992,7 +1004,7 @@
 
 .board-admin-form label > span {
   color: var(--text-secondary);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 900;
 }
 
@@ -1043,7 +1055,7 @@
   border: 1px solid #ffb067;
   background: rgba(255, 176, 103, 0.08);
   color: #ffb067;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 1000;
   cursor: pointer;
 }

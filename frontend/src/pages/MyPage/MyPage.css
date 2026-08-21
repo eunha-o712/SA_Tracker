@@ -112,7 +112,7 @@
   background: rgba(126, 217, 87, 0.08);
   color: var(--accent);
   cursor: pointer;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 900;
   letter-spacing: 2px;
   text-decoration: none;
@@ -248,7 +248,7 @@
 
 .mypage-clan-card small {
   color: #909892;
-  font-size: 11px;
+  font-size: 14px;
   line-height: 1.7;
 }
 
@@ -349,7 +349,7 @@
   background: var(--accent);
   color: #071006;
   cursor: pointer;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 900;
   letter-spacing: 1.5px;
 }
@@ -362,7 +362,7 @@
 
 .mypage-link-card small {
   color: #909892;
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .mypage-link-feedback {
@@ -370,7 +370,7 @@
   border: 1px solid rgba(126, 217, 87, 0.38);
   background: rgba(126, 217, 87, 0.07);
   color: var(--accent);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 700;
   line-height: 1.6;
 }
@@ -397,7 +397,7 @@
   padding: 18px;
   border: 1px solid rgba(126, 217, 87, 0.28);
   color: var(--accent);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 900;
   letter-spacing: 1.5px;
 }
@@ -470,7 +470,7 @@
   display: block;
   margin-bottom: 10px;
   color: var(--accent);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 900;
   letter-spacing: 3px;
 }
@@ -519,7 +519,7 @@
   border-radius: 50%;
   color: var(--accent);
   content: counter(ouid-step);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 900;
 }
 
@@ -530,7 +530,7 @@
 
 .mypage-help-steps span {
   color: #aeb6b0;
-  font-size: 11px;
+  font-size: 14px;
   line-height: 1.6;
 }
 
@@ -552,13 +552,13 @@
 }
 
 .mypage-help-modal__info p {
-  font-size: 11px;
+  font-size: 14px;
   white-space: nowrap;
 }
 
 .mypage-help-modal .mypage-help-modal__security {
   color: #8f9791;
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .mypage-help-modal__confirm {
@@ -569,7 +569,7 @@
   background: var(--accent);
   color: #071006;
   cursor: pointer;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 900;
   letter-spacing: 2px;
 }

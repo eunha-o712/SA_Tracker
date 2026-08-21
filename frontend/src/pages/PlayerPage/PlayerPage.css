@@ -193,5 +193,5 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
     padding: 7px;
   }
-  .profile-section-nav a { min-height: 36px; font-size: 11px; }
+  .profile-section-nav a { min-height: 36px; font-size: 12px; }
 }

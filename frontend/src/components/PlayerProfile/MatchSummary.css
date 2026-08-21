@@ -115,7 +115,7 @@
 .kd-trend-legend {
   display: flex;
   gap: 18px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
 }
 
@@ -257,7 +257,7 @@
 
 .kd-tooltip-average {
   fill: var(--text-dim);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -294,7 +294,7 @@
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   color: var(--text-dim);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .kd-trend-axis strong {

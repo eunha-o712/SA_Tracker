@@ -79,9 +79,9 @@
     padding-left: 10px;
     padding-right: 10px;
   }
-  .clan-team-table-head { font-size: 9px; }
+  .clan-team-table-head { font-size: 12px; }
   .clan-team-table-row,
-  .clan-team-table-row strong { font-size: 11px; }
+  .clan-team-table-row strong { font-size: 12px; }
   .clan-team-table-row > span:nth-child(-n + 2) {
     overflow: hidden;
     text-overflow: ellipsis;

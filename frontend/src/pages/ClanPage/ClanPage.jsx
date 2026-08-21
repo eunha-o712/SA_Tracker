@@ -290,17 +290,24 @@ function ClanPageContent({ name, accountName, isOwnAccount, clanNone }) {
 }
 
 function ClanPowerRanking({ dashboard, loading, refreshing, refreshDotCount, error, onRefresh, onView }) {
+  const members = Array.isArray(dashboard?.members) ? dashboard.members : []
+  const membersKey = members.map((member) => member.id).join('|')
+  const [pagination, setPagination] = useState({ key: '', page: 1 })
+  const pageCount = Math.max(1, Math.ceil(members.length / 10))
+  const currentPage = Math.min(pagination.key === membersKey ? pagination.page : 1, pageCount)
+  const pageMembers = members.slice((currentPage - 1) * 10, currentPage * 10)
+
   if (loading) return <section className="record-section clan-power-loading" aria-busy="true" aria-label="클랜 전력을 집계하는 중입니다."><div className="clan-power-loading-card clan-shimmer" /><div className="clan-power-loading-card clan-shimmer" /><div className="clan-power-loading-table clan-shimmer" /></section>
 
-  const members = Array.isArray(dashboard?.members) ? dashboard.members : []
-  return <section className="record-section clan-power-section">
+  return <>
+    <div className="clan-power-refresh-meta">{dashboard?.lastRefreshedAt ? `전체 새로고침 일시: ${formatDashboardDate(dashboard.lastRefreshedAt)}` : '전체 새로고침 일시: -'}</div>
+    <section className="record-section clan-power-section">
     <div className="record-section-header clan-power-header">
       <div>
         <h2 className="record-section-title">CLAN POWER RANKING</h2>
         <span className="record-section-sub">로스터 전력 집계</span>
       </div>
       <div className="clan-power-refresh-actions">
-        <span>{dashboard?.lastRefreshedAt ? `전체 새로고침 일시: ${formatDashboardDate(dashboard.lastRefreshedAt)}` : '전체 새로고침 일시: -'}</span>
         <button type="button" disabled={refreshing || members.length === 0} onClick={onRefresh}>
           {refreshing ? '새로고침 중' : '전체 전적 새로고침'}
         </button>
@@ -317,20 +324,24 @@ function ClanPowerRanking({ dashboard, loading, refreshing, refreshDotCount, err
         <PowerMetric label="AVG WIN RATE" value={`${decimal(dashboard?.averageWinRate)}%`} sub="분석 멤버 평균" accent />
         <PowerMetric label="AVG K / D" value={decimal(dashboard?.averageKillDeathRatio)} sub="클랜전 평균" />
       </div>
-      {members.length === 0 ? <div className="clan-roster-empty">로스터에 클랜원을 등록하면 전력 순위가 표시됩니다.</div> : <div className="clan-power-table">
-        <div className="clan-power-head"><span>RANK</span><span>PLAYER</span><span>MATCH</span><span>WIN RATE</span><span>K / D</span><span>W · L · D</span><span>ACTION</span></div>
-        {members.map((member, index) => <div className={member.available ? 'clan-power-row' : 'clan-power-row unavailable'} key={member.id}>
-          <strong>{member.available ? String(index + 1).padStart(2, '0') : '--'}</strong>
-          <div><b>{member.userName}</b><em>{member.available ? '분석 완료' : '데이터 없음'}</em></div>
-          <span>{member.available ? member.matchCount : '-'}</span>
-          <span className="win-rate">{member.available ? `${decimal(member.winRate)}%` : '-'}</span>
-          <span>{member.available ? decimal(member.averageKillDeathRatio) : '-'}</span>
-          <span>{member.available ? `${member.winCount} · ${member.loseCount} · ${member.drawCount}` : '-'}</span>
-          <button type="button" onClick={() => onView(member)}>프로필</button>
-        </div>)}
-      </div>}
+      {members.length > 0 && <div className="clan-power-basis">매치 20판 기준</div>}
+      {members.length === 0 ? <div className="clan-roster-empty">로스터에 클랜원을 등록하면 전력 순위가 표시됩니다.</div> : <>
+        <div className={pageCount > 1 ? 'clan-power-table paginated' : 'clan-power-table'}>
+          <div className="clan-power-head"><span>RANK</span><span>PLAYER</span><span>WIN RATE</span><span>K / D</span><span>W · L · D</span><span>ACTION</span></div>
+          {pageMembers.map((member, index) => <div className={member.available ? 'clan-power-row' : 'clan-power-row unavailable'} key={member.id}>
+            <strong>{member.available ? String((currentPage - 1) * 10 + index + 1).padStart(2, '0') : '--'}</strong>
+            <div><b>{member.userName}</b><em>{member.available ? '분석 완료' : '데이터 없음'}</em></div>
+            <span className="win-rate">{member.available ? `${decimal(member.winRate)}%` : '-'}</span>
+            <span>{member.available ? decimal(member.averageKillDeathRatio) : '-'}</span>
+            <span>{member.available ? `${member.winCount} · ${member.loseCount} · ${member.drawCount}` : '-'}</span>
+            <button type="button" onClick={() => onView(member)}>프로필</button>
+          </div>)}
+        </div>
+        <ClanPagination page={currentPage} pageCount={pageCount} onPageChange={(nextPage) => setPagination({ key: membersKey, page: nextPage })} label="클랜 파워 랭킹 페이지" />
+      </>}
     </>}
-  </section>
+    </section>
+  </>
 }
 
 function PowerMetric({ label, value, sub, accent = false }) {
@@ -394,14 +405,17 @@ function ClanTeamBuilder({ members }) {
     <div className="record-section-header">
       <div>
         <h2 className="record-section-title">AUTO TEAM BUILDER</h2>
-        <p className="clan-team-builder-copy">K/D·승률·평균 킬과 주무기 역할을 함께 비교해 전력을 나눕니다.</p>
       </div>
       <span className="record-section-sub">{validSelectedIds.length}명 선택 · 최대 10명</span>
     </div>
 
     <div className="clan-team-builder-controls">
       <div className="clan-team-size-picker">
-        <div><span>TEAM SIZE</span><p>팀당 인원을 선택하면 전체 인원에 맞춰 팀 개수가 자동으로 결정됩니다.</p></div>
+        <div className="clan-team-size-copy">
+          <div className="clan-team-size-title"><span>TEAM SIZE</span><strong>팀당 인원 선택</strong></div>
+          <p>K/D·승률·평균 킬과 주무기 역할을 함께 비교해 전력을 나눕니다.</p>
+          <small>팀당 인원을 선택하면 전체 인원에 맞춰 팀 개수가 자동으로 결정됩니다.</small>
+        </div>
         <div className="clan-team-size-options" role="radiogroup" aria-label="팀당 인원">
           {TEAM_SIZE_OPTIONS.map((size) => <button
             type="button"
@@ -498,18 +512,35 @@ function selectionGuide(count, teamSize) {
 }
 
 function ClanRoster({ clanName, members, loading, pending, message, error, onDelete, onView }) {
+  const membersKey = `${clanName}:${members.map((member) => member.id).join('|')}`
+  const [pagination, setPagination] = useState({ key: '', page: 1 })
+  const pageCount = Math.max(1, Math.ceil(members.length / 10))
+  const currentPage = Math.min(pagination.key === membersKey ? pagination.page : 1, pageCount)
+  const pageMembers = members.slice((currentPage - 1) * 10, currentPage * 10)
+
   return <section className="record-section clan-roster-section">
     <div className="record-section-header"><h2 className="record-section-title">CLAN ROSTER</h2><span className="record-section-sub">{clanName} · {members.length}명</span></div>
     {(message || error) && <div className={error ? 'clan-roster-message error' : 'clan-roster-message'} aria-live="polite">{error || message}</div>}
     {loading ? <div className="clan-roster-loading"><div className="clan-roster-skeleton clan-shimmer" /><div className="clan-roster-skeleton clan-shimmer" /></div>
       : members.length === 0 ? <div className="clan-roster-empty">아직 등록된 클랜원이 없습니다.</div>
-        : <div className="clan-roster-grid">{members.map((member) => <article className="clan-roster-card" key={member.id}>
-          <img src="/sa-assets/sa-clan-basic.png" alt="" />
-          <div><span>CLAN MEMBER</span><h3>{member.userName}</h3><p>{member.clanName}</p></div>
-          <time dateTime={member.createdAt}>{formatRosterDate(member.createdAt)}</time>
-          <div className="clan-roster-actions"><button type="button" onClick={() => onView(member)}>프로필 보기</button><button type="button" className="remove" disabled={pending === String(member.id)} onClick={() => onDelete(member)}>{pending === String(member.id) ? '삭제 중' : '삭제'}</button></div>
-        </article>)}</div>}
+        : <>
+          <div className="clan-roster-grid">{pageMembers.map((member) => <article className="clan-roster-card" key={member.id}>
+            <img src="/sa-assets/sa-clan-basic.png" alt="" />
+            <div><div className="clan-roster-heading"><span>CLAN MEMBER</span><time dateTime={member.createdAt}>{formatRosterDate(member.createdAt)}</time></div><h3>{member.userName}</h3><p>{member.clanName}</p></div>
+            <div className="clan-roster-actions"><button type="button" onClick={() => onView(member)}>프로필 보기</button><button type="button" className="remove" disabled={pending === String(member.id)} onClick={() => onDelete(member)}>{pending === String(member.id) ? '삭제 중' : '삭제'}</button></div>
+          </article>)}</div>
+          <ClanPagination page={currentPage} pageCount={pageCount} onPageChange={(nextPage) => setPagination({ key: membersKey, page: nextPage })} label="클랜 로스터 페이지" />
+        </>}
   </section>
+}
+
+function ClanPagination({ page, pageCount, onPageChange, label }) {
+  if (pageCount <= 1) return null
+  return <nav className="clan-pagination" aria-label={label}>
+    <button type="button" disabled={page === 1} onClick={() => onPageChange(page - 1)}>이전</button>
+    <span><strong>{page}</strong> / {pageCount}</span>
+    <button type="button" disabled={page === pageCount} onClick={() => onPageChange(page + 1)}>다음</button>
+  </nav>
 }
 
 function ClanOverview({ clanName, userName, summary, registered, pending, onAdd }) {

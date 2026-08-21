@@ -68,7 +68,8 @@
 .sa-nav-submenu {
   position: absolute;
   top: calc(100% - 1px);
-  left: 50%;
+  right: 8px;
+  left: auto;
   width: min(220px, calc(100vw - 24px));
   padding: 8px;
   display: grid;
@@ -78,7 +79,7 @@
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.72), 0 0 14px rgba(126, 217, 87, 0.12);
   opacity: 0;
   visibility: hidden;
-  transform: translate(-50%, -6px);
+  transform: translateY(-6px);
   transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s ease;
 }
 
@@ -86,7 +87,7 @@
 .sa-nav-item:focus-within .sa-nav-submenu {
   opacity: 1;
   visibility: visible;
-  transform: translate(-50%, 0);
+  transform: translateY(0);
 }
 
 .sa-nav-submenu a {
@@ -130,7 +131,7 @@
   .sa-nav-link {
     min-width: 0;
     padding: 0 8px;
-    font-size: 10px;
+    font-size: 11px;
     letter-spacing: 4px;
     white-space: nowrap;
   }
@@ -161,7 +162,7 @@
     height: 44px;
     min-width: 0;
     padding: 0 2px;
-    font-size: 9px;
+    font-size: 10px;
     letter-spacing: 1.8px;
   }
 

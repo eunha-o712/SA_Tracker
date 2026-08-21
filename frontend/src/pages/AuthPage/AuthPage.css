@@ -62,7 +62,7 @@
   background: transparent;
   color: var(--text-dim);
   cursor: pointer;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 4px;
 }
@@ -95,7 +95,7 @@
   display: grid;
   gap: 7px;
   color: #909892;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 2.5px;
 }
@@ -126,7 +126,7 @@
 .auth-message {
   min-height: 19px;
   color: var(--lose);
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .auth-message--success {
@@ -140,7 +140,7 @@
   background: transparent;
   color: var(--accent);
   cursor: pointer;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 1.5px;
   text-decoration: none;
@@ -163,7 +163,7 @@
   background: var(--accent);
   color: #071006;
   cursor: pointer;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 900;
   letter-spacing: 2.5px;
   transition: 0.15s ease;
@@ -182,7 +182,7 @@
 .auth-panel__note {
   margin-top: 22px;
   color: #59605b;
-  font-size: 10px;
+  font-size: 12px;
   text-align: center;
 }
 

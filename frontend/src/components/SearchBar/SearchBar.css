@@ -16,7 +16,7 @@
 
 .sa-search-frame {
   position: relative;
-  height: 48px;
+  height: 54px;
 
   display: grid;
   grid-template-columns: 22px 1fr 120px;
@@ -66,7 +66,7 @@
 .sa-search-input-wrap span {
   margin-top: -1px;
   color: var(--accent);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 2px;
 }
@@ -99,12 +99,12 @@
 
 .sa-searchbar--compact .sa-search-label {
   margin: 0 0 3px 12px;
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: .8px;
 }
 
 .sa-searchbar--compact .sa-search-frame {
-  height: 40px;
+  height: 44px;
   grid-template-columns: 16px minmax(0, 1fr) 96px;
   padding: 0 8px;
 }
@@ -126,13 +126,13 @@
 }
 
 .sa-searchbar--compact .sa-search-input-wrap span {
-  font-size: 7px;
+  font-size: 11px;
   letter-spacing: 1.5px;
 }
 
 .sa-searchbar--compact .sa-search-frame button {
   height: 24px;
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 1.4px;
 }
 
@@ -164,7 +164,7 @@
 
 .sa-search-suggestions-head span {
   color: var(--accent);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 1.8px;
 }
@@ -174,7 +174,7 @@
   border: 0;
   background: transparent;
   color: var(--text-dim);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 1px;
   cursor: pointer;
@@ -237,7 +237,7 @@
 .sa-search-suggestion small {
   flex: 0 0 auto;
   color: var(--accent);
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 1px;
 }

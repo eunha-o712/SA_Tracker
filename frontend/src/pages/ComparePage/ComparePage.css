@@ -6,7 +6,7 @@
 .compare-search-form label:nth-of-type(2) { grid-column: 3; }
 .compare-search-form button { grid-column: 1 / -1; width: 140px; justify-self: center; }
 .compare-search-form label { display: flex; flex-direction: column; gap: 8px; }
-.compare-search-form label span { color: var(--accent); font-size: 10px; font-weight: 900; letter-spacing: 1.5px; }
+.compare-search-form label span { color: var(--accent); font-size: 12px; font-weight: 900; letter-spacing: 1.5px; }
 .compare-search-form input { width: 100%; min-width: 0; height: 50px; padding: 0 16px; background: var(--bg-secondary); border: 1px solid rgba(126, 217, 87, .4); color: var(--text-primary); font-size: 15px; font-weight: 700; outline: none; }
 .compare-search-form input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(126, 217, 87, .13); }
 .compare-versus { height: 50px; display: grid; place-items: center; color: var(--text-secondary); font-size: 14px; font-weight: 950; letter-spacing: 1px; }
@@ -30,11 +30,11 @@
 .competitor-rank { align-self: end; display: flex; gap: 10px; align-items: baseline; }
 .competitor-card.right .competitor-rank { justify-content: flex-end; }
 .competitor-rank strong { color: var(--text-primary); font-size: 16px; }
-.competitor-rank em { color: var(--accent); font-size: 11px; font-style: normal; font-weight: 900; }
+.competitor-rank em { color: var(--accent); font-size: 12px; font-style: normal; font-weight: 900; }
 .compare-score { display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 6px; background: var(--bg-primary); border-top: 1px solid rgba(126, 217, 87, .4); border-bottom: 1px solid rgba(126, 217, 87, .4); text-align: center; }
-.compare-score span { color: var(--text-secondary); font-size: 9px; font-weight: 900; letter-spacing: 1.5px; }
+.compare-score span { color: var(--text-secondary); font-size: 12px; font-weight: 900; letter-spacing: 1.5px; }
 .compare-score strong { color: var(--accent); font-size: 42px; line-height: 1; }
-.compare-score em { color: var(--text-primary); font-size: 10px; font-style: normal; font-weight: 900; }
+.compare-score em { color: var(--text-primary); font-size: 12px; font-style: normal; font-weight: 900; }
 .compare-metrics { padding: 12px 30px 30px; }
 .compare-metric-row { min-height: 74px; padding: 0 28px; display: grid; grid-template-columns: 1fr 180px 1fr; align-items: center; background: rgba(255, 255, 255, .025); border-bottom: 1px solid rgba(126, 217, 87, .18); }
 .compare-metric-row > span { color: var(--text-secondary); font-size: 12px; font-weight: 800; text-align: center; }
@@ -67,14 +67,14 @@
   .competitor-card, .competitor-card.right { min-height: 240px; padding: 18px 10px; }
   .competitor-image { width: 62px; height: 62px; }
   .competitor-card h2 { max-width: 100%; font-size: 20px; }
-  .competitor-card p { font-size: 11px; }
+  .competitor-card p { font-size: 14px; }
   .competitor-rank strong { font-size: 13px; }
   .compare-score strong { font-size: 25px; }
-  .compare-score em { font-size: 8px; }
+  .compare-score em { font-size: 11px; }
   .compare-metrics { padding: 8px 16px 20px; }
   .compare-metric-row { min-height: 66px; padding: 0 10px; grid-template-columns: 1fr 104px 1fr; }
   .compare-metric-row > strong { font-size: 16px; }
-  .compare-metric-row > span { font-size: 10px; }
+  .compare-metric-row > span { font-size: 12px; }
   .compare-loading { padding: 16px; grid-template-columns: 1fr 56px 1fr; gap: 8px; }
 }
 @media (prefers-reduced-motion: reduce) { .compare-shimmer::after { animation: none; } }
