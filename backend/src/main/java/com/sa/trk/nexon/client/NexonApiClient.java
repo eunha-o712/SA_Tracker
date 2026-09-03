@@ -263,7 +263,7 @@ public class NexonApiClient {
                 .toUri();
     }
 
-    private synchronized <T> ResponseEntity<T> exchange(
+    private <T> ResponseEntity<T> exchange(
             URI uri,
             Class<T> responseType) {
 
@@ -296,7 +296,7 @@ public class NexonApiClient {
         throw new IllegalStateException("Nexon API request retry loop ended unexpectedly");
     }
 
-    private void waitForRequestSlot() {
+    private synchronized void waitForRequestSlot() {
         long waitMs = Math.max(0L, nexonProperties.getMinRequestIntervalMs())
                 - (System.currentTimeMillis() - lastRequestAtMs);
         if (waitMs > 0) {

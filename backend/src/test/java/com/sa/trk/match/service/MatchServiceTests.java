@@ -69,6 +69,18 @@ class MatchServiceTests {
     }
 
     @Test
+    void resolvesMatchPageQueriesToFavoriteRefreshRanges() {
+        MatchService service = new MatchService(mock(NexonApiClient.class));
+
+        assertThat(service.resolveFavoriteQueryIndexes("RECENT", "ALL", "일반전"))
+                .containsExactly(0, 1, 2);
+        assertThat(service.resolveFavoriteQueryIndexes("CLAN", "폭파미션", "퀵매치 클랜전"))
+                .containsExactly(5);
+        assertThat(service.resolveFavoriteQueryIndexes("BOMB", "폭파미션", "토너먼트"))
+                .isEmpty();
+    }
+
+    @Test
     void failsFastInsteadOfRepeatingRateLimitAcrossEverySummaryRange() {
         NexonApiClient client = mock(NexonApiClient.class);
         OuidResponseDto ouid = new OuidResponseDto();

@@ -270,6 +270,26 @@ public class MatchService {
         );
     }
 
+    public List<Integer> resolveFavoriteQueryIndexes(
+            String scope,
+            String matchMode,
+            String matchType) {
+        String normalizedMatchType = requireValue(matchType, "매치 유형");
+        String normalizedMatchMode = isBlank(matchMode) ? "ALL" : matchMode.trim();
+        List<String> queriedModes = isAll(normalizedMatchMode)
+                ? resolveMatchModes(requireValue(scope, "조회 범위").toUpperCase(Locale.ROOT))
+                : List.of(normalizedMatchMode);
+
+        return IntStream.range(0, FAVORITE_SUMMARY_QUERIES.size())
+                .filter(index -> {
+                    SummaryQuery query = FAVORITE_SUMMARY_QUERIES.get(index);
+                    return queriedModes.contains(query.matchMode())
+                            && normalizedMatchType.equals(query.matchType());
+                })
+                .boxed()
+                .toList();
+    }
+
     public List<MatchDto> getRecentMatchesWithMap(String userName) {
         return getRecentMatchesWithMap(userName, SUMMARY_SIZE);
     }
@@ -687,7 +707,7 @@ public class MatchService {
         return loadMatchesByOuid(userName, resolveOuid(userName), matchMode, matchType);
     }
 
-    private synchronized List<MatchDto> loadMatchesByOuid(
+    private List<MatchDto> loadMatchesByOuid(
             String userName,
             String ouid,
             String matchMode,

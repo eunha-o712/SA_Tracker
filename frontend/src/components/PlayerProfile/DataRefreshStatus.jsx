@@ -1,13 +1,10 @@
 import './DataRefreshStatus.css'
 
-function DataRefreshStatus() {
+function DataRefreshStatus({ label = '갱신 중' }) {
   return (
     <div className="data-refresh-status" role="status" aria-live="polite">
       <span className="data-refresh-indicator" aria-hidden="true" />
-      <div>
-        <strong>갱신중</strong>
-        <span>잠시만 기다려주세요.</span>
-      </div>
+      <strong>{label}</strong>
     </div>
   )
 }

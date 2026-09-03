@@ -4,9 +4,6 @@ chcp 65001>nul
 echo ===== SATrk Frontend 폴더 구조 생성 시작 =====
 echo.
 
-REM - public 정적 파일
-mkdir "public\video" 2>nul
-
 REM - API 호출 모음
 mkdir "src\api" 2>nul
 
@@ -15,7 +12,6 @@ mkdir "src\assets\images" 2>nul
 mkdir "src\assets\icons" 2>nul
 
 REM - 공통 컴포넌트
-mkdir "src\components\LoadingIntro" 2>nul
 mkdir "src\components\SearchBar" 2>nul
 mkdir "src\components\Header" 2>nul
 mkdir "src\components\Footer" 2>nul

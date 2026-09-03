@@ -8,6 +8,8 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Optional;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
@@ -29,7 +31,7 @@ import com.sa.trk.player.service.PlayerService;
 @Service
 public class FavoriteService {
 
-    private static final Duration MATCH_QUERY_PROFILE_DURATION = Duration.ofDays(1);
+    private static final Duration MATCH_QUERY_PROFILE_DURATION = Duration.ofDays(30);
 
     private final FavoriteRepository favoriteRepository;
     private final AuthSessionRepository sessionRepository;
@@ -127,6 +129,71 @@ public class FavoriteService {
         }
         favoriteRepository.save(favorite);
         return refresh.summary();
+    }
+
+    @Transactional
+    public PlayerResponseDto refreshFavoriteProfile(String rawToken, Long id) {
+        AuthUser owner = currentUser(rawToken);
+        Favorite favorite = favoriteRepository.findByIdAndOwner(id, owner)
+                .orElseThrow(() -> new IllegalArgumentException("Favorite was not found."));
+        favorite = synchronizeIdentity(favorite);
+        if (favorite.getOuid() == null || favorite.getOuid().isBlank()) {
+            throw new IllegalArgumentException("Player OUID could not be found.");
+        }
+
+        PlayerResponseDto player = playerService.getFavoritePlayerByOuid(favorite.getOuid());
+        if (player != null
+                && player.getBasic() != null
+                && player.getBasic().getUser_name() != null
+                && !player.getBasic().getUser_name().isBlank()) {
+            favorite.setUserName(player.getBasic().getUser_name().trim());
+            favoriteRepository.save(favorite);
+        }
+        return player;
+    }
+
+    @Transactional
+    public void recordMatchQueryActivity(
+            String rawToken,
+            String userName,
+            String ouid,
+            String scope,
+            String matchMode,
+            String matchType) {
+        AuthUser owner = currentUser(rawToken);
+        List<Integer> queriedIndexes = matchService.resolveFavoriteQueryIndexes(
+                scope,
+                matchMode,
+                matchType
+        );
+        if (queriedIndexes.isEmpty()) {
+            return;
+        }
+
+        Optional<Favorite> favorite = ouid == null || ouid.isBlank()
+                ? Optional.empty()
+                : favoriteRepository.findByOwnerAndOuid(owner, ouid.trim());
+        if (favorite.isEmpty() && userName != null && !userName.isBlank()) {
+            favorite = favoriteRepository.findByOwnerAndUserNameIgnoreCase(owner, userName.trim());
+        }
+        if (favorite.isEmpty()) {
+            return;
+        }
+
+        Favorite savedFavorite = favorite.get();
+        TreeSet<Integer> activeIndexes = new TreeSet<>(
+                parseQueryIndexes(savedFavorite.getActiveMatchQueryIndexes())
+        );
+        if (!activeIndexes.addAll(queriedIndexes)) {
+            return;
+        }
+
+        savedFavorite.setActiveMatchQueryIndexes(
+                activeIndexes.stream()
+                        .map(String::valueOf)
+                        .collect(Collectors.joining(","))
+        );
+        favoriteRepository.save(savedFavorite);
     }
 
     private AuthUser currentUser(String rawToken) {

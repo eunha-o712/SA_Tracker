@@ -72,10 +72,11 @@ function MapPerformance({ userName }) {
     <section className="record-section map-performance-section" aria-busy={loading || refreshing}>
       <div className="record-section-header">
         <h2 className="record-section-title">MAP PERFORMANCE</h2>
-        <span className="record-section-sub">최근 {sampleSize || 20}경기 기준</span>
+        {refreshing && visibleMaps.length > 0
+          ? <DataRefreshStatus label="맵 기록 갱신 중" />
+          : <span className="record-section-sub">최근 {sampleSize || 20}경기 기준</span>}
       </div>
 
-      {refreshing && <DataRefreshStatus />}
       {loading && visibleMaps.length === 0 && <MapPerformanceLoading />}
       {!loading && error && visibleMaps.length === 0 && (
         <div className="map-performance-state error">{error}</div>

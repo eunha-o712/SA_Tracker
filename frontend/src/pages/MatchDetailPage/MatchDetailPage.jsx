@@ -7,6 +7,7 @@ import MatchFilter from '../../components/MatchFilter/MatchFilter'
 import NavBar from '../../components/NavBar/NavBar'
 import TeamTable from '../../components/TeamTable/TeamTable'
 import { addRecentSearch } from '../../utils/recentSearches'
+import { readAuthSession } from '../../utils/authSession'
 import './MatchDetailPage.css'
 
 const PAGE_SIZE = 20
@@ -57,10 +58,24 @@ function MatchDetailPage() {
       })
 
       const data = response.data ?? {}
+      const nextMatches = Array.isArray(data.matches) ? data.matches : []
       setUserName(nextUserName)
       setPage(Number(data.page) || targetPage)
-      setMatches(Array.isArray(data.matches) ? data.matches : [])
+      setMatches(nextMatches)
       setTotalCount(Number(data.totalCount) || 0)
+
+      if (nextMatches.length > 0 && readAuthSession()?.token) {
+        api.post('/api/favorite/match-query-activity', null, {
+          params: {
+            userName: nextUserName,
+            scope: filters.scope,
+            matchType: filters.matchType,
+            matchMode: filters.matchMode,
+          },
+        }).catch(() => {
+          // Match results should remain usable if favorite activity recording fails.
+        })
+      }
     } catch (requestError) {
       setMatches([])
       setTotalCount(0)

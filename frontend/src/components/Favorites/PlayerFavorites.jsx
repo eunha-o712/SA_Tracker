@@ -17,6 +17,7 @@ function PlayerFavorites() {
   const [now, setNow] = useState(() => Date.now())
   const [authSession, setAuthSession] = useState(readAuthSession)
   const carouselRef = useRef(null)
+  const profileSyncInFlightRef = useRef(false)
   const [carouselState, setCarouselState] = useState({
     canPrevious: false,
     canNext: false,
@@ -119,12 +120,19 @@ function PlayerFavorites() {
       setRefreshing(true)
       setError('')
       invalidateCachedGet('/api/favorite')
-      const snapshot = await fetchFavoriteSnapshot(session)
+      const snapshot = await fetchFavoriteSnapshot(session, favorites)
       if (!isSameSession(session.token)) return
 
       writeFavoriteCache(getFavoriteCacheKey(session), snapshot.items, snapshot.refreshedAt)
       setFavorites(snapshot.items)
       setLastRefreshedAt(snapshot.refreshedAt)
+      syncFavoriteProfilesInBackground(
+        snapshot.items,
+        session,
+        snapshot.refreshedAt,
+        profileSyncInFlightRef,
+        setFavorites,
+      )
     } catch (requestError) {
       if (isSameSession(session.token)) {
         setError(getApiErrorMessage(requestError, '즐겨찾기 전적을 새로고침하지 못했습니다.'))
@@ -230,12 +238,12 @@ function PlayerFavorites() {
                       : <img src="/sa-assets/sa-profile-basic.png" alt="" />}
                   </div>
                   <div className="favorite-name">
+                    <div className="favorite-login">
+                      <span><i className={matchStatus.recent ? 'active' : ''} />LAST MATCH</span>
+                      <strong className={matchStatus.recent ? 'active' : ''}>{matchStatus.label}</strong>
+                    </div>
                     <h3>{favorite.userName}</h3>
                     <p>{favorite.titleName}</p>
-                  </div>
-                  <div className="favorite-login">
-                    <span><i className={matchStatus.recent ? 'active' : ''} />LAST MATCH</span>
-                    <strong className={matchStatus.recent ? 'active' : ''}>{matchStatus.label}</strong>
                   </div>
                 </div>
                 <div className="favorite-divider" />
@@ -306,9 +314,10 @@ function PlayerFavorites() {
   )
 }
 
-async function fetchFavoriteSnapshot(session) {
+async function fetchFavoriteSnapshot(session, cachedItems = []) {
   const response = await api.get('/api/favorite')
   const storedFavorites = Array.isArray(response.data) ? response.data : []
+  const cachedById = new Map(cachedItems.map((favorite) => [favorite.id, favorite]))
   let roster
 
   if (containsOwnFavorite(storedFavorites, session)) {
@@ -321,7 +330,9 @@ async function fetchFavoriteSnapshot(session) {
   }
 
   const items = applyOwnClanEvidence(
-    await Promise.all(storedFavorites.map(enrichFavorite)),
+    await Promise.all(storedFavorites.map((favorite) => (
+      enrichFavorite(favorite, cachedById.get(favorite.id))
+    ))),
     session,
     roster,
   )
@@ -329,38 +340,87 @@ async function fetchFavoriteSnapshot(session) {
   return { items, refreshedAt: Date.now() }
 }
 
-async function enrichFavorite(favorite) {
-  let player = null
-  let summary = null
-  try {
-    const playerResponse = await api.get(favorite.ouid ? '/api/player/favorite-card' : '/api/player', {
-      params: favorite.ouid ? { ouid: favorite.ouid } : { userName: favorite.userName },
-    })
-    player = playerResponse.data
-  } catch {
-    // Keep the saved favorite visible when player data is temporarily unavailable.
-  }
-
-  const currentName = cleanText(player?.basic?.user_name) || favorite.userName
-  try {
-    const summaryResponse = await api.get(`/api/favorite/${favorite.id}/match-summary`)
-    summary = summaryResponse.data
-  } catch {
-    // Match details are optional for the favorite card.
-  }
+async function enrichFavorite(favorite, cachedFavorite) {
+  const playerRequest = cachedFavorite
+    ? Promise.resolve(null)
+    : api.get(`/api/favorite/${favorite.id}/profile`)
+  const [playerResult, summaryResult] = await Promise.allSettled([
+    playerRequest,
+    api.get(`/api/favorite/${favorite.id}/match-summary`),
+  ])
+  const player = playerResult.status === 'fulfilled' ? playerResult.value?.data : null
+  const summary = summaryResult.status === 'fulfilled' ? summaryResult.value.data : null
+  const currentName = cleanText(player?.basic?.user_name)
+    || cleanText(cachedFavorite?.userName)
+    || favorite.userName
   const recent = summary?.summaries?.find((item) => item.key === 'RECENT')
 
   return {
     ...favorite,
-    ouid: player?.ouid || favorite.ouid || null,
+    ouid: player?.ouid || cachedFavorite?.ouid || favorite.ouid || null,
     userName: currentName,
-    profileImageUrl: player?.profileImageUrl || null,
-    titleName: cleanText(player?.basic?.title_name) || 'NO TITLE',
-    seasonGrade: player?.rank?.season_grade || 'SEASON GRADE',
-    seasonGradeImage: player?.images?.seasonGradeImage || null,
-    clanName: cleanText(player?.basic?.clan_name) || 'NO CLAN',
-    latestMatchDate: recent?.latestMatchDate || null,
-    kda: { kill: recent?.averageKill, death: recent?.averageDeath, assist: recent?.averageAssist },
+    profileImageUrl: player?.profileImageUrl || cachedFavorite?.profileImageUrl || null,
+    titleName: cleanText(player?.basic?.title_name) || cachedFavorite?.titleName || 'NO TITLE',
+    seasonGrade: player?.rank?.season_grade || cachedFavorite?.seasonGrade || 'SEASON GRADE',
+    seasonGradeImage: player?.images?.seasonGradeImage || cachedFavorite?.seasonGradeImage || null,
+    clanName: cleanText(player?.basic?.clan_name) || cachedFavorite?.clanName || 'NO CLAN',
+    latestMatchDate: recent?.latestMatchDate || cachedFavorite?.latestMatchDate || null,
+    kda: recent
+      ? { kill: recent.averageKill, death: recent.averageDeath, assist: recent.averageAssist }
+      : cachedFavorite?.kda || { kill: null, death: null, assist: null },
+  }
+}
+
+function syncFavoriteProfilesInBackground(
+  favorites,
+  session,
+  refreshedAt,
+  inFlightRef,
+  setFavorites,
+) {
+  if (inFlightRef.current || favorites.length === 0) return
+
+  inFlightRef.current = true
+  Promise.all(favorites.map(fetchFavoriteProfileUpdate))
+    .then((profileUpdates) => {
+      if (!isSameSession(session.token)) return
+
+      const updatesById = new Map(
+        profileUpdates
+          .filter(Boolean)
+          .map((profile) => [profile.id, profile]),
+      )
+      if (updatesById.size === 0) return
+
+      setFavorites((currentFavorites) => {
+        const nextFavorites = currentFavorites.map((favorite) => {
+          const profile = updatesById.get(favorite.id)
+          return profile ? { ...favorite, ...profile } : favorite
+        })
+        writeFavoriteCache(getFavoriteCacheKey(session), nextFavorites, refreshedAt)
+        return nextFavorites
+      })
+    })
+    .finally(() => {
+      inFlightRef.current = false
+    })
+}
+
+async function fetchFavoriteProfileUpdate(favorite) {
+  try {
+    const response = await api.get(`/api/favorite/${favorite.id}/profile`)
+    const player = response.data
+    return {
+      id: favorite.id,
+      ouid: player?.ouid || favorite.ouid || null,
+      userName: cleanText(player?.basic?.user_name) || favorite.userName,
+      profileImageUrl: player?.profileImageUrl || null,
+      titleName: cleanText(player?.basic?.title_name) || 'NO TITLE',
+      seasonGrade: player?.rank?.season_grade || 'SEASON GRADE',
+      seasonGradeImage: player?.images?.seasonGradeImage || null,
+    }
+  } catch {
+    return null
   }
 }
 

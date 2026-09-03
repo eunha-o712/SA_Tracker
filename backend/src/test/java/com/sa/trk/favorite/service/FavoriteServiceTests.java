@@ -109,7 +109,7 @@ class FavoriteServiceTests {
     }
 
     @Test
-    void reusesActiveMatchQueriesUntilDailyDiscoveryIsDue() {
+    void reusesActiveMatchQueriesUntilPeriodicDiscoveryIsDue() {
         Favorite favorite = new Favorite();
         favorite.setId(8L);
         favorite.setOwner(owner);
@@ -134,6 +134,53 @@ class FavoriteServiceTests {
 
         assertThat(result).isSameAs(summary);
         assertThat(favorite.getActiveMatchQueryIndexes()).isEqualTo("0,7");
+        verify(favoriteRepository).save(favorite);
+    }
+
+    @Test
+    void addsAViewedMatchTypeToTheFavoriteRefreshRanges() {
+        Favorite favorite = new Favorite();
+        favorite.setId(8L);
+        favorite.setOwner(owner);
+        favorite.setUserName("agent");
+        favorite.setOuid("ouid-agent");
+        favorite.setActiveMatchQueryIndexes("0,3,7");
+        when(matchService.resolveFavoriteQueryIndexes(
+                "CLAN",
+                "폭파미션",
+                "퀵매치 클랜전"
+        )).thenReturn(List.of(5));
+        when(favoriteRepository.findByOwnerAndOuid(owner, "ouid-agent"))
+                .thenReturn(Optional.of(favorite));
+
+        favoriteService.recordMatchQueryActivity(
+                "session-token",
+                "agent",
+                "ouid-agent",
+                "CLAN",
+                "폭파미션",
+                "퀵매치 클랜전"
+        );
+
+        assertThat(favorite.getActiveMatchQueryIndexes()).isEqualTo("0,3,5,7");
+        verify(favoriteRepository).save(favorite);
+    }
+
+    @Test
+    void refreshesProfileMetadataAndStoresARenamedFavorite() {
+        Favorite favorite = new Favorite();
+        favorite.setId(8L);
+        favorite.setOwner(owner);
+        favorite.setUserName("old-name");
+        favorite.setOuid("ouid-agent");
+        PlayerResponseDto refreshedPlayer = player("new-name", "ouid-agent");
+        when(favoriteRepository.findByIdAndOwner(8L, owner)).thenReturn(Optional.of(favorite));
+        when(playerService.getFavoritePlayerByOuid("ouid-agent")).thenReturn(refreshedPlayer);
+
+        var result = favoriteService.refreshFavoriteProfile("session-token", 8L);
+
+        assertThat(result).isSameAs(refreshedPlayer);
+        assertThat(favorite.getUserName()).isEqualTo("new-name");
         verify(favoriteRepository).save(favorite);
     }
 

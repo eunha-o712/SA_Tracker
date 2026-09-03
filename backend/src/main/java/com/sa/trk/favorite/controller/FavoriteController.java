@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.sa.trk.favorite.dto.FavoriteResponseDto;
 import com.sa.trk.favorite.service.FavoriteService;
 import com.sa.trk.match.dto.MatchSummaryResponseDto;
+import com.sa.trk.player.dto.PlayerResponseDto;
 
 @RestController
 public class FavoriteController {
@@ -49,6 +50,31 @@ public class FavoriteController {
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @PathVariable("id") Long id) {
         return favoriteService.refreshMatchSummary(bearerToken(authorization), id);
+    }
+
+    @GetMapping("/api/favorite/{id}/profile")
+    public PlayerResponseDto refreshFavoriteProfile(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @PathVariable("id") Long id) {
+        return favoriteService.refreshFavoriteProfile(bearerToken(authorization), id);
+    }
+
+    @PostMapping("/api/favorite/match-query-activity")
+    public void recordMatchQueryActivity(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @RequestParam("userName") String userName,
+            @RequestParam(value = "ouid", required = false) String ouid,
+            @RequestParam("scope") String scope,
+            @RequestParam("matchMode") String matchMode,
+            @RequestParam("matchType") String matchType) {
+        favoriteService.recordMatchQueryActivity(
+                bearerToken(authorization),
+                userName,
+                ouid,
+                scope,
+                matchMode,
+                matchType
+        );
     }
 
     private String bearerToken(String authorization) {

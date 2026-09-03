@@ -193,6 +193,7 @@
 }
 
 .favorite-player-card {
+  position: relative;
   flex: 0 0 250px;
   width: 250px;
   min-height: 226px;
@@ -219,9 +220,10 @@
 
 .favorite-top {
   display: grid;
-  grid-template-columns: 50px minmax(0, 1fr) 68px;
+  grid-template-columns: 50px minmax(0, 1fr);
   align-items: center;
   gap: 7px;
+  padding-top: 12px;
 }
 
 .favorite-rank {
@@ -262,28 +264,32 @@
 }
 
 .favorite-login {
-  align-self: start;
-  text-align: right;
+  position: absolute;
+  top: 5px;
+  right: 17px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
   white-space: nowrap;
-  padding-top: 3px;
 }
 
 .favorite-login span {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 5px;
+  gap: 4px;
   color: #777777;
-  font-size: 12px;
+  font-size: 9px;
   font-weight: 800;
-  letter-spacing: 1px;
+  letter-spacing: 0.08em;
 }
 
 .favorite-login i {
   display: block;
-  flex: 0 0 7px;
-  width: 7px;
-  height: 7px;
+  flex: 0 0 5px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: #444444;
 }
@@ -295,10 +301,11 @@
 
 .favorite-login strong {
   display: block;
-  margin-top: 4px;
+  margin: 0;
   color: #555555;
-  font-size: 14px;
+  font-size: 10px;
   font-weight: 900;
+  letter-spacing: 0.02em;
 }
 
 .favorite-login strong.active {
@@ -463,23 +470,10 @@
     width: 38px;
   }
 
-  .favorite-top {
-    grid-template-columns: 52px 1fr;
-  }
-
   .favorite-rank,
   .favorite-clan-mark {
     width: 50px;
     height: 50px;
-  }
-
-  .favorite-login {
-    grid-column: 1 / -1;
-    text-align: left;
-  }
-
-  .favorite-login span {
-    justify-content: flex-start;
   }
 
   .favorite-kda b {

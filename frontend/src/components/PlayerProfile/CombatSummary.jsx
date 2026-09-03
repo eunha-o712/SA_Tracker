@@ -59,10 +59,11 @@ function CombatSummary({ userName }) {
     <section className="record-section">
       <div className="record-section-header">
         <h2 className="record-section-title">AI COMBAT REPORT</h2>
-        <span className="record-section-sub">OpenAI 전적 분석</span>
+        {refreshing && report
+          ? <DataRefreshStatus label="리포트 갱신 중" />
+          : <span className="record-section-sub">OpenAI 전적 분석</span>}
       </div>
 
-      {refreshing && <DataRefreshStatus />}
       <div className={loading ? 'combat-summary-box loading' : 'combat-summary-box'} aria-live="polite" aria-busy={loading || refreshing}>
         {loading && !report && <CombatSummaryLoading />}
         {!loading && error && !report && <p className="combat-summary-error">{error}</p>}
