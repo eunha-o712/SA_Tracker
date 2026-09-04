@@ -1,0 +1,2 @@
+ALTER TABLE auth_users
+    MODIFY COLUMN admin TINYINT(1) NOT NULL;

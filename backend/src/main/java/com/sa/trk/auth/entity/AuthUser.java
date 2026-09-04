@@ -43,7 +43,7 @@ public class AuthUser {
     @Column
     private Boolean nicknameVerified;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TINYINT(1)")
     private boolean admin;
 
     @Column
