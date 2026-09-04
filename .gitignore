@@ -39,4 +39,11 @@ desktop.ini
 
 # Local review artifacts
 /tmp/
-/frontend/public/sa-assets/banner-preview/
+/frontend/public/sa-assets/banner-preview/*
+!/frontend/public/sa-assets/banner-preview/no-outer-frame/
+/frontend/public/sa-assets/banner-preview/no-outer-frame/*
+!/frontend/public/sa-assets/banner-preview/no-outer-frame/sa-clan-banner-no-outer-frame.png
+!/frontend/public/sa-assets/banner-preview/no-outer-frame/sa-match-banner-no-outer-frame.png
+!/frontend/public/sa-assets/banner-preview/no-outer-frame/sa-ranking-banner-no-outer-frame.png
+!/frontend/public/sa-assets/banner-preview/no-outer-frame/sa-recordroom-banner-no-outer-frame.png
+!/frontend/public/sa-assets/banner-preview/no-outer-frame/sa-weapons-banner-no-outer-frame.png
