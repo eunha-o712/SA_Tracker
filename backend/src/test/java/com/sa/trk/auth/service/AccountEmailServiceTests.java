@@ -36,6 +36,12 @@ class AccountEmailServiceTests {
     private ObjectProvider<JavaMailSender> mailSenderProvider;
 
     @Mock
+    private BrevoEmailClient brevoEmailClient;
+
+    @Mock
+    private ObjectProvider<BrevoEmailClient> brevoEmailClientProvider;
+
+    @Mock
     private MailDeliveryQuotaService quotaService;
 
     private MailDeliveryProperties properties;
@@ -49,6 +55,7 @@ class AccountEmailServiceTests {
         properties.setReplyTo("support@satrk.example");
         properties.setFrontendBaseUrl("https://satrk.example/");
         when(mailSenderProvider.getIfAvailable()).thenReturn(mailSender);
+        when(brevoEmailClientProvider.getIfAvailable()).thenReturn(brevoEmailClient);
         when(mailSender.createMimeMessage())
                 .thenReturn(new MimeMessage(Session.getInstance(new Properties())));
     }
@@ -150,8 +157,36 @@ class AccountEmailServiceTests {
         verify(quotaService, never()).recordSuccessfulDelivery();
     }
 
+    @Test
+    void prefersBrevoApiAndUsesPublicTemplateImagesWhenConfigured() {
+        when(brevoEmailClient.isConfigured()).thenReturn(true);
+        when(brevoEmailClient.sendHtml(any(), any(), any())).thenReturn(true);
+        AccountEmailService service = service();
+
+        boolean sent = service.sendEmailVerificationLink("member@example.com", "verify-token");
+
+        ArgumentCaptor<String> htmlCaptor = ArgumentCaptor.forClass(String.class);
+        verify(brevoEmailClient).sendHtml(
+                org.mockito.ArgumentMatchers.eq("member@example.com"),
+                org.mockito.ArgumentMatchers.eq("[SA-TRACKER] 이메일 인증"),
+                htmlCaptor.capture()
+        );
+        verify(mailSender, never()).createMimeMessage();
+        verify(quotaService).recordSuccessfulDelivery();
+        assertThat(sent).isTrue();
+        assertThat(htmlCaptor.getValue())
+                .contains("https://satrk.example/sa-assets/sample/sa-sub-header-ver2.png")
+                .contains("https://satrk.example/sa-assets/sa-footer-logo.png")
+                .doesNotContain("cid:saHeader", "cid:saFooter");
+    }
+
     private AccountEmailService service() {
-        return new AccountEmailService(mailSenderProvider, properties, quotaService);
+        return new AccountEmailService(
+                mailSenderProvider,
+                brevoEmailClientProvider,
+                properties,
+                quotaService
+        );
     }
 
     private String findBody(Part part, String mimeType) throws Exception {

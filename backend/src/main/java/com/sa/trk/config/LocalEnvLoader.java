@@ -98,6 +98,8 @@ public final class LocalEnvLoader {
             case "MAIL_ENABLED" -> "satrk.mail.enabled";
             case "MAIL_FROM" -> "satrk.mail.from";
             case "MAIL_REPLY_TO" -> "satrk.mail.reply-to";
+            case "BREVO_API_KEY" -> "satrk.mail.brevo-api-key";
+            case "BREVO_API_URL" -> "satrk.mail.brevo-api-url";
             case "FRONTEND_BASE_URL" -> "satrk.mail.frontend-base-url";
             case "MAIL_DAILY_LIMIT" -> "satrk.mail.daily-limit";
             case "MAIL_TIME_ZONE" -> "satrk.mail.zone-id";

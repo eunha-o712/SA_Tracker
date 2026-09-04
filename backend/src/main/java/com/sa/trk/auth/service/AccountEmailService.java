@@ -37,6 +37,7 @@ public class AccountEmailService {
             new ClassPathResource("mail/images/sa-footer-logo.png");
 
     private final JavaMailSender mailSender;
+    private final BrevoEmailClient brevoEmailClient;
     private final MailDeliveryProperties properties;
     private final MailDeliveryQuotaService quotaService;
     private final String frontendBaseUrl;
@@ -44,9 +45,11 @@ public class AccountEmailService {
 
     public AccountEmailService(
             ObjectProvider<JavaMailSender> mailSenderProvider,
+            ObjectProvider<BrevoEmailClient> brevoEmailClientProvider,
             MailDeliveryProperties properties,
             MailDeliveryQuotaService quotaService) {
         this.mailSender = mailSenderProvider.getIfAvailable();
+        this.brevoEmailClient = brevoEmailClientProvider.getIfAvailable();
         this.properties = properties;
         this.quotaService = quotaService;
         String configuredBaseUrl = properties.getFrontendBaseUrl();
@@ -141,8 +144,8 @@ public class AccountEmailService {
             log.info("Account email delivery skipped because mail is disabled.");
             return false;
         }
-        if (mailSender == null || isBlank(properties.getFrom())) {
-            log.error("Account email delivery is enabled but SMTP or sender configuration is incomplete.");
+        if (!hasDeliveryProvider() || isBlank(properties.getFrom())) {
+            log.error("Account email delivery is enabled but API/SMTP or sender configuration is incomplete.");
             return false;
         }
 
@@ -150,6 +153,13 @@ public class AccountEmailService {
             if (isDailyLimitReachedSafely()) {
                 log.warn("Account email delivery skipped because the daily limit was reached.");
                 return false;
+            }
+            if (usesBrevoApi()) {
+                boolean sent = brevoEmailClient.sendText(recipient, subject, body);
+                if (sent) {
+                    recordSuccessfulDeliverySafely();
+                }
+                return sent;
             }
             try {
                 SimpleMailMessage message = new SimpleMailMessage();
@@ -180,8 +190,8 @@ public class AccountEmailService {
             log.info("Account email delivery skipped because mail is disabled.");
             return false;
         }
-        if (mailSender == null || isBlank(properties.getFrom())) {
-            log.error("Account email delivery is enabled but SMTP or sender configuration is incomplete.");
+        if (!hasDeliveryProvider() || isBlank(properties.getFrom())) {
+            log.error("Account email delivery is enabled but API/SMTP or sender configuration is incomplete.");
             return false;
         }
 
@@ -189,6 +199,17 @@ public class AccountEmailService {
             if (isDailyLimitReachedSafely()) {
                 log.warn("Account email delivery skipped because the daily limit was reached.");
                 return false;
+            }
+            if (usesBrevoApi()) {
+                boolean sent = brevoEmailClient.sendHtml(
+                        recipient,
+                        subject,
+                        htmlWithPublicImages(htmlBody)
+                );
+                if (sent) {
+                    recordSuccessfulDeliverySafely();
+                }
+                return sent;
             }
             try {
                 MimeMessage message = mailSender.createMimeMessage();
@@ -239,6 +260,26 @@ public class AccountEmailService {
 
     private boolean isBlank(String value) {
         return value == null || value.isBlank();
+    }
+
+    private boolean hasDeliveryProvider() {
+        return usesBrevoApi() || mailSender != null;
+    }
+
+    private boolean usesBrevoApi() {
+        return brevoEmailClient != null && brevoEmailClient.isConfigured();
+    }
+
+    private String htmlWithPublicImages(String htmlBody) {
+        return htmlBody
+                .replace(
+                        "cid:saHeader",
+                        frontendBaseUrl + "/sa-assets/sample/sa-sub-header-ver2.png"
+                )
+                .replace(
+                        "cid:saFooter",
+                        frontendBaseUrl + "/sa-assets/sa-footer-logo.png"
+                );
     }
 
     private boolean isSafeFrontendBaseUrl() {

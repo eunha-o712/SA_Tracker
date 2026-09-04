@@ -8,6 +8,8 @@ public class MailDeliveryProperties {
     private boolean enabled;
     private String from;
     private String replyTo;
+    private String brevoApiKey;
+    private String brevoApiUrl = "https://api.brevo.com/v3/smtp/email";
     private String frontendBaseUrl = "http://localhost:5173";
     private int dailyLimit = 500;
     private String zoneId = "Asia/Seoul";
@@ -34,6 +36,22 @@ public class MailDeliveryProperties {
 
     public void setReplyTo(String replyTo) {
         this.replyTo = replyTo;
+    }
+
+    public String getBrevoApiKey() {
+        return brevoApiKey;
+    }
+
+    public void setBrevoApiKey(String brevoApiKey) {
+        this.brevoApiKey = brevoApiKey;
+    }
+
+    public String getBrevoApiUrl() {
+        return brevoApiUrl;
+    }
+
+    public void setBrevoApiUrl(String brevoApiUrl) {
+        this.brevoApiUrl = brevoApiUrl;
     }
 
     public String getFrontendBaseUrl() {
