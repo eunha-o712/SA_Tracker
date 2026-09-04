@@ -47,18 +47,21 @@ public class BoardPostService {
     private final AuthSessionRepository authSessionRepository;
     private final SupportActionLogRepository supportActionLogRepository;
     private final NexonApiClient nexonApiClient;
+    private final BoardNoticeHtmlSanitizer noticeHtmlSanitizer;
 
     public BoardPostService(
             BoardPostRepository boardPostRepository,
             AuthUserRepository authUserRepository,
             AuthSessionRepository authSessionRepository,
             SupportActionLogRepository supportActionLogRepository,
-            NexonApiClient nexonApiClient) {
+            NexonApiClient nexonApiClient,
+            BoardNoticeHtmlSanitizer noticeHtmlSanitizer) {
         this.boardPostRepository = boardPostRepository;
         this.authUserRepository = authUserRepository;
         this.authSessionRepository = authSessionRepository;
         this.supportActionLogRepository = supportActionLogRepository;
         this.nexonApiClient = nexonApiClient;
+        this.noticeHtmlSanitizer = noticeHtmlSanitizer;
     }
 
     @Transactional(readOnly = true)
@@ -123,7 +126,8 @@ public class BoardPostService {
         BoardType type = parseType(request.type());
         post.setType(type);
         post.setTitle(requireText(request.title(), "제목", MAX_TITLE_LENGTH));
-        post.setContent(requireText(request.content(), "내용", MAX_CONTENT_LENGTH));
+        String content = requireText(request.content(), "내용", MAX_CONTENT_LENGTH);
+        post.setContent(notice ? noticeHtmlSanitizer.sanitize(content) : content);
         post.setAuthorId(author.id());
         post.setAuthorName(firstNonBlank(author.suddenNickname(), author.displayName(), "회원"));
         post.setViewCount(0);
@@ -651,7 +655,7 @@ public class BoardPostService {
                 post.getId(),
                 post.getType().name(),
                 post.getTitle(),
-                post.getContent(),
+                post.isNotice() ? noticeHtmlSanitizer.sanitize(post.getContent()) : post.getContent(),
                 post.getAuthorId(),
                 post.getAuthorName(),
                 post.getViewCount(),

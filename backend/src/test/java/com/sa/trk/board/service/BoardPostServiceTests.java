@@ -59,7 +59,8 @@ class BoardPostServiceTests {
                 authUserRepository,
                 authSessionRepository,
                 supportActionLogRepository,
-                nexonApiClient
+                nexonApiClient,
+                new BoardNoticeHtmlSanitizer()
         );
         when(supportActionLogRepository.findByPostIdOrderByCreatedAtAsc(any())).thenReturn(List.of());
     }
@@ -139,6 +140,32 @@ class BoardPostServiceTests {
         assertThatThrownBy(() -> boardPostService.requireImageAccess(access, null))
                 .isInstanceOf(AuthException.class)
                 .hasMessageContaining("로그인이 필요합니다");
+    }
+
+    @Test
+    void sanitizesNoticeHtmlButKeepsApprovedLayoutClasses() {
+        when(boardPostRepository.save(any(BoardPost.class))).thenAnswer(invocation -> {
+            BoardPost saved = invocation.getArgument(0);
+            saved.setId(12L);
+            return saved;
+        });
+        when(authUserRepository.findById(1L)).thenReturn(Optional.of(linkedUser(1L, true)));
+
+        var response = boardPostService.createPost(
+                new BoardPostCreateRequest(
+                        "FREE",
+                        "인증 안내",
+                        "<section class=\"notice-guide\" onclick=\"alert(1)\"><h2>안내</h2>"
+                                + "<script>alert(1)</script><img src=x onerror=\"alert(1)\"></section>",
+                        null,
+                        null),
+                viewer(1L, true),
+                List.of(),
+                true
+        );
+
+        assertThat(response.content()).contains("<section class=\"notice-guide\"><h2>안내</h2></section>");
+        assertThat(response.content()).doesNotContain("script", "onclick", "onerror", "<img");
     }
 
     @Test

@@ -5,8 +5,10 @@ import Footer from '../../components/Footer/Footer'
 import Header from '../../components/Header/Header'
 import NavBar from '../../components/NavBar/NavBar'
 import { readAuthSession, subscribeToAuthSession } from '../../utils/authSession'
+import { isRichNoticeHtml, sanitizeNoticeHtml } from '../../utils/noticeHtml'
 import '../PlayerPage/PlayerPage.css'
 import './BoardPage.css'
+import { AUTH_NOTICE_HTML, AUTH_NOTICE_TITLE } from './noticeTemplates'
 
 const BOARD_OPTIONS = [
   { value: 'free', apiType: 'FREE', label: '자유게시판', description: '게임과 클랜에 관한 자유로운 이야기를 나눕니다.' },
@@ -39,6 +41,10 @@ function BoardWritePage() {
   const isAdmin = Boolean(session?.user?.admin)
   const isAdminWriteMode = isAdmin && Boolean(location.state?.adminMode)
   const imagePreviews = useMemo(() => images.map((file) => ({ file, url: URL.createObjectURL(file) })), [images])
+  const noticePreview = useMemo(
+    () => notice && isRichNoticeHtml(content) ? sanitizeNoticeHtml(content) : '',
+    [content, notice],
+  )
 
   useEffect(() => () => {
     imagePreviews.forEach((preview) => URL.revokeObjectURL(preview.url))
@@ -60,6 +66,15 @@ function BoardWritePage() {
     }
     setError('')
     setImages((current) => [...current, ...selectedImages])
+  }
+
+  const loadAuthNoticeTemplate = () => {
+    if ((title.trim() || content.trim()) && !window.confirm('작성 중인 제목과 내용을 인증 안내 템플릿으로 바꿀까요?')) return
+    setNotice(true)
+    setType('free')
+    setTitle(AUTH_NOTICE_TITLE)
+    setContent(AUTH_NOTICE_HTML)
+    setError('')
   }
 
   const handleSubmit = async (event) => {
@@ -181,10 +196,30 @@ function BoardWritePage() {
               </label>
 
               <label className="board-form-field board-content-field" htmlFor="board-content">
-                <span>내용</span>
+                <span className="board-content-label">
+                  내용
+                  {isAdminWriteMode && (
+                    <button type="button" className="board-template-button" onClick={loadAuthNoticeTemplate}>
+                      인증 안내 템플릿 불러오기
+                    </button>
+                  )}
+                </span>
                 <textarea id="board-content" value={content} onChange={(event) => setContent(event.target.value)} maxLength={5000} placeholder="내용을 입력해주세요." rows={14} />
                 <small>{content.length} / 5,000</small>
               </label>
+
+              {noticePreview && (
+                <section className="board-notice-preview" aria-labelledby="board-notice-preview-title">
+                  <header>
+                    <div><span>LIVE PREVIEW</span><h2 id="board-notice-preview-title">공지 미리보기</h2></div>
+                    <small>등록 후 회원에게 보이는 모습입니다.</small>
+                  </header>
+                  <div
+                    className="board-detail-content is-rich-notice"
+                    dangerouslySetInnerHTML={{ __html: noticePreview }}
+                  />
+                </section>
+              )}
 
               <section className="board-image-field" aria-labelledby="board-image-label">
                 <div className="board-image-field-header">

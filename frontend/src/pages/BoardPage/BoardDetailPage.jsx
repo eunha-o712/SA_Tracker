@@ -5,6 +5,7 @@ import Footer from '../../components/Footer/Footer'
 import Header from '../../components/Header/Header'
 import NavBar from '../../components/NavBar/NavBar'
 import { clearAuthSession, readAuthSession } from '../../utils/authSession'
+import { isRichNoticeHtml, sanitizeNoticeHtml } from '../../utils/noticeHtml'
 import BoardPostImage from './BoardPostImage'
 import '../PlayerPage/PlayerPage.css'
 import './BoardPage.css'
@@ -154,7 +155,14 @@ function BoardDetailPage() {
                     )}
                   </section>
                 )}
-                <div className="board-detail-content">{post.content}</div>
+                {post.notice && isRichNoticeHtml(post.content) ? (
+                  <div
+                    className="board-detail-content is-rich-notice"
+                    dangerouslySetInnerHTML={{ __html: sanitizeNoticeHtml(post.content) }}
+                  />
+                ) : (
+                  <div className="board-detail-content">{post.content}</div>
+                )}
                 {Array.isArray(post.imageUrls) && post.imageUrls.length > 0 && (
                   <div className="board-detail-images">
                     {post.imageUrls.map((imageUrl, index) => (
