@@ -141,10 +141,11 @@ public class AuthService {
 
     @Transactional
     public AuthResponse login(AuthLoginRequest request) {
-        String email = normalizeEmail(request == null ? null : request.resolvedEmail());
+        String email = normalizeLoginEmail(request == null ? null : request.resolvedEmail());
         String password = request == null ? null : request.password();
 
         AuthUser user = userRepository.findByEmailIgnoreCase(email)
+                .filter(candidate -> email.equals(candidate.getEmail()))
                 .orElseThrow(this::invalidCredentials);
         if (password == null || !passwordHasher.matches(password, user.getPasswordSalt(), user.getPasswordHash())) {
             throw invalidCredentials();
@@ -581,6 +582,14 @@ public class AuthService {
 
     private String normalizeEmail(String email) {
         String normalized = email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
+        if (normalized.length() > 254 || !EMAIL_PATTERN.matcher(normalized).matches()) {
+            throw new AuthException(HttpStatus.BAD_REQUEST, "INVALID_EMAIL", "올바른 이메일을 입력해 주세요.");
+        }
+        return normalized;
+    }
+
+    private String normalizeLoginEmail(String email) {
+        String normalized = email == null ? "" : email.trim();
         if (normalized.length() > 254 || !EMAIL_PATTERN.matcher(normalized).matches()) {
             throw new AuthException(HttpStatus.BAD_REQUEST, "INVALID_EMAIL", "올바른 이메일을 입력해 주세요.");
         }
