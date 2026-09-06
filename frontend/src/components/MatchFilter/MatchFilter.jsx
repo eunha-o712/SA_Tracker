@@ -5,12 +5,11 @@ const QUICK_SCOPES = [
   { label: '폭파미션', value: 'BOMB' },
   { label: '팀데스매치', value: 'DEATHMATCH' },
   { label: '개인전', value: 'SOLO' },
-  { label: '클랜전', value: 'CLAN' },
+  { label: '퀵매치 클랜전', value: 'CLAN' },
 ]
 
 const MATCH_TYPES = [
   '일반전',
-  '클랜전',
   '퀵매치 클랜전',
   '클랜 랭크전',
   '랭크전 솔로',
