@@ -27,13 +27,14 @@ function NavBar() {
   const boardTo = isLoggedIn ? '/board/free' : '/login'
 
   const menus = [
-    { label: 'PROFILE', to: profileTo },
-    { label: 'WEAPONS', to: '/weapons' },
-    { label: 'MATCHES', to: '/match' },
-    { label: 'RANKING', to: '/ranking' },
-    { label: 'CLAN', to: clanTo, state: isLoggedIn ? undefined : { from: { pathname: '/clan' } } },
+    { id: 'profile', label: '프로필', to: profileTo },
+    { id: 'weapons', label: '무기', to: '/weapons' },
+    { id: 'matches', label: '전적', to: '/match' },
+    { id: 'ranking', label: '랭킹', to: '/ranking' },
+    { id: 'clan', label: '클랜', to: clanTo, state: isLoggedIn ? undefined : { from: { pathname: '/clan' } } },
     {
-      label: 'BOARD',
+      id: 'board',
+      label: '게시판',
       to: boardTo,
       state: isLoggedIn ? undefined : { from: { pathname: '/board/free' } },
       children: [
@@ -52,39 +53,39 @@ function NavBar() {
     },
   ]
 
-  const isActive = (label) => {
-    if (label === 'PROFILE') {
+  const isActive = (id) => {
+    if (id === 'profile') {
       return pathname === '/player' || pathname.startsWith('/player/')
     }
 
-    if (label === 'WEAPONS') {
+    if (id === 'weapons') {
       return pathname === '/weapons' || pathname.startsWith('/weapons/')
     }
 
-    if (label === 'RANKING') {
+    if (id === 'ranking') {
       return pathname === '/ranking' || pathname.startsWith('/ranking/')
     }
 
-    if (label === 'CLAN') {
+    if (id === 'clan') {
       return pathname === '/clan' || pathname.startsWith('/clan/')
     }
 
-    if (label === 'BOARD') {
+    if (id === 'board') {
       return pathname === '/board' || pathname.startsWith('/board/')
     }
 
-    return label === 'MATCHES' && pathname.startsWith('/match')
+    return id === 'matches' && pathname.startsWith('/match')
   }
 
   return (
-    <nav className="sa-navbar" aria-label="Main menu">
+    <nav className="sa-navbar" aria-label="주요 메뉴">
       <div className="sa-nav-dot left" aria-hidden="true" />
 
-      {menus.map(({ label, to, state, children }) => {
-        const active = isActive(label)
+      {menus.map(({ id, label, to, state, children }) => {
+        const active = isActive(id)
 
         return (
-          <div className={`sa-nav-item${children ? ' has-submenu' : ''}`} key={label}>
+          <div className={`sa-nav-item${children ? ' has-submenu' : ''}`} key={id}>
             <Link
               className={`sa-nav-link${active ? ' is-active' : ''}`}
               to={to}

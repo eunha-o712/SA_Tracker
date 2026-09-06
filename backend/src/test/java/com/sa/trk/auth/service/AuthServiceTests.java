@@ -255,6 +255,20 @@ class AuthServiceTests {
     }
 
     @Test
+    void rejectsLoginWhenPasswordCaseDoesNotMatch() {
+        AuthUser user = user("member@satrk.gg", "agent", "ouid-123", "password123!");
+        when(userRepository.findByEmailIgnoreCase("member@satrk.gg")).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> authService.login(
+                new AuthLoginRequest("member@satrk.gg", null, "Password123!")
+        ))
+                .isInstanceOf(AuthException.class)
+                .hasMessageContaining("이메일 또는 비밀번호");
+
+        verify(sessionRepository, never()).save(any(AuthSession.class));
+    }
+
+    @Test
     void suspendedUserCannotLogin() {
         AuthUser user = user("member@satrk.gg", "agent", "ouid-123", "password123!");
         user.setAccountStatus(AccountStatus.SUSPENDED);

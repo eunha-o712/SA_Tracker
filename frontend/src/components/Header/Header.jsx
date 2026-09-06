@@ -37,14 +37,14 @@ function Header() {
               <HeaderBadge user={session.user} />
             </Link>
             <Link className="global-header__account-link" to="/mypage">
-              MY PAGE
+              마이페이지
             </Link>
             <button className="global-header__account-link" type="button" onClick={handleLogout}>
-              LOGOUT
+              로그아웃
             </button>
           </>
         ) : (
-          <Link className="global-header__account-link" to="/login">LOGIN</Link>
+          <Link className="global-header__account-link" to="/login">로그인</Link>
         )}
       </div>
     </header>
