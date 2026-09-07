@@ -59,15 +59,20 @@
 
 @media (max-width: 640px) {
   .home-page {
+    flex: 0 0 auto;
     padding-bottom: 28px;
   }
 
+  .home-hero-wrap {
+    display: flex;
+    flex-direction: column;
+  }
+
   .home-search-overlay {
-    left: 7%;
-    right: 7%;
-    bottom: 8%;
+    position: static;
     width: auto;
     max-width: none;
     min-width: 0;
+    margin: 24px 7% 0;
   }
 }
